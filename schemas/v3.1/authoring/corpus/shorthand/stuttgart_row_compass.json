@@ -1,0 +1,36 @@
+{
+  "id": "stuttgart-row-compass",
+  "title": "Stuttgart · Row Compass",
+  "loop": "3.6s",
+  "card": {
+    "message": "Drive mode: Comfort\nDrive mode: Sport\nDrive mode: Track\nDrive mode: Ice",
+    "size": [42, 8],
+    "fg": [236, 237, 238],
+    "bg": [24, 26, 30],
+    "border": { "type": "rounded", "title": " Mode Stack ", "titleAlign": "left" }
+  },
+  "effects": [
+    {
+      "shader": "focused_row_gradient",
+      "scope": { "channel": "background" },
+      "brightColor": [90, 58, 50],
+      "dimColor": [24, 26, 30],
+      "selectedRow": 2,
+      "falloffDistance": 2,
+      "applyTo": "background"
+    },
+    {
+      "shader": "wayfinding_node",
+      "scope": { "channel": "background" },
+      "color": [208, 90, 70],
+      "nodes": [[3, 2], [3, 3], [3, 4], [3, 5]],
+      "radius": 2,
+      "intensity": 0.22,
+      "currentIndex": 1,
+      "previousStrength": 0.28,
+      "futureStrength": 0.08,
+      "pulseSpeed": 0.3,
+      "applyTo": "background"
+    }
+  ]
+}

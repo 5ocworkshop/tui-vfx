@@ -1,0 +1,26 @@
+{
+  "id": "coin-get",
+  "title": "Coin Get",
+  "card": {
+    "message": "+500 GOLD",
+    "size": [16, 3],
+    "fg": [255, 215, 0],
+    "bg": "black",
+    "border": "rounded",
+    "bold": true
+  },
+  "lifecycle": {
+    "enter": {
+      "duration": "1s",
+      "easing": "quadOut",
+      "route": { "bounce": { "bounces": 4, "decay": 0.5 } },
+      "from": "top"
+    },
+    "dwell": "1.5s",
+    "exit":  { "duration": "650ms", "easing": "quadIn", "to": "bottom" }
+  },
+  "at": "bottomRight",
+  "effects": [
+    { "shader": "reflect", "speed": 3.0, "color": "white", "scope": { "content": "text" } }
+  ]
+}

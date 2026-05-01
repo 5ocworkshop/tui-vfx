@@ -1,0 +1,15 @@
+{
+  "id": "mask-dissolve",
+  "title": "Mask: Dissolve Effect",
+  "card": {
+    "message": "Mask: Dissolve Effect",
+    "size": [35, 3],
+    "fg": "green",
+    "bg": [20, 50, 20],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "dissolve", "seed": 42, "chunkSize": 1, "duration": "1s" },
+    "exit":  { "preset": "dissolve", "seed": 99, "chunkSize": 2, "duration": "1s" }
+  }
+}

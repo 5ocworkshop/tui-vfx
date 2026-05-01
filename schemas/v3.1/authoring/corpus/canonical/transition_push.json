@@ -1,0 +1,78 @@
+{
+  "id": "transition-push",
+  "version": "3.1",
+  "metadata": {
+    "title": "Transition: Push (relation.* — schema-faith demonstrator)",
+    "description": "Forward-looking: relation.push coordinates two surfaces displacing in lockstep. Direction parameter selects axis.",
+    "authors": ["corpus"],
+    "tags": ["transition", "push", "relation", "schema-faith"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Pushed in — relation.push demonstrator" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "transitions": {
+    "enterPush": {
+      "id": "enterPush",
+      "intent": { "kind": "preset", "preset": "push" },
+      "subjects": {
+        "from": { "kind": "previous" },
+        "to": { "kind": "scene", "id": "mainScene" }
+      },
+      "timing": {
+        "duration": { "kind": "milliseconds", "value": 400 },
+        "easing": { "kind": "named", "value": "quadOut" }
+      },
+      "activePhases": ["enter"],
+      "tracks": [
+        {
+          "kind": "relation.push",
+          "from": "from",
+          "to": "to",
+          "direction": "leftToRight"
+        }
+      ],
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": { "policy": "instant" }
+    }
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 40,
+      "height": 3,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "baseline",
+  "title": "Baseline (no effects)",
+  "card": {
+    "message": "BASELINE TEST",
+    "size": [35, 3],
+    "fg": "#ffffff",
+    "bg": "#282828",
+    "border": "rounded"
+  }
+}

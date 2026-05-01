@@ -1,0 +1,111 @@
+{
+  "id": "taliesin-hearthline",
+  "version": "3.1",
+  "metadata": {
+    "title": "Taliesin · Hearthline (Drawer)",
+    "description": "Spring-route enter motion (stiffness/damping) — distinct from composed-with-pendulum-dynamics.",
+    "authors": ["corpus"],
+    "tags": ["drawer", "spring-route", "edge-sheen"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 3600 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 760 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 520 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Workspace\n\nMain House\nStudio\nArchive\nMaterials" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 32 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 238, "g": 225, "b": 203, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 76, "g": 56, "b": 41, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "thick" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Taliesin" } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "tintBg": {
+        "id": "tintBg",
+        "effect": "filter.tint",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 173, "g": 92, "b": 68, "a": 255 } } },
+          "strength": { "kind": "literal", "value": { "kind": "number", "value": 0.08 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "edgeSheen": {
+        "id": "edgeSheen",
+        "effect": "shader.edge_sheen",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 209, "g": 133, "b": 92, "a": 255 } } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 0.42 } },
+          "bandWidth": { "kind": "literal", "value": { "kind": "integer", "value": 11 } },
+          "edgeWidth": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.4 } },
+          "cornerBoost": { "kind": "literal", "value": { "kind": "number", "value": 0.16 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "border" }
+      }
+    },
+    "order": ["tintBg", "edgeSheen"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 48, "y": 7 },
+          "source": "mainCard",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "middleRight",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 760 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "spring", "stiffness": 175.0, "damping": 14.0 },
+              "from": { "kind": "offscreen", "direction": "fromRight", "marginCells": 2 },
+              "snap": { "kind": "round" }
+            },
+            "exit": {
+              "duration": { "kind": "milliseconds", "value": 520 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "spring", "stiffness": 220.0, "damping": 16.0 },
+              "to": { "kind": "offscreen", "direction": "fromRight", "marginCells": 2 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

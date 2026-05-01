@@ -1,0 +1,10 @@
+{
+  "id": "physics-spring-elastic",
+  "title": "Physics: Spring Elastic",
+  "card": { "message": "Boing!", "size": [22, 3], "border": "rounded" },
+  "at": "bottomLeft",
+  "lifecycle": {
+    "enter": { "duration": "1s", "route": { "spring": { "stiffness": 180, "damping": 12 } }, "from": "left" },
+    "exit":  { "duration": "600ms", "route": { "spring": { "stiffness": 250, "damping": 8 } }, "to": "left" }
+  }
+}

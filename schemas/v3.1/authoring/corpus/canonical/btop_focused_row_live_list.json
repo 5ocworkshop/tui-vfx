@@ -1,0 +1,91 @@
+{
+  "id": "btop-focused-row-live-list",
+  "version": "3.1",
+  "metadata": {
+    "title": "btop Focused Row (Live List)",
+    "description": "btop-style row focus with V2 separate-field binding form: selected_row_binding names the binding, selected_row carries the default.",
+    "authors": ["corpus"],
+    "tags": ["btop", "focused-row", "separate-field-binding", "live-list"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "  1. First item\n  2. Second item\n  3. Third item\n> 4. SELECTED <\n  5. Fifth item\n  6. Sixth item\n  7. Seventh item\n  8. Eighth item\n  9. Ninth item\n 10. Tenth item" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 22 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 12 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 180, "g": 180, "b": 180, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 20, "g": 22, "b": 28, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "selectedRow": {
+        "id": "selectedRow",
+        "displayName": "Selected row",
+        "description": "Active row for live list focus.",
+        "value": {
+          "kind": "number",
+          "default": { "kind": "number", "value": 4.0 },
+          "range": { "min": 0.0, "max": 9.0 },
+          "allowedValues": [],
+          "unit": null,
+          "semantic": "selectionIndex"
+        },
+        "previewLoopback": { "kind": "literal", "value": { "kind": "number", "value": 4.0 } },
+        "required": false
+      }
+    },
+    "nodes": {
+      "rowGradient": {
+        "id": "rowGradient",
+        "effect": "shader.focused_row_gradient",
+        "inputs": {
+          "selectedRow": { "kind": "signal", "id": "selectedRow", "fallback": { "kind": "number", "value": 4.0 } },
+          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 16 } },
+          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 60, "b": 60, "a": 255 } } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "content", "value": "text" }
+      }
+    },
+    "order": ["rowGradient"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 22,
+      "height": 12,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

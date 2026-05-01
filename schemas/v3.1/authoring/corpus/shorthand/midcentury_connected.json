@@ -1,0 +1,30 @@
+{
+  "id": "midcentury-connected",
+  "title": "Connected (Midcentury Modern)",
+  "card": {
+    "message": "● Connected to server",
+    "size": [34, 3],
+    "fg": [15, 50, 55],
+    "bg": [64, 224, 208],
+    "border": { "type": "rounded", "title": "◉ ONLINE", "titleAlign": "center" }
+  },
+  "at": "topRight",
+  "lifecycle": {
+    "enter": { "duration": "280ms", "easing": "backOut", "route": { "arc": { "bulge": -0.15 } } },
+    "dwell": "2.5s",
+    "exit":  { "duration": "200ms", "easing": "sineIn" }
+  },
+  "effects": [
+    {
+      "shader": "glisten_band",
+      "phase": "enter",
+      "bandWidth": 3,
+      "speed": 1.5,
+      "head": [175, 255, 245],
+      "tail": [100, 240, 225]
+    }
+  ],
+  "transitions": {
+    "exit": { "preset": "fade", "easing": "cubicOut" }
+  }
+}

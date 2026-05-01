@@ -1,0 +1,15 @@
+{
+  "id": "mask-iris",
+  "title": "Mask: Iris Effect",
+  "card": {
+    "message": "Mask: Iris Effect",
+    "size": [35, 5],
+    "fg": "white",
+    "bg": [60, 30, 10],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "iris", "shape": "circle", "softEdge": true, "duration": "2s" },
+    "exit":  { "preset": "iris", "shape": "diamond", "softEdge": true, "duration": "1s" }
+  }
+}

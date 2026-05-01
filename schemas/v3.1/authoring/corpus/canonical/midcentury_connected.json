@@ -1,0 +1,102 @@
+{
+  "id": "midcentury-connected",
+  "version": "3.1",
+  "metadata": {
+    "title": "Connected (Midcentury Modern)",
+    "description": "Atomic link with bordered title, glisten enter, fade exit; canonicalized from V2 spatial_shader-on-style form.",
+    "authors": ["corpus"],
+    "tags": ["notification", "border-title", "glisten"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 280 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2500 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "● Connected to server" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 34 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 15, "g": 50, "b": 55, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 64, "g": 224, "b": 208, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "◉ ONLINE" } },
+        "borderTitlePosition": { "kind": "literal", "value": { "kind": "enum", "value": "top" } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "center" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "glistenEnter": {
+        "id": "glistenEnter",
+        "effect": "shader.glisten_band",
+        "inputs": {
+          "bandWidth": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.5 } },
+          "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
+          "head": { "kind": "literal", "value": { "kind": "color", "value": { "r": 175, "g": 255, "b": 245, "a": 255 } } },
+          "tail": { "kind": "literal", "value": { "kind": "color", "value": { "r": 100, "g": 240, "b": 225, "a": 255 } } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "fadeExit": {
+        "id": "fadeExit",
+        "effect": "opacity.fade",
+        "inputs": {
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } },
+          "easing": { "kind": "literal", "value": { "kind": "enum", "value": "cubicOut" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["glistenEnter", "fadeExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 44, "y": 0 },
+          "source": "mainCard",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "topRight",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 280 },
+              "easing": { "kind": "named", "value": "backOut" },
+              "route": { "kind": "arc", "bulge": -0.15 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

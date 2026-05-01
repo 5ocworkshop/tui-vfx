@@ -1,0 +1,15 @@
+{
+  "id": "filter-dim",
+  "title": "Filter: Dim",
+  "card": {
+    "message": "Filter: Dim Effect",
+    "size": [35, 3],
+    "fg": "#ffffff",
+    "bg": [60, 60, 80],
+    "border": "rounded"
+  },
+  "effects": [
+    { "filter": "dim", "factor": 0.3, "phase": ["enter", "dwell"] },
+    { "filter": "dim", "factor": 0.5, "phase": "exit", "scope": { "channel": "foreground" } }
+  ]
+}

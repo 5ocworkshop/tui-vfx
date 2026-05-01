@@ -1,0 +1,80 @@
+{
+  "id": "filter-dim",
+  "version": "3.1",
+  "metadata": {
+    "title": "Filter: Dim",
+    "description": "Dim filter at enter+dwell on all cells; foreground-only at exit.",
+    "authors": ["corpus"],
+    "tags": ["filter", "dim", "phase-differentiated"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Filter: Dim Effect" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 35 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 60, "b": 80, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "dimAll": {
+        "id": "dimAll",
+        "effect": "filter.dim",
+        "inputs": {
+          "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.3 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter", "dwell"]
+      },
+      "dimFgExit": {
+        "id": "dimFgExit",
+        "effect": "filter.dim",
+        "inputs": {
+          "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.5 } }
+        },
+        "scope": { "kind": "channel", "value": "foreground" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["dimAll", "dimFgExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 35,
+      "height": 3,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

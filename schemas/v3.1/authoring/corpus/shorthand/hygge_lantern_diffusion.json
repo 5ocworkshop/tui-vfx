@@ -1,0 +1,50 @@
+{
+  "id": "hygge-lantern-diffusion",
+  "title": "Hygge Lantern Diffusion",
+  "loop": "4.6s",
+  "card": {
+    "message": "Quiet hours\nLamp mode active",
+    "size": [46, 7],
+    "fg": [236, 226, 208],
+    "bg": [54, 44, 38],
+    "border": { "type": "rounded", "title": " Hygge ", "titleAlign": "left" }
+  },
+  "effects": [
+    {
+      "filter": "subcell_light",
+      "phase": "dwell",
+      "litColor": [242, 222, 196],
+      "unlitColor": [54, 44, 38],
+      "renderMode": "braille",
+      "sampleFrom": "background",
+      "threshold": 0.05,
+      "temporalDitherHz": 1.0,
+      "onlyBlank": true
+    },
+    {
+      "shader": "diffusion",
+      "scope": { "channel": "background" },
+      "source": "topLeft",
+      "color": [242, 222, 196],
+      "radius": 9,
+      "softness": 0.88,
+      "edgeFirmness": 0.22,
+      "intensity": 0.22,
+      "mode": "breath",
+      "driftSpeed": 0.32,
+      "driftAmount": 0.05,
+      "applyTo": "background"
+    },
+    {
+      "shader": "concealed_light",
+      "scope": { "channel": "background" },
+      "color": [236, 210, 176],
+      "source": "top",
+      "spread": 5.0,
+      "edgeWidth": 1,
+      "sourceCutoff": 0.18,
+      "intensity": 0.12,
+      "applyTo": "background"
+    }
+  ]
+}

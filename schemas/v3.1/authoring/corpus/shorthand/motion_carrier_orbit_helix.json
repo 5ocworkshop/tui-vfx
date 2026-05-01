@@ -1,0 +1,27 @@
+{
+  "id": "motion-carrier-orbit-helix",
+  "title": "Motion: Carrier Orbit / Helix",
+  "loop": "1.6s",
+  "card": {
+    "message": "Carrier Orbit\nHelix route",
+    "size": [28, 5],
+    "fg": [235, 245, 255],
+    "bg": [18, 28, 54],
+    "border": "rounded"
+  },
+  "lifecycle": {
+    "enter": {
+      "duration": "1.2s",
+      "easing": "sineInOut",
+      "route": { "helix": { "rotations": 2.0, "radius": 4.0 } },
+      "from": "left"
+    },
+    "dwell": "2s",
+    "exit": {
+      "duration": "900ms",
+      "easing": "sineInOut",
+      "route": { "carrier_orbit": { "rotations": 1.5, "radius": 3.0, "phase": 1.5708, "direction": -1 } },
+      "to": "right"
+    }
+  }
+}

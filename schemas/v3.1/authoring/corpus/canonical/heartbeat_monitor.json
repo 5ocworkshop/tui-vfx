@@ -1,0 +1,89 @@
+{
+  "id": "heartbeat-monitor",
+  "version": "3.1",
+  "metadata": {
+    "title": "Heartbeat Monitor",
+    "description": "Pulse shader on enter, glitch style effect on exit; CRT scanlines throughout.",
+    "authors": ["corpus"],
+    "tags": ["pulse", "glitch", "crt"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1200 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 7000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 850 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Service healthy\nuptime 99.98%" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 38 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "plain" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "pulseEnter": {
+        "id": "pulseEnter",
+        "effect": "shader.pulse",
+        "inputs": {
+          "frequency": { "kind": "literal", "value": { "kind": "number", "value": 2.8 } },
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "crtFilter": {
+        "id": "crtFilter",
+        "effect": "filter.crt",
+        "inputs": {
+          "scanlineStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.45 } },
+          "glow": { "kind": "literal", "value": { "kind": "number", "value": 0.5 } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "glitchExit": {
+        "id": "glitchExit",
+        "effect": "style.glitch",
+        "inputs": {
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 88 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.6 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["pulseEnter", "crtFilter", "glitchExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 38,
+      "height": 4,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

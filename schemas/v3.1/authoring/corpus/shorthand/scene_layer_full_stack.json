@@ -1,0 +1,38 @@
+{
+  "id": "scene-layer-full-stack",
+  "title": "Scene: layer full stack",
+  "size": [40, 12],
+  "bindings": {
+    "cardPhaseOffsetMs": {
+      "type": "number",
+      "range": [0, 2000],
+      "loopback": { "type": "ramp", "start": 0, "end": 2000, "duration": "5s" }
+    }
+  },
+  "scene": [
+    {
+      "id": "card",
+      "card": "STACK",
+      "size": [18, 4],
+      "fg": [228, 232, 236],
+      "bg": [22, 30, 38],
+      "border": "rounded",
+      "at": "center",
+      "shadow": { "color": "#00000096", "offset": [2, 1], "edges": ["right", "bottom"], "soft": true, "source": "border" },
+      "enter": { "duration": "900ms", "easing": "quadOut", "from": "right", "phaseOffset": "$bind:cardPhaseOffsetMs" },
+      "effects": [
+        { "filter": "invert", "scope": { "channel": "foreground" } },
+        { "filter": "dim",    "scope": { "channel": "background" } }
+      ]
+    },
+    {
+      "id": "label",
+      "text": "FOLLOW",
+      "fg": [255, 176, 120],
+      "bg": [18, 26, 34],
+      "bold": true,
+      "at": { "anchor": "topLeft", "sibling": "card", "offset": [2, 1] },
+      "follow": { "sibling": "card", "anchor": "bottomLeft", "lag": "180ms" }
+    }
+  ]
+}

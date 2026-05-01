@@ -1,0 +1,33 @@
+{
+  "id": "signal-wave-envelope",
+  "title": "Signal: Wave with envelope",
+  "card": {
+    "message": "Pattern 2 - sine x adsr",
+    "size": [36, 3],
+    "fg": [220, 240, 230],
+    "bg": [18, 26, 24],
+    "border": "rounded"
+  },
+  "bindings": {
+    "demoAmplitude": {
+      "type": "f32",
+      "range": [0.0, 1.0],
+      "loopback": {
+        "type": "multiply",
+        "a": { "type": "sine", "frequency": 4.0, "amplitude": 0.5, "offset": 0.5 },
+        "b": { "type": "adsr", "attack": 0.2, "decay": 0.1, "sustain": 0.7, "release": 0.3 }
+      }
+    }
+  },
+  "effects": [
+    {
+      "filter": "pill_button",
+      "phase": "dwell",
+      "buttonColor": [90, 200, 160],
+      "bgColor": [18, 26, 24],
+      "edgeWidth": 3,
+      "glisten": true,
+      "progress": "$bind:demoAmplitude"
+    }
+  ]
+}

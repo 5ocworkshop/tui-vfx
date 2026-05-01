@@ -1,0 +1,69 @@
+{
+  "id": "shadow-bottom-centered-inset",
+  "version": "3.1",
+  "metadata": {
+    "title": "Shadow: Bottom centered inset",
+    "description": "Bottom-only shadow with default 2-cell symmetric horizontal inset.",
+    "authors": ["corpus"],
+    "tags": ["shadow", "depth"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1600 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "SHADOW BOTTOM CENTER INSET" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 238, "g": 238, "b": 238, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 34, "g": 46, "b": 60, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 48,
+      "height": 7,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 3, "y": 1 },
+          "source": "mainCard",
+          "surface": {
+            "shadow": {
+              "color": { "r": 0, "g": 0, "b": 0, "a": 170 },
+              "offsetX": 0,
+              "offsetY": 1,
+              "falloffX": 2,
+              "falloffY": 0,
+              "edges": ["bottom"],
+              "softEdges": true,
+              "sourceRegion": "border",
+              "compositeMode": "blendUnderlying",
+              "style": { "kind": "solid" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

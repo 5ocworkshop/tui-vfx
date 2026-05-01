@@ -1,0 +1,20 @@
+{
+  "id": "chamfered-corners",
+  "title": "Chamfered Corners Demo",
+  "card": {
+    "message": "Corners clipped",
+    "size": [24, 4],
+    "fg": [70, 130, 180],
+    "bg": [20, 30, 50],
+    "border": {
+      "frame": {
+        "corners": ["◢", "◣", "◥", "◤"],
+        "edges":   ["▀", "█", "▄", "█"]
+      }
+    }
+  },
+  "at": "topRight",
+  "transitions": {
+    "enter": { "preset": "wipe", "direction": "leftToRight", "duration": "500ms" }
+  }
+}

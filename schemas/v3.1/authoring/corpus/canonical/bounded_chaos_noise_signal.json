@@ -1,0 +1,101 @@
+{
+  "id": "signal-bounded-chaos",
+  "version": "3.1",
+  "metadata": {
+    "title": "Signal: Bounded Chaos (clamp perlin)",
+    "description": "Glisten-band sweep speed driven by clamp(perlin) — organic variation kept in usable range.",
+    "authors": ["corpus"],
+    "tags": ["signal", "perlin", "clamp", "noise"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 800 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 800 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Pattern 3 - clamp perlin" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 215, "b": 0, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 50, "b": 30, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "demoSpeed": {
+        "id": "demoSpeed",
+        "displayName": "Demo speed",
+        "description": "Glisten-band sweep speed multiplier.",
+        "value": {
+          "kind": "number",
+          "default": { "kind": "number", "value": 1.0 },
+          "range": null,
+          "allowedValues": [],
+          "unit": null,
+          "semantic": "speed"
+        },
+        "previewLoopback": {
+          "kind": "numericSignal",
+          "expression": {
+            "type": "clamp",
+            "signal": { "type": "perlin", "seed": 42, "scale": 0.7, "amplitude": 1.0, "octaves": 2, "persistence": 0.5 },
+            "min": 0.4,
+            "max": 1.8
+          },
+          "fallback": { "kind": "number", "value": 1.0 }
+        },
+        "required": false
+      }
+    },
+    "nodes": {
+      "glisten": {
+        "id": "glisten",
+        "effect": "shader.glisten_band",
+        "inputs": {
+          "head": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+          "tail": { "kind": "literal", "value": { "kind": "color", "value": { "r": 200, "g": 180, "b": 100, "a": 255 } } },
+          "speed": { "kind": "signal", "id": "demoSpeed", "fallback": { "kind": "number", "value": 1.0 } },
+          "bandWidth": { "kind": "literal", "value": { "kind": "integer", "value": 6 } },
+          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "forward" } },
+          "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 30.0 } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["glisten"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 44,
+      "height": 5,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "transition-crossfade",
+  "version": "3.1",
+  "metadata": {
+    "title": "Transition: Crossfade (relation.* — schema-faith demonstrator)",
+    "description": "Forward-looking: relation.crossfade canonicalizes a between-surface blend. Two-subject — prior surface fades out as next fades in.",
+    "authors": ["corpus"],
+    "tags": ["transition", "crossfade", "relation", "schema-faith"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Replaced — crossfade demonstrator" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 38 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "transitions": {
+    "enterCrossfade": {
+      "id": "enterCrossfade",
+      "intent": { "kind": "preset", "preset": "crossfade" },
+      "subjects": {
+        "from": { "kind": "previous" },
+        "to": { "kind": "scene", "id": "mainScene" }
+      },
+      "timing": {
+        "duration": { "kind": "milliseconds", "value": 300 },
+        "easing": { "kind": "named", "value": "linear" }
+      },
+      "activePhases": ["enter"],
+      "tracks": [
+        {
+          "kind": "relation.crossfade",
+          "from": "from",
+          "to": "to",
+          "easing": { "kind": "named", "value": "linear" }
+        }
+      ],
+      "interruption": "snapToEnd",
+      "reducedMotion": { "policy": "instant" }
+    }
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 38,
+      "height": 3,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

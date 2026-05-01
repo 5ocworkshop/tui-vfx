@@ -1,0 +1,72 @@
+{
+  "id": "motion-carrier-orbit-helix",
+  "version": "3.1",
+  "metadata": {
+    "title": "Motion: Carrier Orbit / Helix",
+    "description": "Helix route on enter, mirror carrier_orbit on exit.",
+    "authors": ["corpus"],
+    "tags": ["motion", "route", "helix"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 1600 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1200 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Carrier Orbit\nHelix route" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 28 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 235, "g": 245, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 28, "b": 54, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 28,
+      "height": 5,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 1200 },
+              "easing": { "kind": "named", "value": "sineInOut" },
+              "route": { "kind": "helix", "rotations": 2.0, "radius": 4.0, "direction": 1.0 },
+              "from": { "kind": "offscreen", "direction": "fromLeft" },
+              "to": { "kind": "anchor", "anchor": "center" },
+              "snap": { "kind": "round" }
+            },
+            "exit": {
+              "duration": { "kind": "milliseconds", "value": 900 },
+              "easing": { "kind": "named", "value": "sineInOut" },
+              "route": { "kind": "carrierOrbit", "rotations": 1.5, "radius": 3.0, "phase": 1.5708, "direction": -1.0 },
+              "to": { "kind": "offscreen", "direction": "fromRight" },
+              "snap": { "kind": "round" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

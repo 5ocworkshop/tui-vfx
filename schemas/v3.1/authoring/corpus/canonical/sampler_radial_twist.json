@@ -1,0 +1,71 @@
+{
+  "id": "sampler-radial-twist",
+  "version": "3.1",
+  "metadata": {
+    "title": "Sampler: Radial Twist",
+    "description": "RadialTwist sampler — text moves through center-weighted vortex over transparent bg.",
+    "authors": ["corpus"],
+    "tags": ["sampler", "radial_twist", "vortex"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 2200 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Radial Twist\nText follows a vortex\nBasic text-only path" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 11 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 225, "g": 245, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 0, "a": 0 } } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "twist": {
+        "id": "twist",
+        "effect": "sampler.radial_twist",
+        "inputs": {
+          "twist": { "kind": "literal", "value": { "kind": "number", "value": 1.6 } },
+          "center": { "kind": "literal", "value": { "kind": "enum", "value": "center" } },
+          "radiusFloor": { "kind": "literal", "value": { "kind": "number", "value": 0.08 } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["twist"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 44,
+      "height": 11,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

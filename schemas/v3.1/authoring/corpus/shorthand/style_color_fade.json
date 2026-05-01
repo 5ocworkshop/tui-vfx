@@ -1,0 +1,15 @@
+{
+  "id": "style-color-fade",
+  "title": "Style: Color Fade",
+  "card": {
+    "message": "Style: Color Fade",
+    "size": [39, 3],
+    "fg": "white",
+    "bg": [60, 20, 80],
+    "border": "rounded"
+  },
+  "effects": [
+    { "style": "color_fade", "phase": "enter", "colorSpace": "rgb", "target": [255, 200, 50] },
+    { "style": "color_fade", "phase": "exit",  "colorSpace": "hsl", "target": [50, 50, 100] }
+  ]
+}

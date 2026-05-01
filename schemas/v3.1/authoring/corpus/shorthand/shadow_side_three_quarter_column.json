@@ -1,0 +1,21 @@
+{
+  "id": "shadow-side-three-quarter-column",
+  "title": "Shadow: 3/4 Side Column",
+  "card": {
+    "message": "SHADOW: 3/4 Side Column",
+    "size": [34, 5],
+    "fg": [238, 238, 238],
+    "bg": [34, 46, 60],
+    "border": "rounded",
+    "shadow": {
+      "color": "#000000af",
+      "offset": [1, 1],
+      "edges": ["right", "bottom"],
+      "inset": [0, 1],
+      "falloff": [2, 1],
+      "sideCoverage": "6/8",
+      "soft": true,
+      "compositeMode": "glyphOverlay"
+    }
+  }
+}

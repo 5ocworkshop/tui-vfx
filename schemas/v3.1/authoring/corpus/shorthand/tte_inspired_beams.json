@@ -1,0 +1,57 @@
+{
+  "id": "tte-inspired-beams",
+  "title": "TTE-inspired Beams (dual-axis)",
+  "card": {
+    "message": "TerminalTextEffects beams parity",
+    "size": [80, 25],
+    "fg": "white",
+    "bg": [40, 42, 54]
+  },
+  "lifecycle": { "enter": "8s", "dwell": "10m", "exit": "400ms" },
+  "effects": [
+    {
+      "shader": "linear_gradient",
+      "stops": [[0, [153, 153, 153]], [0.5, [0, 125, 153]], [1, [83, 0, 83]]],
+      "angle": 90,
+      "applyTo": "foreground"
+    },
+    {
+      "filter": "glyph_timeline",
+      "phase": "enter",
+      "applyTo": "foreground",
+      "frames": [
+        { "glyph": "▂", "fg": "white", "ticks": 1 },
+        { "glyph": "▁", "fg": "white", "ticks": 1 },
+        { "fg": [130, 145, 170], "ticks": 1 }
+      ],
+      "trigger": {
+        "type": "poissonBurst", "axis": "row",
+        "batchPeriod": "6f", "batchSize": [1, 3],
+        "laneSpeed": [11, 29],
+        "fps": 60,
+        "jitter": "0.05s",
+        "seeds": { "shuffle": 11, "batch": 23, "speed": 41, "direction": 71, "jitter": 81 }
+      },
+      "onComplete": "hide"
+    },
+    {
+      "filter": "glyph_timeline",
+      "phase": "enter",
+      "applyTo": "foreground",
+      "frames": [
+        { "glyph": "▌", "fg": "white", "ticks": 1 },
+        { "glyph": "▏", "fg": "white", "ticks": 1 },
+        { "fg": [130, 145, 170], "ticks": 1 }
+      ],
+      "trigger": {
+        "type": "poissonBurst", "axis": "column",
+        "batchPeriod": "6f", "batchSize": [1, 4],
+        "laneSpeed": [7.5, 11],
+        "fps": 60,
+        "jitter": "0.05s",
+        "seeds": { "shuffle": 13, "batch": 29, "speed": 47, "direction": 73, "jitter": 83 }
+      },
+      "onComplete": "hide"
+    }
+  ]
+}

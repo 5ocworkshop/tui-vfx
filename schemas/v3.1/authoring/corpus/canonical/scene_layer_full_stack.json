@@ -1,0 +1,173 @@
+{
+  "id": "scene-layer-full-stack",
+  "version": "3.1",
+  "metadata": {
+    "title": "Scene: layer full stack",
+    "description": "Card layer with shadow + channel-scoped pipeline + binding-driven phase offset; sibling label layer follows with lag.",
+    "authors": ["corpus"],
+    "tags": ["scene", "shadow", "channel-scope", "sibling-motion", "binding"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "cardSource": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "STACK" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 18 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 22, "g": 30, "b": 38, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    },
+    "labelText": {
+      "source": "source.text",
+      "inputs": {
+        "text": { "kind": "literal", "value": { "kind": "text", "value": "FOLLOW" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "cardPhaseOffsetMs": {
+        "id": "cardPhaseOffsetMs",
+        "displayName": "Card phase offset (ms)",
+        "description": "Runtime offset for the card layer's enter motion.",
+        "value": {
+          "kind": "number",
+          "default": { "kind": "number", "value": 0.0 },
+          "range": { "min": 0.0, "max": 2000.0 },
+          "allowedValues": [],
+          "unit": null,
+          "semantic": "phaseOffsetMs"
+        },
+        "previewLoopback": {
+          "kind": "numericSignal",
+          "expression": { "type": "ramp", "start": 0.0, "end": 2000.0, "duration": 5.0 },
+          "fallback": { "kind": "number", "value": 0.0 }
+        },
+        "required": false
+      }
+    },
+    "nodes": {
+      "invertFg": {
+        "id": "invertFg",
+        "effect": "filter.invert",
+        "inputs": {},
+        "scope": { "kind": "channel", "value": "foreground" }
+      },
+      "dimBg": {
+        "id": "dimBg",
+        "effect": "filter.dim",
+        "inputs": {},
+        "scope": { "kind": "channel", "value": "background" }
+      }
+    },
+    "order": ["invertFg", "dimBg"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 40,
+      "height": 12,
+      "elements": [
+        {
+          "id": "card",
+          "layer": "card",
+          "zIndex": 0,
+          "placement": { "x": 11, "y": 4 },
+          "source": "cardSource",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "center",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 900 },
+              "easing": { "kind": "named", "value": "quadOut" },
+              "route": { "kind": "linear" },
+              "from": { "kind": "offscreen", "direction": "fromRight" },
+              "to": { "kind": "anchor", "anchor": "center" },
+              "phaseOffset": {
+                "kind": "signal",
+                "id": "cardPhaseOffsetMs",
+                "fallback": { "kind": "number", "value": 0.0 }
+              },
+              "snap": { "kind": "round" }
+            }
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "surface": {
+            "baseStyle": {
+              "foreground": { "type": "rgb", "r": 228, "g": 232, "b": 236 },
+              "background": { "type": "rgb", "r": 22, "g": 30, "b": 38 }
+            },
+            "shadow": {
+              "color": { "r": 0, "g": 0, "b": 0, "a": 150 },
+              "offsetX": 2,
+              "offsetY": 1,
+              "edges": ["right", "bottom"],
+              "softEdges": true,
+              "sourceRegion": "border",
+              "compositeMode": "glyphOverlay",
+              "style": { "kind": "solid" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        },
+        {
+          "id": "label",
+          "layer": "label",
+          "zIndex": 1,
+          "placement": { "x": 13, "y": 9 },
+          "source": "labelText",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "topLeft",
+            "offsetRows": 1,
+            "offsetColumns": 2,
+            "siblingLayer": "card"
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 1000 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "linear" },
+              "follow": { "siblingLayer": "card", "targetAnchor": "bottomLeft", "lagMs": 180 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "surface": {
+            "baseStyle": {
+              "foreground": { "type": "rgb", "r": 255, "g": 176, "b": 120 },
+              "background": { "type": "rgb", "r": 18, "g": 26, "b": 34 },
+              "addedModifiers": ["bold"]
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "skipTransparentEmpty",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

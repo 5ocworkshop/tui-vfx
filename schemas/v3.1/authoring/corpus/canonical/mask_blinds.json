@@ -1,0 +1,82 @@
+{
+  "id": "mask-blinds",
+  "version": "3.1",
+  "metadata": {
+    "title": "Mask: Blinds Effect",
+    "description": "Blinds mask — horizontal slats on enter, vertical slats on exit.",
+    "authors": ["corpus"],
+    "tags": ["mask", "blinds", "transition-eligible"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Mask: Blinds Effect\nSlats reveal in bands" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 33 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 0, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 50, "g": 50, "b": 20, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "blindsEnter": {
+        "id": "blindsEnter",
+        "effect": "mask.blinds",
+        "inputs": {
+          "orientation": { "kind": "literal", "value": { "kind": "enum", "value": "horizontal" } },
+          "count": { "kind": "literal", "value": { "kind": "integer", "value": 4 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "blindsExit": {
+        "id": "blindsExit",
+        "effect": "mask.blinds",
+        "inputs": {
+          "orientation": { "kind": "literal", "value": { "kind": "enum", "value": "vertical" } },
+          "count": { "kind": "literal", "value": { "kind": "integer", "value": 6 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["blindsEnter", "blindsExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 33,
+      "height": 9,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

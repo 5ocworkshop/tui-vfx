@@ -1,0 +1,12 @@
+{
+  "id": "transition-braille",
+  "title": "Transition: Braille",
+  "card": {
+    "message": "Braille reveal — visibility.braille",
+    "size": [40, 3],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "braille", "subcellOrder": "raster", "seed": 42, "duration": "600ms" }
+  }
+}

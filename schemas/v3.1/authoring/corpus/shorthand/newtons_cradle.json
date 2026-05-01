@@ -1,0 +1,38 @@
+{
+  "id": "newtons-cradle",
+  "title": "Newton's Cradle",
+  "size": [32, 14],
+  "loop": "2.2s",
+  "scene": [
+    {
+      "id": "frame",
+      "text": "╔══════════════════════════════╗\n║                              ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║       ●   ●   ●              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n╚══════════════════════════════╝",
+      "fg": [200, 215, 232],
+      "bg": [14, 18, 26],
+      "at": [0, 0]
+    },
+    {
+      "id": "ballLeft",
+      "text": "●",
+      "fg": [240, 220, 160],
+      "bold": true,
+      "at": [3, 7],
+      "enter": {
+        "duration": "2.2s",
+        "route": { "composed": { "route": { "arc": { "bulge": 2.0 } }, "dynamics": [{ "pendulum": { "amplitude": 3, "oscillations": 1, "damping": 0 } }] } }
+      }
+    },
+    {
+      "id": "ballRight",
+      "text": "●",
+      "fg": [240, 220, 160],
+      "bold": true,
+      "at": [19, 7],
+      "enter": {
+        "duration": "2.2s",
+        "route": { "composed": { "route": { "arc": { "bulge": 2.0 } }, "dynamics": [{ "pendulum": { "amplitude": 3, "oscillations": 1, "damping": 0 } }] } },
+        "follow": { "lag": "1100ms" }
+      }
+    }
+  ]
+}

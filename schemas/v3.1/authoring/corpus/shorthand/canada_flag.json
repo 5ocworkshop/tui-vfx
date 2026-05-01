@@ -1,0 +1,44 @@
+{
+  "id": "canada-flag",
+  "title": "Canadian Flag (Runtime Wave)",
+  "size": [40, 14],
+  "assets": {
+    "canadaFlagBase": {
+      "kind": "brailleDotfield",
+      "format": "tui-vfx.braille_flag_asset.v1",
+      "path": "/usr/projects/tui-vfx-recipes/recipes/canada_flag/assets/canada_flag_dots.json"
+    }
+  },
+  "bindings": {
+    "wave_speed": {
+      "type": "number",
+      "range": [0, 4],
+      "loopback": { "type": "ramp", "start": 0.5, "end": 2.0, "duration": "4s" }
+    }
+  },
+  "scene": [
+    {
+      "id": "canadaFlag",
+      "procedural": {
+        "id": "braille_flag_field",
+        "size": [40, 14],
+        "params": {
+          "layout": { "width_cells": 40, "flag_height_cells": 10, "overscan_rows": 2 },
+          "wave": {
+            "speed": "$bind:wave_speed",
+            "primary_cycles": 6.0,
+            "primary_rate": 2.4,
+            "secondary_cycles": 12.0,
+            "secondary_rate": 4.0,
+            "secondary_scale": 0.3,
+            "max_amplitude": 0.18
+          },
+          "asset": "$asset:canadaFlagBase"
+        }
+      },
+      "at": "center",
+      "enter": { "duration": "667ms", "easing": "quadOut", "offset": "200ms" },
+      "exit":  { "duration": "500ms", "easing": "quadIn" }
+    }
+  ]
+}

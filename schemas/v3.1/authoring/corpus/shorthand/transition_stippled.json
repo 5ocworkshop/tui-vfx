@@ -1,0 +1,12 @@
+{
+  "id": "transition-stippled",
+  "title": "Transition: Stippled",
+  "card": {
+    "message": "Stippled reveal — visibility.stippled",
+    "size": [40, 3],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "stippled", "pattern": "ordered", "density": 0.5, "seed": 42, "duration": "500ms" }
+  }
+}

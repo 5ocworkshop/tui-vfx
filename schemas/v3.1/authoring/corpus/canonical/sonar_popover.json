@@ -1,0 +1,138 @@
+{
+  "id": "sonar-popover",
+  "version": "3.1",
+  "metadata": {
+    "title": "Sonar Popover / Anchored Context Menu",
+    "description": "Anchored popover: radial mask reveal from origin, cell-scoped radar shader at anchor, row-range focused gradient, bracket emphasis.",
+    "authors": ["corpus"],
+    "tags": ["popover", "radial", "radar", "bracket-emphasis", "binding"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 180 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 120 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "  Open in editor   \n  Copy path        \n  Reveal in tree   \n  Properties…      " } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 24 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 6 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 226, "g": 232, "b": 244, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 22, "b": 30, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "activeIndex": {
+        "id": "activeIndex",
+        "displayName": "Active row index",
+        "description": "Index of the popover row treated as active.",
+        "value": {
+          "kind": "number",
+          "default": { "kind": "number", "value": 1.0 },
+          "range": { "min": 0.0, "max": 4.0 },
+          "allowedValues": [],
+          "unit": null,
+          "semantic": "selectionIndex"
+        },
+        "previewLoopback": {
+          "kind": "numericSignal",
+          "expression": { "type": "ramp", "start": 0.0, "end": 4.0, "duration": 4.0 },
+          "fallback": { "kind": "number", "value": 1.0 }
+        },
+        "required": false
+      }
+    },
+    "nodes": {
+      "irisIn": {
+        "id": "irisIn",
+        "effect": "mask.radial",
+        "inputs": {
+          "origin": { "kind": "literal", "value": { "kind": "enum", "value": "topLeft" } },
+          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "radar": {
+        "id": "radar",
+        "effect": "shader.radar",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 120, "g": 220, "b": 255, "a": 255 } } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 2.0 } },
+          "tailLength": { "kind": "literal", "value": { "kind": "number", "value": 1.4 } }
+        },
+        "scope": { "kind": "cell", "x": 0, "y": 0 }
+      },
+      "rowGradient": {
+        "id": "rowGradient",
+        "effect": "shader.focused_row_gradient",
+        "inputs": {
+          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 80, "g": 160, "b": 220, "a": 255 } } },
+          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 22, "b": 30, "a": 255 } } },
+          "selectedRow": { "kind": "signal", "id": "activeIndex", "fallback": { "kind": "number", "value": 1.0 } },
+          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+        },
+        "scope": { "kind": "rowRange", "start": 1, "end": 5 }
+      },
+      "bracket": {
+        "id": "bracket",
+        "effect": "filter.bracket_emphasis",
+        "inputs": {
+          "left": { "kind": "literal", "value": { "kind": "string", "value": "▸" } },
+          "right": { "kind": "literal", "value": { "kind": "string", "value": "◂" } },
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 200, "g": 230, "b": 255, "a": 255 } } },
+          "bgColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 22, "b": 30, "a": 255 } } },
+          "progress": { "kind": "literal", "value": { "kind": "number", "value": 0.85 } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["irisIn", "radar", "rowGradient", "bracket"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 24,
+      "height": 6,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "surface": {
+            "shadow": {
+              "color": { "r": 0, "g": 0, "b": 0, "a": 150 },
+              "offsetX": 2,
+              "offsetY": 1,
+              "edges": ["right", "bottom"],
+              "softEdges": true,
+              "sourceRegion": "border",
+              "compositeMode": "glyphOverlay",
+              "style": { "kind": "gradient", "layers": 2 }
+            }
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

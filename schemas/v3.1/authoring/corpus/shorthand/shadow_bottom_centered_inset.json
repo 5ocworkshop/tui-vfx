@@ -1,0 +1,18 @@
+{
+  "id": "shadow-bottom-centered-inset",
+  "title": "Shadow: Bottom centered inset",
+  "card": {
+    "message": "SHADOW BOTTOM CENTER INSET",
+    "size": [42, 5],
+    "fg": [238, 238, 238],
+    "bg": [34, 46, 60],
+    "border": "rounded",
+    "shadow": {
+      "color": "#000000aa",
+      "offset": [0, 1],
+      "edges": "bottom",
+      "falloff": [2, 0],
+      "soft": true
+    }
+  }
+}

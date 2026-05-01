@@ -1,0 +1,122 @@
+{
+  "id": "tte-inspired-beams",
+  "version": "3.1",
+  "metadata": {
+    "title": "TTE-inspired Beams (dual-axis)",
+    "description": "Linear-gradient shader plus row + column glyph_timeline filters with poisson_burst triggers for stochastic beam scan.",
+    "authors": ["corpus"],
+    "tags": ["tte-parity", "glyph-timeline", "poisson-burst", "dual-axis"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "TerminalTextEffects beams parity" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 80 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 25 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 40, "g": 42, "b": 54, "a": 255 } } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "gradient": {
+        "id": "gradient",
+        "effect": "shader.linear_gradient",
+        "inputs": {
+          "stops": { "kind": "literal", "value": { "kind": "structured", "value": [
+            [0.0, { "type": "rgb", "r": 153, "g": 153, "b": 153 }],
+            [0.5, { "type": "rgb", "r": 0, "g": 125, "b": 153 }],
+            [1.0, { "type": "rgb", "r": 83, "g": 0, "b": 83 }]
+          ]}},
+          "space": { "kind": "literal", "value": { "kind": "enum", "value": "rgb" } },
+          "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 90.0 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "rowBeams": {
+        "id": "rowBeams",
+        "effect": "filter.glyph_timeline",
+        "inputs": {
+          "frames": { "kind": "literal", "value": { "kind": "structured", "value": [
+            { "glyph": "▂", "fg": { "type": "rgb", "r": 255, "g": 255, "b": 255 }, "duration_ticks": 1 },
+            { "glyph": "▁", "fg": { "type": "rgb", "r": 255, "g": 255, "b": 255 }, "duration_ticks": 1 },
+            { "fg": { "type": "rgb", "r": 130, "g": 145, "b": 170 }, "duration_ticks": 1 }
+          ]}},
+          "trigger": { "kind": "literal", "value": { "kind": "structured", "value": {
+            "kind": "poisson_burst", "lane_axis": "row",
+            "batch_period_frames": 6, "batch_size_min": 1, "batch_size_max": 3,
+            "lane_speed_min": 11.0, "lane_speed_max": 29.0,
+            "shuffle_seed": 11, "batch_seed": 23, "speed_seed": 41,
+            "fps": 60.0, "direction_seed": 71,
+            "jitter": { "seed": 81, "amount_seconds": 0.05 }
+          }}},
+          "onComplete": { "kind": "literal", "value": { "kind": "enum", "value": "hide" } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "colBeams": {
+        "id": "colBeams",
+        "effect": "filter.glyph_timeline",
+        "inputs": {
+          "frames": { "kind": "literal", "value": { "kind": "structured", "value": [
+            { "glyph": "▌", "fg": { "type": "rgb", "r": 255, "g": 255, "b": 255 }, "duration_ticks": 1 },
+            { "glyph": "▏", "fg": { "type": "rgb", "r": 255, "g": 255, "b": 255 }, "duration_ticks": 1 },
+            { "fg": { "type": "rgb", "r": 130, "g": 145, "b": 170 }, "duration_ticks": 1 }
+          ]}},
+          "trigger": { "kind": "literal", "value": { "kind": "structured", "value": {
+            "kind": "poisson_burst", "lane_axis": "column",
+            "batch_period_frames": 6, "batch_size_min": 1, "batch_size_max": 4,
+            "lane_speed_min": 7.5, "lane_speed_max": 11.0,
+            "shuffle_seed": 13, "batch_seed": 29, "speed_seed": 47,
+            "fps": 60.0, "direction_seed": 73,
+            "jitter": { "seed": 83, "amount_seconds": 0.05 }
+          }}},
+          "onComplete": { "kind": "literal", "value": { "kind": "enum", "value": "hide" } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      }
+    },
+    "order": ["gradient", "rowBeams", "colBeams"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 25,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

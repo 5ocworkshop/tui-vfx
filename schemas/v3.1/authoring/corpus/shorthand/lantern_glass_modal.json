@@ -1,0 +1,53 @@
+{
+  "id": "lantern-glass-modal",
+  "title": "Lantern-Glass Modal",
+  "card": {
+    "message": "Lantern-Glass Modal\nFrosted shell · soft inner light\nPress Enter to confirm",
+    "size": [46, 7],
+    "fg": [232, 238, 248],
+    "bg": [22, 28, 40],
+    "border": { "type": "rounded", "title": "Modal", "titleAlign": "center" },
+    "shadow": { "color": "#000000aa", "offset": [3, 2], "edges": ["right", "bottom"], "soft": true, "style": "gradient:4" }
+  },
+  "lifecycle": { "enter": "260ms", "dwell": "6s", "exit": "180ms" },
+  "effects": [
+    {
+      "shader": "concealed_light",
+      "scope": { "channel": "background" },
+      "color": [236, 220, 188],
+      "source": "left",
+      "spread": 6,
+      "intensity": 0.30
+    },
+    {
+      "shader": "diffusion",
+      "source": "center",
+      "color": [200, 220, 245],
+      "radius": 8,
+      "applyTo": "background"
+    },
+    {
+      "filter": "subcell_light",
+      "litColor": [220, 232, 250],
+      "unlitColor": [28, 34, 48],
+      "renderMode": "horizontal",
+      "sampleFrom": "background",
+      "threshold": 0.05,
+      "onlyBlank": true
+    },
+    {
+      "shader": "colored_overlay",
+      "pattern": { "type": "edgeShadow", "edges": ["bottom", "right"], "radius": 3, "falloff": "quadratic" },
+      "color": "#000000",
+      "intensity": 0.55
+    },
+    {
+      "shader": "bevel",
+      "scope": { "channel": "background" },
+      "lightDirection": "topLeft",
+      "highlightIntensity": 0.22,
+      "shadowIntensity": 0.28,
+      "edgeWidth": 1
+    }
+  ]
+}

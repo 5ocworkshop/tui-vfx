@@ -1,0 +1,75 @@
+{
+  "id": "physics-friction-slide",
+  "version": "3.1",
+  "metadata": {
+    "title": "Physics: Friction Slide (route-as-primitive)",
+    "description": "Friction route — momentum-based deceleration. Single drag parameter.",
+    "authors": ["corpus"],
+    "tags": ["physics", "friction", "route-primitive", "deceleration"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 700 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Sliding in..." } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 32 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "plain" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 48, "y": 0 },
+          "source": "mainCard",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "topRight",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 900 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "friction", "drag": 3.5 },
+              "from": { "kind": "offscreen", "direction": "fromRight", "marginCells": 10 },
+              "snap": { "kind": "round" }
+            },
+            "exit": {
+              "duration": { "kind": "milliseconds", "value": 700 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "friction", "drag": 5.0 },
+              "to": { "kind": "offscreen", "direction": "fromRight", "marginCells": 8 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

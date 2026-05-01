@@ -1,0 +1,19 @@
+{
+  "id": "center-expand",
+  "title": "Center Expand",
+  "card": {
+    "message": "Center expand/collapse",
+    "size": [42, 5],
+    "fg": "white",
+    "bg": [12, 14, 20],
+    "border": "rounded"
+  },
+  "lifecycle": {
+    "enter": { "duration": "550ms", "easing": "quadOut", "scale": { "from": "minimum", "origin": "center", "min": [3, 1] } },
+    "exit":  { "duration": "650ms", "easing": "quadIn",  "scale": { "to":   "minimum", "origin": "center", "min": [3, 1] } }
+  },
+  "transitions": {
+    "enter": { "preset": "fade" },
+    "exit":  { "preset": "fade" }
+  }
+}

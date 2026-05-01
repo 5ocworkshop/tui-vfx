@@ -1,0 +1,18 @@
+{
+  "id": "heartbeat-monitor",
+  "title": "Heartbeat Monitor",
+  "card": {
+    "message": "Service healthy\nuptime 99.98%",
+    "size": [38, 4],
+    "fg": "light_cyan",
+    "bg": "black",
+    "border": "plain",
+    "bold": true
+  },
+  "at": "topCenter",
+  "effects": [
+    { "shader": "pulse", "phase": "enter", "frequency": 2.8, "color": "white" },
+    { "filter": "crt", "scanlineStrength": 0.45, "glow": 0.5 },
+    { "style": "glitch", "phase": "exit", "seed": 88, "intensity": 0.6 }
+  ]
+}

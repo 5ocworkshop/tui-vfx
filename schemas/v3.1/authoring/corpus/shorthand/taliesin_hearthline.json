@@ -1,0 +1,30 @@
+{
+  "id": "taliesin-hearthline",
+  "title": "Taliesin · Hearthline (Drawer)",
+  "loop": "3.6s",
+  "card": {
+    "message": "Workspace\n\nMain House\nStudio\nArchive\nMaterials",
+    "size": [32, 9],
+    "fg": [238, 225, 203],
+    "bg": [76, 56, 41],
+    "border": { "type": "thick", "title": "Taliesin", "titleAlign": "left" }
+  },
+  "at": "middleRight",
+  "lifecycle": {
+    "enter": { "duration": "760ms", "route": { "spring": { "stiffness": 175, "damping": 14 } }, "from": "right" },
+    "exit":  { "duration": "520ms", "route": { "spring": { "stiffness": 220, "damping": 16 } }, "to": "right" }
+  },
+  "effects": [
+    { "filter": "tint", "phase": "dwell", "color": [173, 92, 68], "strength": 0.08, "applyTo": "background" },
+    {
+      "shader": "edge_sheen",
+      "scope": { "role": "border" },
+      "color": [209, 133, 92],
+      "speed": 0.42,
+      "bandWidth": 11,
+      "intensity": 0.4,
+      "cornerBoost": 0.16,
+      "applyTo": "foreground"
+    }
+  ]
+}

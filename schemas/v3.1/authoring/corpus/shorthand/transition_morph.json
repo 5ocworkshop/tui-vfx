@@ -1,0 +1,12 @@
+{
+  "id": "transition-morph",
+  "title": "Transition: Morph",
+  "card": {
+    "message": "Morphed — relation.morph demonstrator",
+    "size": [40, 3],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "morph", "match": "glyph", "duration": "600ms", "easing": "cubicInOut" }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "id": "event-driven-dwell-bool",
+  "version": "3.1",
+  "metadata": {
+    "title": "Event-Driven Dwell — Bool Binding",
+    "description": "Dwell phase exits when user_dismissed becomes true; falls back to 5s.",
+    "authors": ["corpus"],
+    "tags": ["binding", "dwell", "event-driven"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1500 } } },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "kind": "untilTruthy",
+            "binding": "userDismissed",
+            "fallback": { "kind": "milliseconds", "value": 5000 }
+          }
+        }
+      },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 800 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Event-Driven Dwell\nWaits for user_dismissed=true" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 238, "g": 238, "b": 238, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 28, "g": 36, "b": 44, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "userDismissed": {
+        "id": "userDismissed",
+        "displayName": "User dismissed",
+        "description": "Set true to advance dwell to exit.",
+        "value": {
+          "kind": "boolean",
+          "default": { "kind": "boolean", "value": false },
+          "range": null,
+          "allowedValues": [],
+          "unit": null,
+          "semantic": "dismiss"
+        },
+        "previewLoopback": { "kind": "literal", "value": { "kind": "boolean", "value": false } },
+        "required": false
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 44,
+      "height": 5,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

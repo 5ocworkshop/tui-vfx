@@ -1,0 +1,30 @@
+{
+  "id": "content-glyph-particles-base-spray",
+  "title": "Content: Glyph Particles Base Spray",
+  "card": {
+    "message": "SPARK",
+    "size": [16, 3],
+    "fg": [230, 244, 255],
+    "bg": [5, 10, 20],
+    "border": "rounded",
+    "glyphEmitters": [
+      {
+        "origin": "authored",
+        "spawnCount": 1,
+        "glyphs": ["*", "+", "·"],
+        "colors": ["#50dcff", "#aaffe6"],
+        "from": { "offsetCells": [1, 0] },
+        "to": "authored",
+        "duration": "800ms",
+        "easing": "sineInOut",
+        "stagger": "45ms",
+        "lifetime": "900ms",
+        "affect": "nonEmpty",
+        "seed": 11
+      }
+    ]
+  },
+  "effects": [
+    { "filter": "invert", "applyTo": "foreground", "scope": { "content": "text" } }
+  ]
+}

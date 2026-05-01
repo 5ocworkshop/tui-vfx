@@ -1,0 +1,14 @@
+{
+  "id": "sampler-gravity",
+  "title": "Sampler: Gravity",
+  "card": {
+    "message": "GRAV MIX",
+    "size": [24, 5],
+    "fg": "white",
+    "bg": [30, 30, 40]
+  },
+  "effects": [
+    { "sampler": "gravity", "axis": "y", "acceleration": 4.0, "terminalVelocity": 8.0 },
+    { "filter": "greyscale", "strength": 0.4, "applyTo": "foreground" }
+  ]
+}

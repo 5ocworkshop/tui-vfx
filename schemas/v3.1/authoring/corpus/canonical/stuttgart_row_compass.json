@@ -1,0 +1,94 @@
+{
+  "id": "stuttgart-row-compass",
+  "version": "3.1",
+  "metadata": {
+    "title": "Stuttgart · Row Compass (subtle-light)",
+    "description": "Row-list focus with focused_row_gradient + wayfinding_node nodes shader marking left-edge spine.",
+    "authors": ["corpus"],
+    "tags": ["subtle-light", "wayfinding_node", "row-focus", "navigation"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 3600 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 360 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6400 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 280 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Drive mode: Comfort\nDrive mode: Sport\nDrive mode: Track\nDrive mode: Ice" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 236, "g": 237, "b": 238, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 24, "g": 26, "b": 30, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": " Mode Stack " } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "rowGradient": {
+        "id": "rowGradient",
+        "effect": "shader.focused_row_gradient",
+        "inputs": {
+          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 90, "g": 58, "b": 50, "a": 255 } } },
+          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 24, "g": 26, "b": 30, "a": 255 } } },
+          "selectedRow": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+        },
+        "scope": { "kind": "channel", "value": "background" }
+      },
+      "spine": {
+        "id": "spine",
+        "effect": "shader.wayfinding_node",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 208, "g": 90, "b": 70, "a": 255 } } },
+          "nodes": { "kind": "literal", "value": { "kind": "structured", "value": [
+            { "x": 3, "y": 2 }, { "x": 3, "y": 3 }, { "x": 3, "y": 4 }, { "x": 3, "y": 5 }
+          ] } },
+          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.22 } },
+          "currentIndex": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+          "previousStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.28 } },
+          "futureStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.08 } },
+          "pulseSpeed": { "kind": "literal", "value": { "kind": "number", "value": 0.3 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+        },
+        "scope": { "kind": "channel", "value": "background" }
+      }
+    },
+    "order": ["rowGradient", "spine"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 42,
+      "height": 8,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

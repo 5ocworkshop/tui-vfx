@@ -1,0 +1,14 @@
+{
+  "id": "style-fade-in-from-canvas",
+  "title": "Style: Fade In From Canvas",
+  "card": {
+    "message": "Style: Fade In From Canvas\nContent emerges from canvas color",
+    "size": [48, 3],
+    "fg": [30, 32, 36],
+    "bg": [252, 252, 248],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "fade", "from": "#121c28", "easing": "quadOut" }
+  }
+}

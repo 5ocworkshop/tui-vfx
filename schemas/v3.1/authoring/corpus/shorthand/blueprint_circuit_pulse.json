@@ -1,0 +1,55 @@
+{
+  "id": "blueprint-circuit-pulse-info",
+  "title": "Blueprint · Circuit Pulse",
+  "card": {
+    "message": "TELEMETRY UPLINK ESTABLISHED  ·  TX 12.4 Mbit/s",
+    "size": [52, 9],
+    "fg": [240, 248, 255],
+    "bg": [8, 22, 52],
+    "border": { "type": "rounded", "title": " ▣ ROUTING ACTIVE ", "titleAlign": "left" }
+  },
+  "at": "topRight",
+  "transitions": {
+    "enter": { "preset": "wipe", "direction": "leftToRight", "softEdge": true, "duration": "1.1s" },
+    "exit":  { "preset": "wipe", "direction": "rightToLeft", "softEdge": true, "duration": "700ms" }
+  },
+  "effects": [
+    {
+      "filter": "pattern_fill",
+      "pattern": { "type": "horizontalLines", "lineChar": "·", "spacing": 2 },
+      "color": [60, 110, 165],
+      "onlyEmpty": true
+    },
+    { "filter": "vignette", "phase": "dwell", "strength": 0.35, "radius": 0.7 },
+    {
+      "shader": "trace_path",
+      "scope": { "channel": "background" },
+      "color": [130, 240, 255],
+      "speed": 1.0,
+      "tailLength": 10,
+      "verticalWeight": 2.0,
+      "junctionGlow": 1.0,
+      "tailMode": "segment",
+      "applyTo": "background",
+      "paths": [
+        { "points": [[1,1],[16,1],[16,7],[32,7],[32,1],[50,1]], "delay": 0 },
+        { "points": [[50,7],[38,7],[38,1],[24,1],[24,7],[10,7],[10,1],[1,1]], "delay": 0.5 }
+      ]
+    },
+    {
+      "shader": "border_sweep",
+      "scope": { "role": "border" },
+      "speed": 0.4,
+      "length": 8,
+      "color": [190, 245, 255]
+    },
+    {
+      "shader": "pulse",
+      "scope": { "content": "text" },
+      "phase": "dwell",
+      "frequency": 0.6,
+      "pulseColor": [130, 240, 255]
+    },
+    { "filter": "dim", "phase": "exit", "factor": 0.6, "applyTo": "both" }
+  ]
+}

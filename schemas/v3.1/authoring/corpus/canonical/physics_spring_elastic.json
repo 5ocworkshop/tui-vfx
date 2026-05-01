@@ -1,0 +1,75 @@
+{
+  "id": "physics-spring-elastic",
+  "version": "3.1",
+  "metadata": {
+    "title": "Physics: Spring Elastic (route-as-primitive)",
+    "description": "Spring motion as a primitive route type — distinct from composed-route-plus-pendulum-dynamics. Stiffness + damping parameterize the spring directly.",
+    "authors": ["corpus"],
+    "tags": ["physics", "spring", "route-primitive", "motion-route"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Boing!" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 22 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 21 },
+          "source": "mainCard",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "bottomLeft",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 1000 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "spring", "stiffness": 180.0, "damping": 12.0 },
+              "from": { "kind": "offscreen", "direction": "fromLeft", "marginCells": 8 },
+              "snap": { "kind": "round" }
+            },
+            "exit": {
+              "duration": { "kind": "milliseconds", "value": 600 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": { "kind": "spring", "stiffness": 250.0, "damping": 8.0 },
+              "to": { "kind": "offscreen", "direction": "fromLeft", "marginCells": 6 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

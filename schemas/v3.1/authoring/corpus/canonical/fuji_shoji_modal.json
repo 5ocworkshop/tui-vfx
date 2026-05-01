@@ -1,0 +1,102 @@
+{
+  "id": "fuji-shoji-modal",
+  "version": "3.1",
+  "metadata": {
+    "title": "Fuji · Shoji (Modal Dialog)",
+    "description": "Combined-mask enter (wipe horizontal_center_out + iris box), single-mask exit (wipe horizontal_edges_in); paper-screen restraint.",
+    "authors": ["corpus"],
+    "tags": ["gt-design", "restrained", "fuji", "combined-mask", "iris-box"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Confirm\n\nSave changes to this workspace?" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 38, "g": 34, "b": 30, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 252, "g": 248, "b": 238, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "plain" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Confirm" } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "center" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "wipeEnter": {
+        "id": "wipeEnter",
+        "effect": "mask.wipe",
+        "inputs": {
+          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "horizontalCenterOut" } },
+          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "irisEnter": {
+        "id": "irisEnter",
+        "effect": "mask.iris",
+        "inputs": {
+          "shape": { "kind": "literal", "value": { "kind": "enum", "value": "box" } },
+          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "wipeExit": {
+        "id": "wipeExit",
+        "effect": "mask.wipe",
+        "inputs": {
+          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "horizontalEdgesIn" } },
+          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      },
+      "highlighter": {
+        "id": "highlighter",
+        "effect": "shader.highlighter",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 205, "g": 55, "b": 48, "a": 255 } } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["wipeEnter", "irisEnter", "wipeExit", "highlighter"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 42,
+      "height": 9,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

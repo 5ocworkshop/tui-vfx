@@ -1,0 +1,15 @@
+{
+  "id": "mask-blinds",
+  "title": "Mask: Blinds Effect",
+  "card": {
+    "message": "Mask: Blinds Effect\nSlats reveal in bands",
+    "size": [33, 9],
+    "fg": "yellow",
+    "bg": [50, 50, 20],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "blinds", "orientation": "horizontal", "count": 4, "duration": "2s" },
+    "exit":  { "preset": "blinds", "orientation": "vertical",   "count": 6, "duration": "1s" }
+  }
+}

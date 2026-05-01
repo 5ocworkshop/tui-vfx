@@ -1,0 +1,26 @@
+{
+  "id": "fuji-shoji-modal",
+  "title": "Fuji · Shoji (Modal)",
+  "card": {
+    "message": "Confirm\n\nSave changes to this workspace?",
+    "size": [42, 9],
+    "fg": [38, 34, 30],
+    "bg": [252, 248, 238],
+    "border": { "type": "plain", "title": "Confirm", "titleAlign": "center" }
+  },
+  "transitions": {
+    "enter": {
+      "compose": "all",
+      "tracks": [
+        { "preset": "wipe", "direction": "horizontalCenterOut", "softEdge": true },
+        { "preset": "iris", "shape": "box", "softEdge": true }
+      ],
+      "duration": "1s",
+      "easing": "sineOut"
+    },
+    "exit": { "preset": "wipe", "direction": "horizontalEdgesIn", "softEdge": true, "duration": "900ms", "easing": "sineInOut" }
+  },
+  "effects": [
+    { "shader": "highlighter", "color": [205, 55, 48] }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "transition-stippled",
+  "version": "3.1",
+  "metadata": {
+    "title": "Transition: Stippled (visibility.* — schema-faith demonstrator)",
+    "description": "Forward-looking: visibility.stippled reveals via stipple pattern. Single-subject (same shape as iris/dissolve/blinds).",
+    "authors": ["corpus"],
+    "tags": ["transition", "stippled", "visibility", "schema-faith"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Stippled reveal — visibility.stippled" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "transitions": {
+    "enterStippled": {
+      "id": "enterStippled",
+      "intent": { "kind": "preset", "preset": "stippled" },
+      "subjects": {
+        "to": { "kind": "scene", "id": "mainScene" }
+      },
+      "timing": {
+        "duration": { "kind": "milliseconds", "value": 500 },
+        "easing": { "kind": "named", "value": "linear" }
+      },
+      "activePhases": ["enter"],
+      "tracks": [
+        {
+          "kind": "visibility.stippled",
+          "subject": "to",
+          "pattern": "ordered",
+          "density": 0.5,
+          "seed": 42
+        }
+      ],
+      "interruption": "snapToEnd",
+      "reducedMotion": { "policy": "instant" }
+    }
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 40,
+      "height": 3,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

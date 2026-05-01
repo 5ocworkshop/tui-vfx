@@ -1,0 +1,10 @@
+{
+  "id": "physics-friction-slide",
+  "title": "Physics: Friction Slide",
+  "card": { "message": "Sliding in...", "size": [32, 3], "border": "plain" },
+  "at": "topRight",
+  "lifecycle": {
+    "enter": { "duration": "900ms", "route": { "friction": { "drag": 3.5 } }, "from": "right" },
+    "exit":  { "duration": "700ms", "route": { "friction": { "drag": 5.0 } }, "to": "right" }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "magnetic-summon-palette",
+  "title": "Magnetic Summon Command Palette",
+  "card": {
+    "message": "❯ open recent project_______________\n  recent: tui-vfx-recipes\n  recent: tui-vfx\n  recent: gt-design",
+    "size": [56, 8],
+    "fg": [230, 238, 250],
+    "bg": [14, 18, 30],
+    "border": { "type": "rounded", "title": "Command Palette", "titleAlign": "center" },
+    "bold": true,
+    "shadow": { "color": "#000000a0", "offset": [3, 2], "edges": ["right", "bottom"], "soft": true, "style": "gradient:3" },
+    "content": {
+      "typewriter": { "speedVariance": 0.08, "cursor": "▌", "wake": { "mode": "tint", "decay": "600ms", "maxCells": 6, "gap": 1, "tint": [180, 210, 240] } }
+    }
+  },
+  "bindings": {
+    "selectedRow": { "type": "number", "range": [0, 8], "default": 2, "loopback": { "type": "ramp", "start": 0, "end": 8, "duration": "5s" } }
+  },
+  "lifecycle": {
+    "enter": { "duration": "360ms", "easing": "quadOut", "route": { "carrier_orbit": { "rotations": 0.5, "radius": 3 } }, "from": "top" },
+    "dwell": "6s",
+    "exit":  { "duration": "200ms", "easing": "quadIn", "to": "top" }
+  },
+  "effects": [
+    { "sampler": "spatial_signal", "signal": { "type": "sample_norm_x" }, "emitsHint": "reveal_field" },
+    {
+      "shader": "focused_row_gradient",
+      "scope": { "rowRange": [1, 8] },
+      "brightColor": [110, 175, 240],
+      "dimColor": [14, 18, 30],
+      "selectedRow": "$bind:selectedRow",
+      "falloffDistance": 3
+    },
+    {
+      "shader": "highlighter",
+      "scope": { "content": "text" },
+      "color": [255, 232, 150],
+      "blendStrength": "$hint:reveal_field"
+    },
+    { "shader": "border_sweep", "scope": { "role": "border" }, "color": [180, 220, 255], "length": 8, "speed": 1.4 }
+  ]
+}

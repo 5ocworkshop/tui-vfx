@@ -1,0 +1,73 @@
+{
+  "id": "style-fade-in-from-canvas",
+  "version": "3.1",
+  "metadata": {
+    "title": "Style: Fade In From Canvas",
+    "description": "Canvas-aware fade — content rises from a configured color rather than black.",
+    "authors": ["corpus"],
+    "tags": ["style", "fade-in", "canvas-aware"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Style: Fade In From Canvas\nContent emerges from canvas color" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 48 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 30, "g": 32, "b": 36, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 252, "g": 252, "b": 248, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "fadeIn": {
+        "id": "fadeIn",
+        "effect": "style.fadeIn",
+        "inputs": {
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } },
+          "easing": { "kind": "literal", "value": { "kind": "enum", "value": "quadOut" } },
+          "from": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "color", "color": { "r": 18, "g": 28, "b": 40, "a": 255 } } } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      }
+    },
+    "order": ["fadeIn"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 48,
+      "height": 3,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

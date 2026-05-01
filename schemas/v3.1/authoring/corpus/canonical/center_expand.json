@@ -1,0 +1,69 @@
+{
+  "id": "center-expand",
+  "version": "3.1",
+  "metadata": {
+    "title": "Center Expand",
+    "description": "Card scales up from center on enter, scales down on exit, with cross-fade.",
+    "authors": ["corpus"],
+    "tags": ["transition", "rect_scale", "fade"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 550 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 650 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Center expand/collapse" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 12, "g": 14, "b": 20, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 42,
+      "height": 5,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 550 },
+              "easing": { "kind": "named", "value": "quadOut" },
+              "rectScale": { "origin": "center", "minWidth": 3, "minHeight": 1 },
+              "snap": { "kind": "round" }
+            },
+            "exit": {
+              "duration": { "kind": "milliseconds", "value": 650 },
+              "easing": { "kind": "named", "value": "quadIn" },
+              "rectScale": { "origin": "center", "minWidth": 3, "minHeight": 1 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "sampler-gravity",
+  "version": "3.1",
+  "metadata": {
+    "title": "Sampler: Gravity (per-cell physics primitive)",
+    "description": "Gravity as a per-cell sampler — cells displace under acceleration with terminal velocity. Distinct from gravity as motion route or composed-route dynamic.",
+    "authors": ["corpus"],
+    "tags": ["physics", "gravity", "sampler", "per-cell-displacement"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "GRAV MIX" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 24 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 30, "g": 30, "b": 40, "a": 255 } } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "gravity": {
+        "id": "gravity",
+        "effect": "sampler.gravity",
+        "inputs": {
+          "axis": { "kind": "literal", "value": { "kind": "enum", "value": "y" } },
+          "acceleration": { "kind": "literal", "value": { "kind": "number", "value": 4.0 } },
+          "terminalVelocity": { "kind": "literal", "value": { "kind": "number", "value": 8.0 } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "greyscaleFg": {
+        "id": "greyscaleFg",
+        "effect": "filter.greyscale",
+        "inputs": {
+          "strength": { "kind": "literal", "value": { "kind": "number", "value": 0.4 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["gravity", "greyscaleFg"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 24,
+      "height": 5,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

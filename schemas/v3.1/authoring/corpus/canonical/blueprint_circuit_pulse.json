@@ -1,0 +1,147 @@
+{
+  "id": "blueprint-circuit-pulse-info",
+  "version": "3.1",
+  "metadata": {
+    "title": "Blueprint · Circuit Pulse (Info Banner)",
+    "description": "Telemetry banner with shader.trace_path: two authored PCB-route pulses with junction glow, plus border sweep, vignette, pattern_fill, role-scoped pulse.",
+    "authors": ["corpus"],
+    "tags": ["gt-design", "blueprint", "trace_path", "multi-region", "telemetry"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1100 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6500 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 700 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "TELEMETRY UPLINK ESTABLISHED  ·  TX 12.4 Mbit/s" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 52 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 240, "g": 248, "b": 255, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 8, "g": 22, "b": 52, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": " ▣ ROUTING ACTIVE " } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "patternFill": {
+        "id": "patternFill",
+        "effect": "filter.pattern_fill",
+        "inputs": {
+          "pattern": { "kind": "literal", "value": { "kind": "structured", "value": { "kind": "horizontal_lines", "lineChar": "·", "spacing": 2 } } },
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 110, "b": 165, "a": 255 } } },
+          "onlyEmpty": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "vignetteDwell": {
+        "id": "vignetteDwell",
+        "effect": "filter.vignette",
+        "inputs": {
+          "strength": { "kind": "literal", "value": { "kind": "number", "value": 0.35 } },
+          "radius": { "kind": "literal", "value": { "kind": "number", "value": 0.7 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "tracePathBg": {
+        "id": "tracePathBg",
+        "effect": "shader.trace_path",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 130, "g": 240, "b": 255, "a": 255 } } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+          "tailLength": { "kind": "literal", "value": { "kind": "number", "value": 10.0 } },
+          "verticalWeight": { "kind": "literal", "value": { "kind": "number", "value": 2.0 } },
+          "thickness": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+          "junctionGlow": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+          "tailMode": { "kind": "literal", "value": { "kind": "enum", "value": "segment" } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } },
+          "paths": { "kind": "literal", "value": { "kind": "structured", "value": [
+            {
+              "points": [
+                { "x": 1, "y": 1 }, { "x": 16, "y": 1 }, { "x": 16, "y": 7 },
+                { "x": 32, "y": 7 }, { "x": 32, "y": 1 }, { "x": 50, "y": 1 }
+              ],
+              "delay": 0.0
+            },
+            {
+              "points": [
+                { "x": 50, "y": 7 }, { "x": 38, "y": 7 }, { "x": 38, "y": 1 },
+                { "x": 24, "y": 1 }, { "x": 24, "y": 7 }, { "x": 10, "y": 7 },
+                { "x": 10, "y": 1 }, { "x": 1, "y": 1 }
+              ],
+              "delay": 0.5
+            }
+          ] } }
+        },
+        "scope": { "kind": "channel", "value": "background" }
+      },
+      "borderSweep": {
+        "id": "borderSweep",
+        "effect": "shader.border_sweep",
+        "inputs": {
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 0.4 } },
+          "length": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 190, "g": 245, "b": 255, "a": 255 } } }
+        },
+        "scope": { "kind": "border" }
+      },
+      "textPulse": {
+        "id": "textPulse",
+        "effect": "shader.pulse",
+        "inputs": {
+          "frequency": { "kind": "literal", "value": { "kind": "number", "value": 0.6 } },
+          "pulseColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 130, "g": 240, "b": 255, "a": 255 } } }
+        },
+        "scope": { "kind": "content", "value": "text" },
+        "activePhases": ["dwell"]
+      },
+      "dimExit": {
+        "id": "dimExit",
+        "effect": "filter.dim",
+        "inputs": {
+          "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.6 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["patternFill", "vignetteDwell", "tracePathBg", "borderSweep", "textPulse", "dimExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 26, "y": 1 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

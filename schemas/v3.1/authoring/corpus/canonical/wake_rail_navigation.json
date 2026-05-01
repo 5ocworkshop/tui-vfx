@@ -1,0 +1,138 @@
+{
+  "id": "wake-rail-navigation",
+  "version": "3.1",
+  "metadata": {
+    "title": "Wake-Rail Navigation",
+    "description": "affordance_wake on hover + focused_row_gradient on selection + edge_grow rest-to-peak fill + wayfinding_node on bottom strip.",
+    "authors": ["corpus"],
+    "tags": ["navigation", "affordance-wake", "edge-grow", "wayfinding", "multi-binding"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 220 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 9000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 180 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "▎ Inbox\n▎ Drafts\n▎ Sent\n▎ Archive\n▎ Spam\n▎ Trash\n  ◌      ◌      ◌" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 26 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 222, "g": 230, "b": 244, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 16, "g": 20, "b": 28, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Mail" } },
+        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "selectedRow": {
+        "id": "selectedRow",
+        "displayName": "Selected row",
+        "value": { "kind": "number", "default": { "kind": "number", "value": 3.0 }, "range": { "min": 0.0, "max": 8.0 }, "allowedValues": [], "unit": null, "semantic": "selectionIndex" },
+        "previewLoopback": { "kind": "numericSignal", "expression": { "type": "ramp", "start": 0.0, "end": 8.0, "duration": 5.0 }, "fallback": { "kind": "number", "value": 3.0 } },
+        "required": false
+      },
+      "hoverProgress": {
+        "id": "hoverProgress",
+        "displayName": "Hover progress",
+        "value": { "kind": "number", "default": { "kind": "number", "value": 0.6 }, "range": { "min": 0.0, "max": 1.0 }, "allowedValues": [], "unit": null, "semantic": "progress" },
+        "previewLoopback": { "kind": "numericSignal", "expression": { "type": "ramp", "start": 0.0, "end": 1.0, "duration": 2.0 }, "fallback": { "kind": "number", "value": 0.6 } },
+        "required": false
+      },
+      "wayfindingIndex": {
+        "id": "wayfindingIndex",
+        "displayName": "Wayfinding index",
+        "value": { "kind": "number", "default": { "kind": "number", "value": 1.0 }, "range": { "min": 0.0, "max": 2.0 }, "allowedValues": [], "unit": null, "semantic": "step" },
+        "previewLoopback": { "kind": "numericSignal", "expression": { "type": "ramp", "start": 0.0, "end": 2.0, "duration": 4.0 }, "fallback": { "kind": "number", "value": 1.0 } },
+        "required": false
+      }
+    },
+    "nodes": {
+      "wake": {
+        "id": "wake",
+        "effect": "shader.affordance_wake",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 200, "g": 220, "b": 255, "a": 255 } } },
+          "zone": { "kind": "literal", "value": { "kind": "enum", "value": "allEdges" } },
+          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+          "progress": { "kind": "signal", "id": "hoverProgress", "fallback": { "kind": "number", "value": 0.6 } },
+          "peakIntensity": { "kind": "literal", "value": { "kind": "number", "value": 0.22 } }
+        },
+        "scope": { "kind": "channel", "value": "background" }
+      },
+      "rowGradient": {
+        "id": "rowGradient",
+        "effect": "shader.focused_row_gradient",
+        "inputs": {
+          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 110, "g": 175, "b": 240, "a": 255 } } },
+          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 16, "g": 20, "b": 28, "a": 255 } } },
+          "selectedRow": { "kind": "signal", "id": "selectedRow", "fallback": { "kind": "number", "value": 3.0 } },
+          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 2 } }
+        },
+        "scope": { "kind": "rowRange", "start": 1, "end": 7 }
+      },
+      "edgeGrow": {
+        "id": "edgeGrow",
+        "effect": "filter.edge_grow",
+        "inputs": {
+          "restEighths": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+          "peakEighths": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+          "edge": { "kind": "literal", "value": { "kind": "enum", "value": "left" } },
+          "fillColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 120, "g": 200, "b": 255, "a": 255 } } },
+          "bgColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 16, "g": 20, "b": 28, "a": 255 } } },
+          "progress": { "kind": "signal", "id": "hoverProgress", "fallback": { "kind": "number", "value": 0.6 } }
+        },
+        "scope": { "kind": "rect", "x": 1, "y": 1, "width": 1, "height": 6 }
+      },
+      "wayfinding": {
+        "id": "wayfinding",
+        "effect": "shader.wayfinding_node",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 200, "g": 230, "b": 255, "a": 255 } } },
+          "nodes": { "kind": "literal", "value": { "kind": "structured", "value": [{ "x": 4, "y": 7 }, { "x": 12, "y": 7 }, { "x": 20, "y": 7 }] } },
+          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.32 } },
+          "currentIndex": { "kind": "signal", "id": "wayfindingIndex", "fallback": { "kind": "number", "value": 1.0 } },
+          "previousStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.45 } },
+          "futureStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.10 } },
+          "pulseSpeed": { "kind": "literal", "value": { "kind": "number", "value": 0.4 } }
+        },
+        "scope": { "kind": "rows", "indices": [7] }
+      }
+    },
+    "order": ["wake", "rowGradient", "edgeGrow", "wayfinding"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 26,
+      "height": 9,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

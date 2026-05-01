@@ -1,0 +1,7 @@
+{
+  "id": "wargames-shall-we-play",
+  "extends": "themes/wopr_green",
+  "title": "WarGames - Shall We Play",
+  "card": { "message": "SHALL WE PLAY A GAME?" },
+  "lifecycle": { "enter": "1.5s", "dwell": "8s" }
+}

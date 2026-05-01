@@ -1,0 +1,25 @@
+{
+  "id": "btop-focused-row-live-list",
+  "title": "btop Focused Row (Live List)",
+  "card": {
+    "message": "  1. First item\n  2. Second item\n  3. Third item\n> 4. SELECTED <\n  5. Fifth item\n  6. Sixth item\n  7. Seventh item\n  8. Eighth item\n  9. Ninth item\n 10. Tenth item",
+    "size": [22, 12],
+    "fg": [180, 180, 180],
+    "bg": [20, 22, 28],
+    "border": "rounded"
+  },
+  "bindings": {
+    "selectedRow": { "type": "number", "range": [0, 9], "default": 4 }
+  },
+  "effects": [
+    {
+      "shader": "focused_row_gradient",
+      "scope": { "content": "text" },
+      "selectedRow": "$bind:selectedRow",
+      "falloffDistance": 16,
+      "brightColor": "white",
+      "dimColor": [60, 60, 60],
+      "applyTo": "foreground"
+    }
+  ]
+}

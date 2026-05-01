@@ -1,0 +1,12 @@
+{
+  "id": "transition-crossfade",
+  "title": "Transition: Crossfade",
+  "card": {
+    "message": "Replaced — crossfade demonstrator",
+    "size": [38, 3],
+    "border": "rounded"
+  },
+  "transitions": {
+    "enter": { "preset": "crossfade", "duration": "300ms" }
+  }
+}

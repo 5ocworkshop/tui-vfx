@@ -1,0 +1,37 @@
+{
+  "id": "grimoire-natural-twenty",
+  "title": "Grimoire · Natural Twenty",
+  "loop": "3s",
+  "card": {
+    "message": "★  CRITICAL SUCCESS",
+    "size": [26, 3],
+    "fg": [248, 222, 150],
+    "bg": [48, 16, 22],
+    "border": "double"
+  },
+  "at": "topCenter",
+  "transitions": {
+    "enter": { "preset": "iris", "shape": "circle", "softEdge": true, "duration": "650ms", "easing": "backOut" },
+    "exit":  { "preset": "dissolve", "seed": 5, "chunkSize": 2, "duration": "500ms", "easing": "cubicIn" }
+  },
+  "effects": [
+    { "content": "scramble", "phase": "enter", "resolvePace": 0.75, "charset": "alphanumeric", "seed": 20 },
+    {
+      "phase": "dwell",
+      "stack": [
+        { "filter": "braille_dust", "density": 0.15, "hz": 6.0, "seed": 42, "pattern": "one_to_two_dots", "drift": 0.5 },
+        { "filter": "tint", "color": [232, 182, 72], "strength": 0.12, "applyTo": "both" },
+        { "shader": "pulse", "frequency": 0.8, "pulseColor": [255, 232, 140] }
+      ]
+    },
+    {
+      "shader": "glisten_band",
+      "head": [255, 232, 140],
+      "tail": [168, 120, 40],
+      "speed": 1.1,
+      "bandWidth": 6,
+      "direction": "forward",
+      "angleDeg": 25
+    }
+  ]
+}

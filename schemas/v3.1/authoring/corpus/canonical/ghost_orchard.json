@@ -1,0 +1,112 @@
+{
+  "id": "ghost-orchard",
+  "version": "3.1",
+  "metadata": {
+    "title": "Ghost Orchard",
+    "description": "Cellular masks with organic/voronoi patterns, braille_dust dwell filter, edge_sheen shader.",
+    "authors": ["corpus"],
+    "tags": ["cellular", "braille_dust", "edge_sheen", "atmospheric"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 3200 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1400 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 10000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "ORCHARD GHOSTS COUNT THE WIND" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 46 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 218, "g": 245, "b": 226, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 12, "g": 24, "b": 18, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "cellularEnter": {
+        "id": "cellularEnter",
+        "effect": "mask.cellular",
+        "inputs": {
+          "pattern": { "kind": "literal", "value": { "kind": "enum", "value": "organic" } },
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 313 } },
+          "cellCount": { "kind": "literal", "value": { "kind": "integer", "value": 20 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "cellularExit": {
+        "id": "cellularExit",
+        "effect": "mask.cellular",
+        "inputs": {
+          "pattern": { "kind": "literal", "value": { "kind": "enum", "value": "voronoi" } },
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 919 } },
+          "cellCount": { "kind": "literal", "value": { "kind": "integer", "value": 26 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      },
+      "brailleDust": {
+        "id": "brailleDust",
+        "effect": "filter.braille_dust",
+        "inputs": {
+          "density": { "kind": "literal", "value": { "kind": "number", "value": 0.18 } },
+          "hz": { "kind": "literal", "value": { "kind": "number", "value": 5.0 } },
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 414 } },
+          "pattern": { "kind": "literal", "value": { "kind": "enum", "value": "one_to_two_dots" } },
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 190, "g": 255, "b": 210, "a": 255 } } },
+          "drift": { "kind": "literal", "value": { "kind": "number", "value": -0.2 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "edgeSheen": {
+        "id": "edgeSheen",
+        "effect": "shader.edge_sheen",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 212, "g": 255, "b": 224, "a": 255 } } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 0.55 } },
+          "bandWidth": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
+          "edgeWidth": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.8 } },
+          "cornerBoost": { "kind": "literal", "value": { "kind": "number", "value": 0.3 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        },
+        "scope": { "kind": "all" }
+      }
+    },
+    "order": ["cellularEnter", "cellularExit", "brailleDust", "edgeSheen"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 46,
+      "height": 7,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

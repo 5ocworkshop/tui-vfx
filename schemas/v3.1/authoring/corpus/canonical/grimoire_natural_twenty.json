@@ -1,0 +1,146 @@
+{
+  "id": "grimoire-natural-twenty",
+  "version": "3.1",
+  "metadata": {
+    "title": "Grimoire · Natural Twenty (Success Toast)",
+    "description": "Premium success: iris-circle enter, gold glisten band, multi-effect dwell stack (braille dust + amber tint + pulse), dissolve exit.",
+    "authors": ["corpus"],
+    "tags": ["gt-design", "bold", "grimoire", "multi-effect-dwell", "premium"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 3000 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 650 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4200 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "★  CRITICAL SUCCESS" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 26 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 248, "g": 222, "b": 150, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 48, "g": 16, "b": 22, "a": 255 } } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "double" } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "nodes": {
+      "scrambleEnter": {
+        "id": "scrambleEnter",
+        "effect": "content.scramble",
+        "inputs": {
+          "resolvePace": { "kind": "literal", "value": { "kind": "number", "value": 0.75 } },
+          "charset": { "kind": "literal", "value": { "kind": "enum", "value": "alphanumeric" } },
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 20 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "irisIn": {
+        "id": "irisIn",
+        "effect": "mask.iris",
+        "inputs": {
+          "shape": { "kind": "literal", "value": { "kind": "enum", "value": "circle" } },
+          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["enter"]
+      },
+      "dustDwell": {
+        "id": "dustDwell",
+        "effect": "filter.braille_dust",
+        "inputs": {
+          "density": { "kind": "literal", "value": { "kind": "number", "value": 0.15 } },
+          "hz": { "kind": "literal", "value": { "kind": "number", "value": 6.0 } },
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
+          "pattern": { "kind": "literal", "value": { "kind": "enum", "value": "one_to_two_dots" } },
+          "drift": { "kind": "literal", "value": { "kind": "number", "value": 0.5 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "tintDwell": {
+        "id": "tintDwell",
+        "effect": "filter.tint",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 232, "g": 182, "b": 72, "a": 255 } } },
+          "strength": { "kind": "literal", "value": { "kind": "number", "value": 0.12 } },
+          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "pulseDwell": {
+        "id": "pulseDwell",
+        "effect": "shader.pulse",
+        "inputs": {
+          "frequency": { "kind": "literal", "value": { "kind": "number", "value": 0.8 } },
+          "pulseColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 232, "b": 140, "a": 255 } } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["dwell"]
+      },
+      "glistenAlways": {
+        "id": "glistenAlways",
+        "effect": "shader.glisten_band",
+        "inputs": {
+          "head": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 232, "b": 140, "a": 255 } } },
+          "tail": { "kind": "literal", "value": { "kind": "color", "value": { "r": 168, "g": 120, "b": 40, "a": 255 } } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.1 } },
+          "bandWidth": { "kind": "literal", "value": { "kind": "integer", "value": 6 } },
+          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "forward" } },
+          "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 25.0 } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "dissolveExit": {
+        "id": "dissolveExit",
+        "effect": "mask.dissolve",
+        "inputs": {
+          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
+          "chunkSize": { "kind": "literal", "value": { "kind": "integer", "value": 2 } }
+        },
+        "scope": { "kind": "all" },
+        "activePhases": ["exit"]
+      }
+    },
+    "order": ["scrambleEnter", "irisIn", "dustDwell", "tintDwell", "pulseDwell", "glistenAlways", "dissolveExit"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 80,
+      "height": 24,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 27, "y": 0 },
+          "source": "mainCard",
+          "placementRule": {
+            "kind": "anchor",
+            "anchor": "topCenter",
+            "offsetRows": 0,
+            "offsetColumns": 0
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

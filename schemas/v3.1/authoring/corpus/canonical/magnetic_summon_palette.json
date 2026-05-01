@@ -1,0 +1,140 @@
+{
+  "id": "magnetic-summon-palette",
+  "version": "3.1",
+  "metadata": {
+    "title": "Magnetic Summon Command Palette",
+    "description": "Carrier-orbit entrance + typewriter cursor wake + I/O-chained highlighter + focused row gradient.",
+    "authors": ["corpus"],
+    "tags": ["palette", "cursor-wake", "io-chain", "carrier-orbit"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "monotonic", "period": null },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 360 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6000 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "source": "source.card",
+      "inputs": {
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "❯ open recent project_______________\n  recent: tui-vfx-recipes\n  recent: tui-vfx\n  recent: gt-design" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 56 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
+        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Command Palette" } },
+        "contentEffect": { "kind": "literal", "value": { "kind": "structured", "value": {
+          "type": "typewriter",
+          "speed_variance": 0.08,
+          "cursor": {
+            "character": "▌",
+            "wake": { "mode": "tint", "decay_seconds": 0.6, "max_cells": 6, "gap_cells": 1, "curve": 1.0, "tint": { "type": "rgb", "r": 180, "g": 210, "b": 240 } }
+          }
+        } } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1",
+    "signals": {
+      "selectedRow": {
+        "id": "selectedRow",
+        "displayName": "Selected row",
+        "value": { "kind": "number", "default": { "kind": "number", "value": 2.0 }, "range": { "min": 0.0, "max": 8.0 }, "allowedValues": [], "unit": null, "semantic": "selectionIndex" },
+        "previewLoopback": { "kind": "numericSignal", "expression": { "type": "ramp", "start": 0.0, "end": 8.0, "duration": 5.0 }, "fallback": { "kind": "number", "value": 2.0 } },
+        "required": false
+      }
+    },
+    "nodes": {
+      "revealField": {
+        "id": "revealField",
+        "effect": "sampler.spatial_signal",
+        "inputs": {
+          "signal": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "sample_norm_x" } } }
+        },
+        "outputs": {
+          "reveal_field": { "id": "reveal_field", "outputSource": { "kind": "scalar" } }
+        },
+        "scope": { "kind": "all" }
+      },
+      "rowGradient": {
+        "id": "rowGradient",
+        "effect": "shader.focused_row_gradient",
+        "inputs": {
+          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 110, "g": 175, "b": 240, "a": 255 } } },
+          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 14, "g": 18, "b": 30, "a": 255 } } },
+          "selectedRow": { "kind": "signal", "id": "selectedRow", "fallback": { "kind": "number", "value": 2.0 } },
+          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 3 } }
+        },
+        "scope": { "kind": "rowRange", "start": 1, "end": 8 }
+      },
+      "highlighter": {
+        "id": "highlighter",
+        "effect": "shader.highlighter",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 232, "b": 150, "a": 255 } } },
+          "blendStrength": { "kind": "graphValue", "id": "reveal_field", "fallback": { "kind": "number", "value": 0.0 } }
+        },
+        "scope": { "kind": "content", "value": "text" }
+      },
+      "borderSweep": {
+        "id": "borderSweep",
+        "effect": "shader.border_sweep",
+        "inputs": {
+          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 180, "g": 220, "b": 255, "a": 255 } } },
+          "length": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+          "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.4 } }
+        },
+        "scope": { "kind": "border" }
+      }
+    },
+    "order": ["revealField", "rowGradient", "highlighter", "borderSweep"]
+  },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 56,
+      "height": 8,
+      "elements": [
+        {
+          "id": "mainElement",
+          "layer": "primary",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "mainCard",
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 360 },
+              "easing": { "kind": "named", "value": "quadOut" },
+              "route": { "kind": "carrierOrbit", "rotations": 0.5, "radius": 3.0, "direction": 1.0 },
+              "from": { "kind": "offscreen", "direction": "fromTop" },
+              "to": { "kind": "anchor", "anchor": "center" },
+              "snap": { "kind": "round" }
+            }
+          },
+          "surface": {
+            "shadow": {
+              "color": { "r": 0, "g": 0, "b": 0, "a": 160 },
+              "offsetX": 3, "offsetY": 2,
+              "edges": ["right", "bottom"],
+              "softEdges": true,
+              "sourceRegion": "border",
+              "compositeMode": "glyphOverlay",
+              "style": { "kind": "gradient", "layers": 3 }
+            }
+          },
+          "pipeline": { "graph": "mainGraph" },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

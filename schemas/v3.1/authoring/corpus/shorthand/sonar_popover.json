@@ -1,0 +1,48 @@
+{
+  "id": "sonar-popover",
+  "title": "Sonar Popover",
+  "card": {
+    "message": "  Open in editor   \n  Copy path        \n  Reveal in tree   \n  Properties…      ",
+    "size": [24, 6],
+    "fg": [226, 232, 244],
+    "bg": [18, 22, 30],
+    "border": "rounded",
+    "shadow": { "color": "#00000096", "offset": [2, 1], "edges": ["right", "bottom"], "soft": true, "style": "gradient:2" }
+  },
+  "bindings": {
+    "activeIndex": {
+      "type": "number",
+      "range": [0, 4],
+      "loopback": { "type": "ramp", "start": 0, "end": 4, "duration": "4s" }
+    }
+  },
+  "lifecycle": { "enter": "180ms", "dwell": "5s", "exit": "120ms" },
+  "transitions": {
+    "enter": { "preset": "radial", "origin": "topLeft", "softEdge": true }
+  },
+  "effects": [
+    {
+      "shader": "radar",
+      "scope": { "cell": [0, 0] },
+      "color": [120, 220, 255],
+      "speed": 2.0,
+      "tailLength": 1.4
+    },
+    {
+      "shader": "focused_row_gradient",
+      "scope": { "rowRange": [1, 5] },
+      "brightColor": [80, 160, 220],
+      "dimColor": [18, 22, 30],
+      "selectedRow": "$bind:activeIndex",
+      "falloffDistance": 1
+    },
+    {
+      "filter": "bracket_emphasis",
+      "left": "▸",
+      "right": "◂",
+      "color": [200, 230, 255],
+      "bgColor": [18, 22, 30],
+      "progress": 0.85
+    }
+  ]
+}

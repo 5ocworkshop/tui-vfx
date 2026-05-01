@@ -1,0 +1,136 @@
+{
+  "id": "newtons-cradle",
+  "version": "3.1",
+  "metadata": {
+    "title": "Newton's Cradle (5.5-suggestions)",
+    "description": "Composed motion route (arc + pendulum dynamics) on two end-balls; right ball lags 1100ms via follow.lagMs for half-cycle phase offset.",
+    "authors": ["corpus"],
+    "tags": ["physics", "composed-route", "pendulum-dynamics", "follow-lag", "multi-layer"]
+  },
+  "lifecycle": {
+    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 2200 } },
+    "phases": [
+      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2200 } } },
+      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8800 } } } },
+      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
+    ]
+  },
+  "assets": {},
+  "sourceDescriptors": {},
+  "sources": {
+    "frameSource": {
+      "source": "source.text",
+      "inputs": {
+        "text": { "kind": "literal", "value": { "kind": "text", "value": "╔══════════════════════════════╗\n║                              ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║       ●   ●   ●              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n╚══════════════════════════════╝" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 32 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 14 } }
+      },
+      "assets": {}
+    },
+    "ballSource": {
+      "source": "source.text",
+      "inputs": {
+        "text": { "kind": "literal", "value": { "kind": "text", "value": "●" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+      },
+      "assets": {}
+    }
+  },
+  "graph": { "id": "mainGraph", "version": "3.1" },
+  "scenes": [
+    {
+      "id": "mainScene",
+      "width": 32,
+      "height": 14,
+      "elements": [
+        {
+          "id": "frame",
+          "layer": "frame",
+          "zIndex": 0,
+          "placement": { "x": 0, "y": 0 },
+          "source": "frameSource",
+          "surface": {
+            "baseStyle": {
+              "foreground": { "type": "rgb", "r": 200, "g": 215, "b": 232 },
+              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 }
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "writeCell",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        },
+        {
+          "id": "ballLeft",
+          "layer": "ballLeft",
+          "zIndex": 10,
+          "placement": { "x": 3, "y": 7 },
+          "source": "ballSource",
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 2200 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": {
+                "kind": "composed",
+                "route": { "kind": "arc", "bulge": 2.0 },
+                "dynamics": [
+                  { "kind": "pendulum", "amplitude": 3.0, "oscillations": 1.0, "damping": 0.0 }
+                ]
+              },
+              "from": { "kind": "absolute", "x": 3, "y": 7 },
+              "to": { "kind": "absolute", "x": 3, "y": 7 },
+              "phaseOffsetMs": 0,
+              "snap": { "kind": "round" }
+            }
+          },
+          "surface": {
+            "baseStyle": {
+              "foreground": { "type": "rgb", "r": 240, "g": 220, "b": 160 },
+              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 },
+              "addedModifiers": ["bold"]
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "skipTransparentEmpty",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        },
+        {
+          "id": "ballRight",
+          "layer": "ballRight",
+          "zIndex": 10,
+          "placement": { "x": 19, "y": 7 },
+          "source": "ballSource",
+          "placementMotion": {
+            "enter": {
+              "duration": { "kind": "milliseconds", "value": 2200 },
+              "easing": { "kind": "named", "value": "linear" },
+              "route": {
+                "kind": "composed",
+                "route": { "kind": "arc", "bulge": 2.0 },
+                "dynamics": [
+                  { "kind": "pendulum", "amplitude": 3.0, "oscillations": 1.0, "damping": 0.0 }
+                ]
+              },
+              "from": { "kind": "absolute", "x": 19, "y": 7 },
+              "to": { "kind": "absolute", "x": 19, "y": 7 },
+              "phaseOffsetMs": 0,
+              "follow": { "mode": "maintainOffset", "lagMs": 1100 },
+              "snap": { "kind": "round" }
+            }
+          },
+          "surface": {
+            "baseStyle": {
+              "foreground": { "type": "rgb", "r": 240, "g": 220, "b": 160 },
+              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 },
+              "addedModifiers": ["bold"]
+            }
+          },
+          "clipPolicy": "clip",
+          "cellWritePolicy": "skipTransparentEmpty",
+          "roleWritePolicy": { "kind": "preserveDestination" }
+        }
+      ]
+    }
+  ],
+  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+}

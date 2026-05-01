@@ -1,0 +1,19 @@
+{
+  "id": "event-driven-dwell-bool",
+  "title": "Event-Driven Dwell — Bool Binding",
+  "card": {
+    "message": "Event-Driven Dwell\nWaits for user_dismissed=true",
+    "size": [44, 5],
+    "fg": [238, 238, 238],
+    "bg": [28, 36, 44],
+    "border": "rounded"
+  },
+  "bindings": {
+    "userDismissed": { "type": "bool", "default": false }
+  },
+  "lifecycle": {
+    "enter": "1.5s",
+    "dwell": { "until": "$bind:userDismissed", "fallback": "5s" },
+    "exit":  "800ms"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "sampler-radial-twist",
+  "title": "Sampler: Radial Twist",
+  "loop": "2.2s",
+  "card": {
+    "message": "Radial Twist\nText follows a vortex\nBasic text-only path",
+    "size": [44, 11],
+    "fg": [225, 245, 255],
+    "bg": "transparent"
+  },
+  "effects": [
+    { "sampler": "radial_twist", "twist": 1.6, "center": "center", "radiusFloor": 0.08 }
+  ]
+}
