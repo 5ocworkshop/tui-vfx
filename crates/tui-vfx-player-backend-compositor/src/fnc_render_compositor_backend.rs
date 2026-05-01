@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.37.0</VERS>
+// <VERS>VERSION: 0.38.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.37.0: MINOR — remove backend-owned diffusion shader rendering after diffusion moved to compositor ShaderLayerSpec.
+// <CLOG>0.38.0: MINOR — remove backend-owned focused-row-gradient style rendering after style.spatial moved to compositor ShaderLayerSpec.
+// 0.37.0: MINOR — remove backend-owned diffusion shader rendering after diffusion moved to compositor ShaderLayerSpec.
 // 0.36.0: MINOR — remove backend-owned barber-pole shader rendering after barberPole moved to compositor ShaderLayerSpec.
 // 0.35.0: MINOR — remove backend-owned wayfinding-node shader rendering after wayfindingNode moved to compositor ShaderLayerSpec.
 // 0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
@@ -295,21 +296,6 @@ fn scene_ir_with_native_content_stages(
             } => {
                 apply_glitch_style_stage(&mut staged, *seed, *intensity, *italic_start, *italic_end)
             }
-            NativeStyleStage::SpatialFocusedRowGradient {
-                x,
-                y,
-                bright_color,
-                apply_to,
-                ..
-            } => apply_spatial_focused_row_gradient_style_stage(
-                &mut staged,
-                SpatialFocusedRowGradientInputs {
-                    x: *x,
-                    y: *y,
-                    bright_color,
-                    apply_to,
-                },
-            ),
             NativeStyleStage::ColorFade {
                 target,
                 color_space,
@@ -837,30 +823,6 @@ fn apply_glitch_style_stage(
     }
 }
 
-struct SpatialFocusedRowGradientInputs<'a> {
-    x: usize,
-    y: usize,
-    bright_color: &'a str,
-    apply_to: &'a str,
-}
-
-fn apply_spatial_focused_row_gradient_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: SpatialFocusedRowGradientInputs<'_>,
-) {
-    if inputs.x >= report_width(report) || inputs.y >= report_height(report) {
-        return;
-    }
-    set_report_shader_cell(
-        report,
-        inputs.x,
-        inputs.y,
-        inputs.apply_to,
-        inputs.bright_color,
-        "ShaderFocusedRowGradient",
-    );
-}
-
 fn apply_color_fade_style_stage(
     report: &mut PlayerRenderIrReport,
     target: &str,
@@ -1023,86 +985,6 @@ fn set_report_cell_style(
         modifiers: modifier.into_iter().map(str::to_string).collect(),
         role: None,
     });
-}
-
-fn set_report_shader_cell(
-    report: &mut PlayerRenderIrReport,
-    x: usize,
-    y: usize,
-    apply_to: &str,
-    color: &str,
-    role: &str,
-) {
-    let (existing_foreground, existing_background) = report
-        .styled_cells
-        .iter()
-        .find(|cell| cell.x == x && cell.y == y)
-        .map(|cell| (cell.foreground.clone(), cell.background.clone()))
-        .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
-    let foreground = if matches!(apply_to, "foreground" | "both") {
-        color.to_string()
-    } else {
-        existing_foreground
-    };
-    let background = if matches!(apply_to, "background" | "both") {
-        color.to_string()
-    } else {
-        existing_background
-    };
-    set_report_cell_exact(
-        report,
-        x,
-        y,
-        foreground.as_str(),
-        background.as_str(),
-        &[],
-        Some(role),
-    );
-}
-
-fn set_report_cell_exact(
-    report: &mut PlayerRenderIrReport,
-    x: usize,
-    y: usize,
-    foreground: &str,
-    background: &str,
-    modifiers: &[&str],
-    role: Option<&str>,
-) {
-    if let Some(cell) = report
-        .styled_cells
-        .iter_mut()
-        .find(|cell| cell.x == x && cell.y == y)
-    {
-        cell.foreground = foreground.to_string();
-        cell.background = background.to_string();
-        cell.modifiers = modifier_labels(modifiers);
-        cell.role = role.map(str::to_string);
-        return;
-    }
-
-    let glyph = report
-        .rows
-        .get(y)
-        .and_then(|row| row.chars().nth(x))
-        .unwrap_or(' ')
-        .to_string();
-    report.styled_cells.push(PlayerRenderCell {
-        x,
-        y,
-        glyph,
-        foreground: foreground.to_string(),
-        background: background.to_string(),
-        modifiers: modifier_labels(modifiers),
-        role: role.map(str::to_string),
-    });
-}
-
-fn modifier_labels(modifiers: &[&str]) -> Vec<String> {
-    modifiers
-        .iter()
-        .map(|modifier| (*modifier).to_string())
-        .collect()
 }
 
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {

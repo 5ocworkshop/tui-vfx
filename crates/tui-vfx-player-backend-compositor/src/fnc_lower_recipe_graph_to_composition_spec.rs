@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.40.0</VERS>
+// <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -49,13 +50,13 @@ use tui_vfx_player::{
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
-    BarberPoleApplyTo, BarberPoleShader, BorderSweepShader, ColorConfig, ColorSpace,
-    DiffusionApplyTo, DiffusionShader, DiffusionSource, FocusFieldApplyTo, FocusFieldShader,
-    FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
-    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
-    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, RadarShader, RevealWipeShader,
-    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
-    WayfindingNodeShader,
+    ApplyToColor, BarberPoleApplyTo, BarberPoleShader, BindableU16, BorderSweepShader, ColorConfig,
+    ColorSpace, DiffusionApplyTo, DiffusionShader, DiffusionSource, FocusFieldApplyTo,
+    FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
+    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
+    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
+    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast, WayfindingNode,
+    WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -186,16 +187,6 @@ pub enum NativeStyleStage {
         intensity: f64,
         italic_start: f64,
         italic_end: f64,
-    },
-    /// Apply structured focused-row-gradient spatial styling to a resolved single cell.
-    SpatialFocusedRowGradient {
-        x: usize,
-        y: usize,
-        bright_color: String,
-        dim_color: String,
-        selected_row_ratio: f64,
-        falloff_distance: f64,
-        apply_to: String,
     },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
@@ -1900,7 +1891,7 @@ fn lower_style_glitch(
 fn lower_style_spatial(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    _style_stages: &mut Vec<NativeStyleStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1911,7 +1902,7 @@ fn lower_style_spatial(
     };
     match shader.get("type").and_then(serde_json::Value::as_str) {
         Some("focused_row_gradient") => {
-            lower_style_spatial_focused_row_gradient(node, style_stages, request, warnings, &shader)
+            lower_style_spatial_focused_row_gradient(node, spec, warnings, &shader)
         }
         Some("radar") => lower_style_spatial_radar(node, spec, warnings, &shader),
         _ => NodeLoweringOutcome::Unsupported {
@@ -1922,8 +1913,7 @@ fn lower_style_spatial(
 
 fn lower_style_spatial_focused_row_gradient(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
-    request: &PlayerRenderBackendRequest,
+    spec: &mut CompositionSpec,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
     shader: &serde_json::Value,
 ) -> NodeLoweringOutcome {
@@ -1935,31 +1925,136 @@ fn lower_style_spatial_focused_row_gradient(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let Some((x, y)) = cell_scope_coordinates(node, request) else {
-        return NodeLoweringOutcome::Unsupported {
-            reason: "Effect `style.spatial` requires a resolvable single-cell scope for compositor-native focused-row-gradient lowering.".to_string(),
-        };
+    let (x, y) = match cell_scope_region(node) {
+        Ok(region) => region,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-
-    style_stages.push(NativeStyleStage::SpatialFocusedRowGradient {
-        x,
-        y,
-        bright_color: json_color_label(shader.get("bright_color"), (255, 180, 80)),
-        dim_color: json_color_label(shader.get("dim_color"), (20, 20, 35)),
-        selected_row_ratio: json_number(shader.get("selected_row_ratio")).unwrap_or(0.5),
-        falloff_distance: json_number(shader.get("falloff_distance"))
-            .unwrap_or(1.0)
-            .max(0.01),
-        apply_to: shader
-            .get("apply_to")
-            .or_else(|| shader.get("applyTo"))
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or("background")
-            .to_ascii_lowercase(),
+    if let Some(reason) = unsupported_focused_row_fields(shader) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let apply_to = match focused_row_apply_to(shader) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let selected_row_ratio = match focused_row_ratio(shader) {
+        Ok(value) => value,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let falloff_distance = match focused_row_falloff_distance(shader) {
+        Ok(value) => value,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader {
+            selected_row: None,
+            selected_row_binding: None,
+            selected_row_ratio,
+            selected_row_ratio_binding: None,
+            falloff_distance,
+            bright_color: json_color_config(shader.get("bright_color"), (255, 180, 80)),
+            dim_color: json_color_config(shader.get("dim_color"), (20, 20, 35)),
+            apply_to,
+        }),
+        region: StyleRegion::Cell { x, y },
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn unsupported_focused_row_fields(shader: &serde_json::Value) -> Option<String> {
+    for key in [
+        "selected_row",
+        "selectedRow",
+        "selected_row_binding",
+        "selectedRowBinding",
+        "selected_row_ratio_binding",
+        "selectedRowRatioBinding",
+    ] {
+        if shader.get(key).is_some() {
+            return Some(format!(
+                "Effect `style.spatial` focused_row_gradient uses `{key}`, but this v3.1 lowering currently supports only selected_row_ratio without row bindings."
+            ));
+        }
+    }
+    None
+}
+
+fn focused_row_ratio(shader: &serde_json::Value) -> Result<f32, String> {
+    let value = json_number(shader.get("selected_row_ratio")).unwrap_or(0.5);
+    if !(0.0..=1.0).contains(&value) {
+        return Err(format!(
+            "Effect `style.spatial` focused_row_gradient uses selected_row_ratio `{value}` outside 0.0..=1.0."
+        ));
+    }
+    Ok(value as f32)
+}
+
+fn focused_row_falloff_distance(shader: &serde_json::Value) -> Result<u16, String> {
+    let value = json_number(shader.get("falloff_distance")).unwrap_or(1.0);
+    if value < 1.0 || value.fract().abs() > f64::EPSILON {
+        return Err(format!(
+            "Effect `style.spatial` focused_row_gradient uses falloff_distance `{value}`, but compositor-native lowering requires a whole-cell integer >= 1."
+        ));
+    }
+    Ok(value.clamp(1.0, u16::MAX as f64) as u16)
+}
+
+fn focused_row_apply_to(shader: &serde_json::Value) -> Result<ApplyToColor, String> {
+    match shader
+        .get("apply_to")
+        .or_else(|| shader.get("applyTo"))
+        .and_then(serde_json::Value::as_str)
+    {
+        Some("foreground" | "Foreground") => Ok(ApplyToColor::Foreground),
+        Some("background" | "Background") | None => Ok(ApplyToColor::Background),
+        Some("both" | "Both") => Ok(ApplyToColor::Both),
+        Some(value) => Err(format!(
+            "Effect `style.spatial` focused_row_gradient uses `apply_to` value `{value}` that has no compositor-native FocusedRowGradientShader equivalent."
+        )),
+    }
+}
+
+fn cell_scope_region(node: &NodeSpec) -> Result<(BindableU16, BindableU16), String> {
+    let Some(ScopeSpec::Cell { x, y }) = node.scope.as_ref() else {
+        return Err("Effect `style.spatial` requires a single-cell scope for compositor-native focused-row-gradient lowering.".to_string());
+    };
+    Ok((bindable_scope_coordinate(x)?, bindable_scope_coordinate(y)?))
+}
+
+fn bindable_scope_coordinate(source: &ValueSource) -> Result<BindableU16, String> {
+    match source {
+        ValueSource::Literal { value } => match value {
+            Value::Integer(value) => u16::try_from(*value)
+                .map(BindableU16::Literal)
+                .map_err(|_| "Effect `style.spatial` cell scope coordinate is outside u16 range.".to_string()),
+            Value::Number(value) if value.is_finite() && *value >= 0.0 && value.fract() == 0.0 => {
+                Ok(BindableU16::Literal((*value).min(u16::MAX as f64) as u16))
+            }
+            _ => Err("Effect `style.spatial` cell scope coordinate must be a whole-cell integer or binding.".to_string()),
+        },
+        ValueSource::Signal { id, fallback } => {
+            if !fallback_is_zero(fallback.as_ref()) {
+                return Err("Effect `style.spatial` cell scope signal fallback cannot be represented by compositor StyleRegion bindings unless it is zero.".to_string());
+            }
+            Ok(BindableU16::Binding(id.as_str().to_string()))
+        }
+        ValueSource::Parameter { id, fallback } => {
+            if !fallback_is_zero(fallback.as_ref()) {
+                return Err("Effect `style.spatial` cell scope parameter fallback cannot be represented by compositor StyleRegion bindings unless it is zero.".to_string());
+            }
+            Ok(BindableU16::Binding(id.as_str().to_string()))
+        }
+        _ => Err("Effect `style.spatial` cell scope uses a coordinate source that cannot be represented by compositor StyleRegion bindings.".to_string()),
+    }
+}
+
+fn fallback_is_zero(value: Option<&Value>) -> bool {
+    match value {
+        None => true,
+        Some(Value::Integer(value)) => *value == 0,
+        Some(Value::Number(value)) => value.is_finite() && *value == 0.0,
+        _ => false,
+    }
+}
 fn lower_style_spatial_radar(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
@@ -3378,63 +3473,6 @@ fn structured_value_to_json(value: &StructuredValue) -> serde_json::Value {
                 .iter()
                 .map(|(key, value)| (key.clone(), structured_value_to_json(value)))
                 .collect(),
-        ),
-    }
-}
-
-fn cell_scope_coordinates(
-    node: &NodeSpec,
-    request: &PlayerRenderBackendRequest,
-) -> Option<(usize, usize)> {
-    let ScopeSpec::Cell { x, y } = node.scope.as_ref()? else {
-        return None;
-    };
-    Some((
-        resolve_scope_coordinate(x, request)?,
-        resolve_scope_coordinate(y, request)?,
-    ))
-}
-
-fn resolve_scope_coordinate(
-    source: &ValueSource,
-    request: &PlayerRenderBackendRequest,
-) -> Option<usize> {
-    match resolve_value_source_with_graph_values(
-        source,
-        &request.sample.signals,
-        &request.sample.graph_values,
-    )? {
-        Value::Integer(value) => usize::try_from(value).ok(),
-        Value::Number(value) if value.is_finite() && value >= 0.0 => Some(value.round() as usize),
-        _ => None,
-    }
-}
-
-fn json_color_label(value: Option<&serde_json::Value>, default_rgb: (u8, u8, u8)) -> String {
-    let Some(value) = value else {
-        return format!(
-            "rgba({},{},{},{})",
-            default_rgb.0, default_rgb.1, default_rgb.2, 255
-        );
-    };
-    let r = value.get("r").and_then(serde_json::Value::as_u64);
-    let g = value.get("g").and_then(serde_json::Value::as_u64);
-    let b = value.get("b").and_then(serde_json::Value::as_u64);
-    let a = value
-        .get("a")
-        .and_then(serde_json::Value::as_u64)
-        .unwrap_or(255);
-    match (r, g, b) {
-        (Some(r), Some(g), Some(b)) => format!(
-            "rgba({},{},{},{})",
-            r.min(255),
-            g.min(255),
-            b.min(255),
-            a.min(255)
-        ),
-        _ => format!(
-            "rgba({},{},{},{})",
-            default_rgb.0, default_rgb.1, default_rgb.2, 255
         ),
     }
 }
