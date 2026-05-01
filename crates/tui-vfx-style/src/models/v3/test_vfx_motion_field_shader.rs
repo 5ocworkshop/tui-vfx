@@ -4,7 +4,9 @@
 // <CLOG>Extract focused conversion tests for VfxMotionFieldShader into a dedicated sibling file.</CLOG>
 
 use super::{VfxMotionFieldBehavior, VfxMotionFieldDirection, VfxMotionFieldShader};
-use crate::models::{ColorConfig, OrbitShader, PulseWaveShader, RadarShader, SpatialShaderType};
+use crate::models::{
+    ApplyToColor, ColorConfig, OrbitShader, PulseWaveShader, RadarShader, SpatialShaderType,
+};
 
 #[test]
 fn converts_pulse_wave_into_v3_motion_field_surface() {
@@ -13,6 +15,8 @@ fn converts_pulse_wave_into_v3_motion_field_surface() {
         frequency_binding: Some("freq".to_string()),
         speed: 1.25,
         color: ColorConfig::Magenta,
+        apply_to: ApplyToColor::Background,
+        uniform: true,
         direction: crate::models::WaveDirection::Radial,
         wavelength: 10.0,
     };
@@ -25,10 +29,36 @@ fn converts_pulse_wave_into_v3_motion_field_surface() {
             frequency_binding: Some("freq".to_string()),
             speed: 1.25,
             color: ColorConfig::Magenta,
+            apply_to: ApplyToColor::Background,
+            uniform: true,
             direction: VfxMotionFieldDirection::Radial,
             wavelength: 10.0,
         }
     );
+}
+
+#[test]
+fn lowers_v3_pulse_wave_channel_fields_back_to_legacy_shader() {
+    let grouped = VfxMotionFieldShader {
+        behavior: VfxMotionFieldBehavior::PulseWave {
+            frequency: 2.0,
+            frequency_binding: None,
+            speed: 1.0,
+            color: ColorConfig::Red,
+            apply_to: ApplyToColor::Both,
+            uniform: true,
+            direction: VfxMotionFieldDirection::Horizontal,
+            wavelength: 8.0,
+        },
+    };
+
+    let lowered = SpatialShaderType::from(&grouped);
+    let SpatialShaderType::PulseWave(shader) = lowered else {
+        panic!("expected PulseWave shader");
+    };
+
+    assert_eq!(shader.apply_to, ApplyToColor::Both);
+    assert!(shader.uniform);
 }
 
 #[test]

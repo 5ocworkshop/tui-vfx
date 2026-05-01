@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
+// <CLOG>0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
+// 0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
 // 0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
 // 0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -57,9 +58,9 @@ use tui_vfx_style::models::{
     FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
     GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
     HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, NeonFlickerShader, RadarShader, RevealWipeShader, SegmentMode,
-    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
-    WayfindingNodeShader,
+    LinearGradientShader, NeonFlickerShader, PulseWaveShader, RadarShader, RevealWipeShader,
+    SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection, WayfindingNode,
+    WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -184,12 +185,6 @@ pub enum NativeStyleStage {
         hue_shift: f64,
         saturation_shift: f64,
         lightness_shift: f64,
-    },
-    /// Apply player-compatible pulse styling to existing channels.
-    Pulse {
-        color: String,
-        frequency: f64,
-        apply_to: String,
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
@@ -551,7 +546,7 @@ fn lower_node_into_spec(
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
-        "style.pulse" => lower_style_pulse(node, style_stages, request, warnings),
+        "style.pulse" => lower_style_pulse(node, spec, request, warnings),
         "style.italicWindow" => lower_style_italic_window(node, style_stages, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
@@ -2159,7 +2154,7 @@ fn lower_style_color_shift(
 
 fn lower_style_pulse(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2172,15 +2167,27 @@ fn lower_style_pulse(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::Pulse {
-        color: color_label_from_config(color_alias_input(
-            node,
-            request,
-            &["pulseColor", "color"],
-            (255, 100, 100),
-        )),
-        frequency: number_input(node, request, "frequency", 1.0).max(0.0),
-        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::PulseWave(PulseWaveShader {
+            frequency: resolved_number_input(node, request, "frequency", 1.0).max(0.0) as f32,
+            frequency_binding: signal_source_id(node, "frequency")
+                .map(|id| id.as_str().to_string()),
+            speed: 1.0,
+            color: resolved_color_alias_input(
+                node,
+                request,
+                &["pulseColor", "color"],
+                (255, 100, 100),
+            ),
+            apply_to: match pulse_apply_to_input(node, request) {
+                Ok(apply_to) => apply_to,
+                Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+            },
+            uniform: true,
+            direction: WaveDirection::Horizontal,
+            wavelength: PulseWaveShader::default().wavelength,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3606,6 +3613,35 @@ fn color_alias_input(
             g: default_rgb.1,
             b: default_rgb.2,
         })
+}
+
+fn resolved_color_alias_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    keys: &[&str],
+    default_rgb: (u8, u8, u8),
+) -> ColorConfig {
+    keys.iter()
+        .find_map(|key| resolved_color_input(node, request, key))
+        .unwrap_or(ColorConfig::Rgb {
+            r: default_rgb.0,
+            g: default_rgb.1,
+            b: default_rgb.2,
+        })
+}
+
+fn pulse_apply_to_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<ApplyToColor, String> {
+    match enum_input(node, request, "applyTo") {
+        Some("foreground" | "fg") | None => Ok(ApplyToColor::Foreground),
+        Some("background" | "bg") => Ok(ApplyToColor::Background),
+        Some("both") => Ok(ApplyToColor::Both),
+        Some(value) => Err(format!(
+            "Effect `style.pulse` uses `applyTo` value `{value}` that has no compositor-native PulseWaveShader equivalent."
+        )),
+    }
 }
 
 fn color_config_from_hex(value: &str) -> Option<ColorConfig> {

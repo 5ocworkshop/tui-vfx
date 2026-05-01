@@ -49,6 +49,8 @@ impl From<&PulseWaveShader> for VfxMotionFieldShader {
                 frequency_binding: shader.frequency_binding.clone(),
                 speed: shader.speed,
                 color: shader.color,
+                apply_to: shader.apply_to,
+                uniform: shader.uniform,
                 direction: shader.direction.into(),
                 wavelength: shader.wavelength,
             },

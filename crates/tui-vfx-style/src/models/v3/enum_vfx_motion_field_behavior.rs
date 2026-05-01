@@ -46,6 +46,13 @@ pub enum VfxMotionFieldBehavior {
         speed: f32,
         /// Target pulse color.
         color: ColorConfig,
+        /// Target channel(s) affected by the pulse.
+        #[serde(default)]
+        apply_to: crate::models::ApplyToColor,
+        /// Whether all cells share one temporal pulse factor.
+        #[serde(default)]
+        #[config(default = false)]
+        uniform: bool,
         /// Field direction.
         #[serde(default)]
         direction: VfxMotionFieldDirection,

@@ -290,11 +290,6 @@ fn scene_ir_with_native_content_stages(
                 *saturation_shift,
                 *lightness_shift,
             ),
-            NativeStyleStage::Pulse {
-                color,
-                frequency,
-                apply_to,
-            } => apply_pulse_style_stage(&mut staged, color, *frequency, apply_to),
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
@@ -822,39 +817,6 @@ fn apply_color_shift_style_stage(
     }
 }
 
-fn apply_pulse_style_stage(
-    report: &mut PlayerRenderIrReport,
-    color: &str,
-    frequency: f64,
-    apply_to: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let clock = report.loop_t.unwrap_or(report.phase_t);
-    let strength = (clock * frequency.max(0.0) * std::f64::consts::TAU).sin() * 0.5 + 0.5;
-    for y in 0..height {
-        for x in 0..width {
-            let (existing_foreground, existing_background) = report
-                .styled_cells
-                .iter()
-                .find(|cell| cell.x == x && cell.y == y)
-                .map(|cell| (cell.foreground.clone(), cell.background.clone()))
-                .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
-            let foreground = if matches!(apply_to, "foreground" | "both") {
-                pulse_lerp_rgba_label(&existing_foreground, color, strength)
-            } else {
-                existing_foreground
-            };
-            let background = if matches!(apply_to, "background" | "both") {
-                pulse_lerp_rgba_label(&existing_background, color, strength)
-            } else {
-                existing_background
-            };
-            set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
-        }
-    }
-}
-
 fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64, end: f64) {
     if !(start..=end).contains(&report.phase_t) {
         return;
@@ -1074,27 +1036,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
 
 const DEFAULT_FOREGROUND: &str = "defaultForeground";
 const TRANSPARENT_RGBA: &str = "transparent";
-fn pulse_lerp_rgba_label(from: &str, to: &str, t: f64) -> String {
-    let Some((from_r, from_g, from_b, from_a)) = parse_rgba_label(from) else {
-        return from.to_string();
-    };
-    let Some((to_r, to_g, to_b, to_a)) = parse_rgba_label(to) else {
-        return from.to_string();
-    };
-    let t = t.clamp(0.0, 1.0);
-    let inv_t = 1.0 - t;
-    rgba_label(
-        pulse_lerp_channel(from_r, to_r, inv_t, t),
-        pulse_lerp_channel(from_g, to_g, inv_t, t),
-        pulse_lerp_channel(from_b, to_b, inv_t, t),
-        pulse_lerp_channel(from_a, to_a, inv_t, t),
-    )
-}
-
-fn pulse_lerp_channel(start: u8, end: u8, inv_t: f64, t: f64) -> u8 {
-    (start as f64 * inv_t + end as f64 * t) as u8
-}
-
 fn rgba_label(r: u8, g: u8, b: u8, a: u8) -> String {
     format!("rgba({r},{g},{b},{a})")
 }

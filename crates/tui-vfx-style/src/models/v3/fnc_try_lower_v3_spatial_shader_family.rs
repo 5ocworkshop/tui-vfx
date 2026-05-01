@@ -476,6 +476,8 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
                 frequency_binding,
                 speed,
                 color,
+                apply_to,
+                uniform,
                 direction,
                 wavelength,
             } => SpatialShaderType::PulseWave(PulseWaveShader {
@@ -483,6 +485,8 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
                 frequency_binding: frequency_binding.clone(),
                 speed: *speed,
                 color: *color,
+                apply_to: *apply_to,
+                uniform: *uniform,
                 direction: (*direction).into(),
                 wavelength: *wavelength,
             }),

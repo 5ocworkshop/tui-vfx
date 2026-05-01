@@ -2584,13 +2584,117 @@ fn test_fnc_cli_native_style_pulse_matches_v2_deprecated_channel_oracle_json() {
 
     assert_eq!(report["compositionMode"], "native");
     assert_eq!(report["fallbackUsed"], false);
-    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
     assert_eq!(report["rows"][0], "╭─────────────────────────────────╮");
     assert_eq!(report["rows"][1], "│STYLE TEST: Pulse Effect         │");
     assert_eq!(
         styled_cell_color_count(&report, "rgba(230,50,50,255)", "rgba(152,55,55,255)"),
         V2_PULSE_CARD_CELL_COUNT
     );
+}
+
+#[test]
+fn test_fnc_cli_native_style_pulse_defaults_to_foreground_only_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-style-pulse-default-apply-to");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create pulse default applyTo temp root");
+    let mut recipe: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(debug_recipe_root().join("styles/style_pulse_runtime_frequency.json"))
+            .expect("read pulse recipe"),
+    )
+    .expect("parse pulse recipe");
+    recipe["graph"]["nodes"]["effectNode"]["inputs"]
+        .as_object_mut()
+        .expect("pulse inputs object")
+        .remove("applyTo");
+    let temp_recipe_path = temp_root.join("style_pulse_default_apply_to.json");
+    fs::write(
+        &temp_recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize pulse default applyTo recipe"),
+    )
+    .expect("write pulse default applyTo recipe");
+
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            temp_recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("0.25"),
+        ],
+        "render-backend native pulse default applyTo player cli",
+    );
+
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["styledCells"][0]["foreground"],
+        "rgba(230,50,50,255)"
+    );
+    assert_eq!(report["styledCells"][0]["background"], "rgba(50,10,10,255)");
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_style_pulse_unknown_apply_to_json() {
+    let recipe = unsupported_native_effect_shape_recipe(
+        "styles/style_pulse_runtime_frequency.json",
+        Some((
+            "applyTo",
+            serde_json::json!({
+                "kind": "literal",
+                "value": { "kind": "enum", "value": "sideways" }
+            }),
+        )),
+        None,
+        None,
+    );
+    let temp_root = std::env::temp_dir().join("tui-vfx-style-pulse-invalid-apply-to");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create pulse invalid applyTo temp root");
+    let temp_recipe_path = temp_root.join("style_pulse_invalid_apply_to.json");
+    fs::write(
+        &temp_recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize pulse invalid applyTo recipe"),
+    )
+    .expect("write pulse invalid applyTo recipe");
+
+    let output = run_player_cli(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            temp_recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("0.25"),
+        ],
+        "render-backend native pulse invalid applyTo player cli",
+    );
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("unsupportedNativeEffect"));
 }
 
 #[test]

@@ -1,10 +1,11 @@
 // <FILE>tui-vfx-style/src/models/cls_pulse_wave_shader.rs</FILE> - <DESC>Spatial pulse wave with rippling color</DESC>
-// <VERS>VERSION: 1.5.0</VERS>
-// <WCTX>Phase 0 P0.3 follow-on — refactor representative position/radius field math onto the shared mixed-signals spatial coordinate substrate now that those leaves exist.</WCTX>
-// <CLOG>1.5.0: use mixed-signals spatial coordinate leaves for horizontal/vertical/radial/diagonal wave phase derivation instead of open-coding normalized coordinate math in the shader.
+// <VERS>VERSION: 1.6.0</VERS>
+// <WCTX>Compositor-owned v3.1 style.pulse lowering needs PulseWaveShader to support uniform channel pulses without backend emulation.</WCTX>
+// <CLOG>1.6.0: add uniform pulse and channel-target controls so v3.1 pulse style recipes can lower into compositor shader layers.
+// 1.5.0: use mixed-signals spatial coordinate leaves for horizontal/vertical/radial/diagonal wave phase derivation instead of open-coding normalized coordinate math in the shader.
 // Add frequency_binding: Option<String> and thread an explicit frequency parameter through blend_at so style_at can resolve the binding once per frame</CLOG>
 
-use crate::models::{ColorConfig, ColorSpace};
+use crate::models::{ApplyToColor, ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::blend_colors;
 use mixed_signals::prelude::{Signal, SignalContext, SignalExt, Sine, SpatialCoordinateSignal};
@@ -32,6 +33,13 @@ pub struct PulseWaveShader {
     pub speed: f32,
     /// Color to pulse towards
     pub color: ColorConfig,
+    /// Target channel(s) affected by the pulse.
+    #[serde(default)]
+    pub apply_to: ApplyToColor,
+    /// Whether all cells share the same temporal pulse factor.
+    #[serde(default)]
+    #[config(default = false)]
+    pub uniform: bool,
     /// Wave direction
     #[config(default = "horizontal")]
     pub direction: WaveDirection,
@@ -64,6 +72,8 @@ impl Default for PulseWaveShader {
             frequency_binding: None,
             speed: 1.0,
             color: ColorConfig::Magenta,
+            apply_to: ApplyToColor::Both,
+            uniform: false,
             direction: WaveDirection::Horizontal,
             wavelength: 8.0,
         }
@@ -126,22 +136,37 @@ impl PulseWaveShader {
 impl StyleShader for PulseWaveShader {
     fn style_at(&self, ctx: &ShaderContext, base: Style) -> Style {
         let frequency = self.effective_frequency(ctx);
-        let blend_factor = self.blend_at(
-            ctx.local_x,
-            ctx.local_y,
-            ctx.width,
-            ctx.height,
-            ctx.t as f32,
-            frequency,
-        );
+        let blend_factor = if self.uniform {
+            let signal = Sine::new(1.0 / std::f32::consts::TAU, 1.0, 0.0, 0.0).normalized();
+            let wave_input = ctx.t as f32 * self.speed * frequency * std::f32::consts::TAU;
+            signal.sample(wave_input.into())
+        } else {
+            self.blend_at(
+                ctx.local_x,
+                ctx.local_y,
+                ctx.width,
+                ctx.height,
+                ctx.t as f32,
+                frequency,
+            )
+        };
         let pulse_color: Color = self.color.into();
 
         let mut result = base;
-        if base.fg != Color::TRANSPARENT {
+        if matches!(self.apply_to, ApplyToColor::Foreground | ApplyToColor::Both)
+            && base.fg != Color::TRANSPARENT
+        {
             result.fg = blend_colors(base.fg, pulse_color, blend_factor, ColorSpace::Rgb);
         }
-        if base.bg != Color::TRANSPARENT {
-            result.bg = blend_colors(base.bg, pulse_color, blend_factor * 0.3, ColorSpace::Rgb);
+        if matches!(self.apply_to, ApplyToColor::Background | ApplyToColor::Both)
+            && base.bg != Color::TRANSPARENT
+        {
+            let background_blend = if self.uniform {
+                blend_factor
+            } else {
+                blend_factor * 0.3
+            };
+            result.bg = blend_colors(base.bg, pulse_color, background_blend, ColorSpace::Rgb);
         }
         result
     }
@@ -165,6 +190,8 @@ mod tests {
             frequency_binding: None,
             speed: 1.0,
             color: ColorConfig::Red,
+            apply_to: ApplyToColor::Both,
+            uniform: false,
             direction: WaveDirection::Horizontal,
             wavelength: 4.0,
         };
@@ -191,6 +218,8 @@ mod tests {
             frequency_binding: None,
             speed: 1.0,
             color: ColorConfig::Cyan,
+            apply_to: ApplyToColor::Both,
+            uniform: false,
             direction: WaveDirection::Radial,
             wavelength: 10.0,
         };
@@ -266,6 +295,8 @@ mod tests {
             frequency_binding: Some("freq".to_string()),
             speed: 1.0,
             color: ColorConfig::Red,
+            apply_to: ApplyToColor::Both,
+            uniform: false,
             direction: WaveDirection::Horizontal,
             wavelength: 4.0,
         };
@@ -292,7 +323,33 @@ mod tests {
         // should differ at this fixed position.
         assert_ne!(out_a, out_b);
     }
+
+    #[test]
+    fn uniform_pulse_targets_both_channels_with_same_blend_factor() {
+        let shader = PulseWaveShader {
+            frequency: 2.0,
+            speed: 1.0,
+            color: ColorConfig::Rgb {
+                r: 255,
+                g: 100,
+                b: 100,
+            },
+            apply_to: ApplyToColor::Both,
+            uniform: true,
+            ..PulseWaveShader::default()
+        };
+        let ctx = ShaderContext::new(0, 0, 35, 3, 0, 0, 0.25, None, None);
+        let base = Style {
+            fg: Color::rgb(204, 0, 0),
+            bg: Color::rgb(50, 10, 10),
+            mods: Default::default(),
+        };
+        let out = shader.style_at(&ctx, base);
+
+        assert_eq!(out.fg, Color::rgb(229, 50, 50));
+        assert_eq!(out.bg, Color::rgb(152, 55, 55));
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_pulse_wave_shader.rs</FILE> - <DESC>Spatial pulse wave with rippling color</DESC>
-// <VERS>END OF VERSION: 1.4.0</VERS>
+// <VERS>END OF VERSION: 1.6.0</VERS>
