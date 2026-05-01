@@ -139,6 +139,7 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 - [arch/INDEX.md](arch/INDEX.md) — Architecture hub for foundational v3.1 schema-boundary and primitive-workbench north-star docs.
 - [arch/compositor-next-vertical-implementation-plan.md](arch/compositor-next-vertical-implementation-plan.md) — Detailed plan for copying the hardened compositor into compositor-next, then migrating primitive-by-primitive through vertical schema/runtime/validation slices.
+- [arch/compositor-next-agent-workflow-handoff.md](arch/compositor-next-agent-workflow-handoff.md) — Restartable compositor-next execution handoff for warmed low-level coding agents, lead review/integration, active worktrees, scoreboard, and per-slice gates.
 - [arch/compositor-next-current-state-fence.md](arch/compositor-next-current-state-fence.md) — Phase 0 current-state fence separating pre-existing dirty/exploratory work from compositor-next-owned vertical implementation.
 - [arch/CLOCKS_AND_TIMING.md](arch/CLOCKS_AND_TIMING.md) — Architecture note separating current and proposed clocks/cadences: lifecycle clocks, phase timing, element timing, sample time, presentation FPS, semantic update cadence, and primitive motion parameters.
 - [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, data models, responsibilities, co-located primitive source trees, and validation discipline.
