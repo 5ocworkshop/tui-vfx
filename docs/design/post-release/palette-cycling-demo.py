@@ -1,7 +1,7 @@
-# <FILE>docs/design/post-release/palette-cycling-demo.py</FILE> - <DESC>Runnable Amiga-demoscene palette-cycling demo with three swappable presets (rings/water, plasma/fire, waves/neon) selectable via 1/2/3 at runtime. Each preset bundles an index-field generator with a thematically-distinct palette; the rendering loop is identical across all three, demonstrating that wildly different visual results come from swapping pure-data inputs (the field shape and the palette colors) without touching the per-frame compositing code. Companion to historical-graphics-techniques-addendum.md §1.2.</DESC>
-# <VERS>VERSION: 0.2.0</VERS>
-# <WCTX>Extend the original single-pattern demo into a multi-preset showcase so the architectural payoff of the technique — separation of spatial pattern from color binding — is tangible and explorable in real time, not just described in prose.</WCTX>
-# <CLOG>0.2.0: rewrite with PRESETS list (rings/plasma/waves) × matching palettes (water/fire/neon); add termios cbreak + select-based non-blocking single-key input for live preset switching (1/2/3) and clean quit (q); refactor palette construction around an interpolate_palette() utility taking keyframe-color lists; non-TTY stdin gracefully degrades to key-less playback for smoke testing; expanded inline documentation explaining the architectural shape (indices computed once, palette rotates per frame, lookup binds them at render time) and why it generalizes.</CLOG>
+# <FILE>docs/design/post-release/palette-cycling-demo.py</FILE> - <DESC>Runnable Amiga-demoscene palette-cycling demo with three swappable presets (rings/water, plasma/fire, waves/neon) selectable via 1/2/3 at runtime. Each preset bundles an index-field generator with a thematically-distinct palette; the rendering loop is identical across all three, demonstrating that wildly different visual results come from swapping pure-data inputs (the field shape and the palette colors) without touching the per-frame compositing code. Renders via U+258C LEFT HALF BLOCK ▌ with fg=left half / bg=right half for doubled horizontal resolution. Companion to historical-graphics-techniques-addendum.md §1.2.</DESC>
+# <VERS>VERSION: 0.3.0</VERS>
+# <WCTX>Double horizontal resolution by encoding two samples per terminal cell via LEFT HALF BLOCK (fg=left, bg=right) and widen the palette to keep gradients smooth at the new sample density.</WCTX>
+# <CLOG>0.3.0: render with U+258C ▌ packing two samples per cell for 2× horizontal resolution; PALETTE_SIZE 16→32; rings aspect correction rescaled (dx*0.5) so circles stay circular under the sub-cell x-grid; SGR emits coalesce on (fg,bg) pairs; add fgbg() helper and HALF glyph constant.</CLOG>
 
 """
 Amiga-demoscene palette-cycling demo with multiple pattern presets.
@@ -40,6 +40,18 @@ cheap animation, cheap re-skin, and cheap mood transitions.
 To prove the independence, edit PRESETS below and pair (say) plasma_indices
 with water_palette. The visual will be unmistakably different from the
 default, but no code outside PRESETS changes.
+
+RESOLUTION TRICK
+
+Each terminal cell renders the U+258C LEFT HALF BLOCK glyph ▌ with
+foreground = left-half colour and background = right-half colour. That
+packs two independent samples into a single cell, doubling horizontal
+resolution without changing the field/palette decoupling described above.
+The index field is generated 2W sub-columns wide; the renderer walks it
+two columns at a time and emits one ▌ per terminal cell. Coalescing now
+runs on (fg, bg) pairs rather than single colours — runs are shorter, so
+byte savings are smaller than in a bg-only renderer, but well within the
+budget at this frame size.
 """
 
 import math
@@ -53,8 +65,9 @@ import tty
 # Tunables — change any of these and rerun
 # ============================================================================
 
-W, H         = 78, 18    # field size in cells
-PALETTE_SIZE = 16        # palette entries; try 8 (chunky) or 32 (smooth)
+W, H         = 78, 18    # terminal size in cells
+SUB_W        = W * 2     # sub-columns — each terminal cell carries two horizontal samples
+PALETTE_SIZE = 32        # palette entries; doubled from 16 to keep gradients smooth at 2× spatial density
 FPS          = 14        # frames per second; 60 also works on modern terms
 DIRECTION    = +1        # +1 = palette rotates one way, -1 = the other
 
@@ -63,7 +76,9 @@ DIRECTION    = +1        # +1 = palette rotates one way, -1 = the other
 # ============================================================================
 
 ESC         = "\x1b"
-def bg(r, g, b): return f"{ESC}[48;2;{r};{g};{b}m"
+def bg(r, g, b):    return f"{ESC}[48;2;{r};{g};{b}m"
+def fgbg(fc, bc):   return f"{ESC}[38;2;{fc[0]};{fc[1]};{fc[2]};48;2;{bc[0]};{bc[1]};{bc[2]}m"
+HALF        = "▌"        # U+258C LEFT HALF BLOCK — fg paints left half, bg paints right half
 RESET       = f"{ESC}[0m"
 HIDE_CURSOR = f"{ESC}[?25l"
 SHOW_CURSOR = f"{ESC}[?25h"
@@ -126,17 +141,19 @@ def rings_indices(w, h, n):
     """Concentric circles around the centre.
 
     The eye sees ripples flowing outward (or inward, with DIRECTION = -1).
-    The aspect correction (* 2.2) compensates for terminal cells being
-    roughly twice as tall as wide; without it the rings would appear as
-    vertical ovals.
+    Two aspect terms convert (sub-x, y) into a screen-isotropic distance:
+    each sub-x is half a cell wide (the LEFT HALF BLOCK halves the cell
+    horizontally), so dx is multiplied by 0.5; cells are roughly 2.2× tall
+    as wide, so dy is multiplied by 2.2. Without these the rings would be
+    elliptical instead of circular.
     """
     cx, cy = w / 2, h / 2
     field  = []
     for y in range(h):
         row = []
         for x in range(w):
-            dx = x - cx
-            dy = (y - cy) * 2.2          # aspect correction
+            dx = (x - cx) * 0.5          # each sub-x = half a cell-width
+            dy = (y - cy) * 2.2          # cells are ~2.2× taller than wide
             d  = math.sqrt(dx * dx + dy * dy)
             row.append(int(d / 1.4) % n) # /1.4 = ring spacing; smaller = thinner
         field.append(row)
@@ -207,6 +224,13 @@ PRESETS = [
 def render(indices, palette, offset, preset_idx):
     """Paint one frame to stdout, overwriting the previous frame in place.
 
+    Each row in `indices` has 2W entries; each terminal cell consumes two
+    of them — entry 2x paints the left half (fg), entry 2x+1 paints the
+    right half (bg) — emitted as a single ▌ glyph. SGR coalescing runs on
+    the (left, right) colour PAIR: while the pair is unchanged we keep
+    emitting bare ▌ bytes; on change we emit one combined fg+bg SGR and
+    update the cached pair.
+
     The output starts with HOME (cursor-to-top) so each frame's bytes
     overwrite the previous frame at the same screen positions; on a modern
     terminal this is flicker-free and avoids the cost of a full clear.
@@ -223,24 +247,26 @@ def render(indices, palette, offset, preset_idx):
     out.append("\n\n")
 
     # Live palette swatch — rotates one slot per frame, makes the trick
-    # directly visible alongside the field below.
+    # directly visible alongside the field below. Drawn with bg-only full
+    # cells so each palette entry reads as one clean separable swatch.
     out.append("Palette → ")
     for i in range(len(palette)):
         c = palette[(i + offset) % len(palette)]
         out.append(bg(*c) + "  ")
     out.append(RESET + "\n\n")
 
-    # The index field, rendered through the rotated palette. We coalesce
-    # runs of identical colour into a single bg() emit per run, which
-    # roughly halves the bytes-per-frame compared to a naive per-cell emit.
+    # The index field, rendered through the rotated palette and packed
+    # two samples per cell via the LEFT HALF BLOCK glyph.
+    n = len(palette)
     for row in indices:
-        last = None
-        for idx in row:
-            c = palette[(idx + offset) % len(palette)]
-            if c != last:
-                out.append(bg(*c))
-                last = c
-            out.append(" ")
+        last_pair = None
+        for x in range(0, len(row), 2):
+            cl = palette[(row[x]     + offset) % n]
+            cr = palette[(row[x + 1] + offset) % n]
+            if (cl, cr) != last_pair:
+                out.append(fgbg(cl, cr))
+                last_pair = (cl, cr)
+            out.append(HALF)
         out.append(RESET + "\n")
 
     sys.stdout.write("".join(out))
@@ -265,7 +291,7 @@ def read_key():
 
 def main():
     preset_idx = 0
-    indices = PRESETS[0]["indices"](W, H, PALETTE_SIZE)
+    indices = PRESETS[0]["indices"](SUB_W, H, PALETTE_SIZE)
     palette = PRESETS[0]["palette"](PALETTE_SIZE)
 
     # Switch stdin to cbreak so single keys reach us without Enter. If stdin
@@ -298,7 +324,7 @@ def main():
                         n = int(key) - 1
                         if 0 <= n < len(PRESETS):
                             preset_idx = n
-                            indices = PRESETS[n]["indices"](W, H, PALETTE_SIZE)
+                            indices = PRESETS[n]["indices"](SUB_W, H, PALETTE_SIZE)
                             palette = PRESETS[n]["palette"](PALETTE_SIZE)
                             sys.stdout.write(CLEAR)  # clear stale rows from prev preset
 
@@ -317,4 +343,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/palette-cycling-demo.py</FILE>
-# <VERS>END OF VERSION: 0.2.0</VERS>
+# <VERS>END OF VERSION: 0.3.0</VERS>
