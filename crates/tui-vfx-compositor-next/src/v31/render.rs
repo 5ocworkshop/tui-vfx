@@ -11,9 +11,10 @@ use tui_vfx_contract::{
     Value, ValueSource,
 };
 use tui_vfx_style::models::{
-    ColorConfig, ColorSpace, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
-    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
-    SpatialShaderType, StyleRegion, TextContrast,
+    ColorConfig, ColorSpace, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
+    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
+    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, SpatialShaderType, StyleRegion,
+    TextContrast,
 };
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
@@ -179,6 +180,14 @@ fn append_node_to_composition(
             applied_effect_kinds.push(node.effect.as_str().to_string());
             Ok(())
         }
+        "shader.glistenBand" => {
+            spec.shader_layers.push(ShaderLayerSpec {
+                shader: SpatialShaderType::GlistenBand(glisten_band_shader(node)?),
+                region: StyleRegion::All,
+            });
+            applied_effect_kinds.push(node.effect.as_str().to_string());
+            Ok(())
+        }
         other => Err(V31RenderError::Unsupported(format!(
             "Direct v3.1 rendering does not support effect `{other}`."
         ))),
@@ -211,6 +220,27 @@ fn gradient_input(node: &NodeSpec) -> Result<Gradient, V31RenderError> {
     Ok(Gradient {
         stops: vec![(0.0, start), (1.0, end)],
         space: color_space_input(node, "colorSpace")?,
+    })
+}
+
+fn glisten_band_shader(node: &NodeSpec) -> Result<GlistenBandShader, V31RenderError> {
+    Ok(GlistenBandShader {
+        speed: optional_number_input(node, "speed")
+            .unwrap_or(1.0)
+            .clamp(0.1, 10.0) as f32,
+        speed_binding: None,
+        band_width: number_input(node, "bandWidth").max(1.0) as u16,
+        angle_deg: optional_number_input(node, "angleDeg").unwrap_or(0.0) as f32,
+        head: ColorConfig::from(color_input(node, "color")?),
+        tail: ColorConfig::from(color_input(node, "color")?),
+        direction: glisten_direction_input(node, "direction")?,
+        direction_binding: None,
+        repeat_count: 0,
+        apply_to: GlistenApplyTo::Foreground,
+        blend_strength: optional_number_input(node, "blendStrength")
+            .unwrap_or(1.0)
+            .clamp(0.0, 1.0) as f32,
+        blend_strength_binding: None,
     })
 }
 
@@ -375,6 +405,20 @@ fn apply_to_input(node: &NodeSpec, id: &str) -> Result<LinearGradientApplyTo, V3
             "Direct v3.1 rendering expected enum input `{id}` for shader.linearGradient."
         ))),
     }
+}
+
+fn glisten_direction_input(node: &NodeSpec, id: &str) -> Result<GlistenDirection, V31RenderError> {
+    match optional_literal_value(node, id).and_then(Value::as_enum_value) {
+        Some("leftToRight") | None => Ok(GlistenDirection::Forward),
+        Some("rightToLeft") => Ok(GlistenDirection::Reverse),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.glistenBand direction `{value}` is not supported by direct v3.1 rendering."
+        ))),
+    }
+}
+
+fn optional_number_input(node: &NodeSpec, id: &str) -> Option<f64> {
+    optional_literal_value(node, id).and_then(Value::as_range_number)
 }
 
 fn highlighter_apply_to_input(

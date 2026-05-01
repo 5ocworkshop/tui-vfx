@@ -86,6 +86,7 @@ fn validate_direct_render_contract(recipe: &RecipeDocument) -> Result<(), V31Loa
         match node.effect.as_str() {
             "shader.linearGradient" => validate_linear_gradient_direct_inputs(node_id, node)?,
             "shader.highlighter" => validate_highlighter_direct_inputs(node_id, node)?,
+            "shader.glistenBand" => validate_glisten_band_direct_inputs(node_id, node)?,
             _ => {}
         }
     }
@@ -196,6 +197,35 @@ fn require_literal_input(
     literal_direct_value(node_id, node, input).map(|_| ())
 }
 
+fn validate_glisten_band_direct_inputs(
+    node_id: &NodeId,
+    node: &NodeSpec,
+) -> Result<(), V31LoadError> {
+    require_declared_inputs_literal(node_id, node)?;
+
+    require_color_input(node_id, node, "color")?;
+    require_integer_valued_number_input(node_id, node, "bandWidth")?;
+    for input in ["blendStrength", "angleDeg", "speed"] {
+        if node.inputs.contains_key(&EffectInputId::new(input)) {
+            require_number_input(node_id, node, input)?;
+        }
+    }
+    if node.inputs.contains_key(&EffectInputId::new("direction")) {
+        require_enum_value(node_id, node, "direction", &["leftToRight", "rightToLeft"])?;
+    }
+    for input in ["head", "tail"] {
+        if node.inputs.contains_key(&EffectInputId::new(input)) {
+            return Err(direct_input_error(
+                node_id,
+                node,
+                input,
+                "shader.glistenBand numeric head/tail band-position fields are not supported by direct v3.1 rendering.",
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn validate_highlighter_direct_inputs(
     node_id: &NodeId,
     node: &NodeSpec,
@@ -282,6 +312,27 @@ fn require_number_input(
                 &format!("Direct v3.1 rendering expected numeric input `{input}`."),
             )
         })
+}
+
+fn require_integer_valued_number_input(
+    node_id: &NodeId,
+    node: &NodeSpec,
+    input: &str,
+) -> Result<f64, V31LoadError> {
+    let value = require_number_input(node_id, node, input)?;
+    if value.fract().abs() <= f64::EPSILON {
+        Ok(value)
+    } else {
+        Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!(
+                "{} `{input}` value `{value}` must be an integer-valued number for direct v3.1 rendering.",
+                node.effect.as_str()
+            ),
+        ))
+    }
 }
 
 fn require_bool_input(node_id: &NodeId, node: &NodeSpec, input: &str) -> Result<(), V31LoadError> {

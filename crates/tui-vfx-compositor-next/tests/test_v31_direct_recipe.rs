@@ -340,6 +340,147 @@ fn highlighter_recipe_value() -> serde_json::Value {
     recipe
 }
 
+fn glisten_band_recipe_value() -> serde_json::Value {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["id"] = serde_json::Value::String("compositorNextDirectGlistenBand".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "text", "value": "GLISTEN" }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 7 }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["height"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 1 }
+    });
+    recipe["scenes"][0]["width"] = serde_json::Value::from(7);
+    recipe["scenes"][0]["height"] = serde_json::Value::from(1);
+    recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("nodes object")
+        .remove("gradient");
+    recipe["graph"]["nodes"]["glisten"] = serde_json::json!({
+        "id": "glisten",
+        "effect": "shader.glistenBand",
+        "inputs": {
+            "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 0, "b": 0, "a": 255 } } },
+            "bandWidth": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "direction": { "kind": "literal", "value": { "kind": "enum", "value": "leftToRight" } },
+            "blendStrength": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
+            "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } }
+        },
+        "outputs": {},
+        "activePhases": [],
+        "scope": { "kind": "all" },
+        "cellWritePolicy": "writeCell",
+        "roleWritePolicy": { "kind": "preserveDestination" }
+    });
+    recipe["graph"]["order"] = serde_json::json!(["glisten"]);
+    recipe
+}
+
+#[test]
+fn load_validated_v31_glisten_band_renders_directly_in_compositor_next() {
+    let catalog = primitive_catalog();
+    let loaded = LoadedV31Recipe::load(recipe_from_value(glisten_band_recipe_value()), &catalog)
+        .expect("glisten band recipe validates at load time");
+
+    let frame = render_v31_recipe(&loaded, &V31SampleContext { phase_t: 0.0625 })
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.recipe_id, "compositorNextDirectGlistenBand");
+    assert_eq!(
+        frame.applied_effect_kinds,
+        vec!["shader.glistenBand".to_string()]
+    );
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().fg, Color::RED);
+    assert_eq!(frame.grid.cell((6, 0)).unwrap().fg, Color::WHITE);
+}
+
+#[test]
+fn rejects_descriptor_valid_glisten_band_tail_input_without_direct_support() {
+    let catalog = primitive_catalog();
+    let mut recipe = glisten_band_recipe_value();
+    recipe["graph"]["nodes"]["glisten"]["inputs"]["tail"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "number", "value": 0.5 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unsupported glisten band tail input");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.glistenBand" && input == "tail"
+    ));
+}
+
+#[test]
+fn rejects_fractional_glisten_band_width_without_direct_support() {
+    let catalog = primitive_catalog();
+    let mut recipe = glisten_band_recipe_value();
+    recipe["graph"]["nodes"]["glisten"]["inputs"]["bandWidth"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "number", "value": 1.5 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects fractional glisten band width");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.glistenBand" && input == "bandWidth"
+    ));
+}
+
+#[test]
+fn rejects_runtime_sourced_glisten_band_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = glisten_band_recipe_value();
+    recipe["graph"]["parameters"]["glistenColor"] = serde_json::json!({
+        "id": "glistenColor",
+        "displayName": "Glisten Color",
+        "description": null,
+        "value": {
+            "kind": "color",
+            "default": { "kind": "color", "value": { "r": 255, "g": 0, "b": 0, "a": 255 } },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "bindable": true
+    });
+    recipe["graph"]["nodes"]["glisten"]["inputs"]["color"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "glistenColor",
+        "fallback": { "kind": "color", "value": { "r": 255, "g": 0, "b": 0, "a": 255 } }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects runtime-sourced glisten band inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.glistenBand" && input == "color"
+    ));
+}
+
 #[test]
 fn load_validated_v31_highlighter_renders_directly_in_compositor_next() {
     let catalog = primitive_catalog();

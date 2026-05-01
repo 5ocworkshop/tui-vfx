@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Compositor-next execution handoff: warmed low-level coding agents implement vertical slices while the lead reviews, verifies, documents, and commits.</WCTX> -->
-<!-- <CLOG>0.1.0: INIT — document the repeatable two-agent vertical-slice workflow, scoreboard, active worktrees, review gates, and restart instructions.</CLOG> -->
+<!-- <CLOG>0.2.0: MINOR — advance scoreboard after shader.glistenBand integration and note focusField as the remaining active worktree.
+0.1.0: INIT — document the repeatable two-agent vertical-slice workflow, scoreboard, active worktrees, review gates, and restart instructions.</CLOG> -->
 
 # Compositor-Next Agent Workflow Handoff
 
@@ -38,18 +39,19 @@ Current descriptor-effect count:
 Signed direct compositor-next v3.1 primitives:
 
 ```text
-2 / 120
+3 / 120
 ```
 
 Signed primitives:
 
 1. `shader.linearGradient`
 2. `shader.highlighter`
+3. `shader.glistenBand`
 
 Remaining:
 
 ```text
-118 / 120
+117 / 120
 ```
 
 Human-facing progress banner:
@@ -58,9 +60,9 @@ Human-facing progress banner:
 ╔════════════════════════════════════════════════════╗
 ║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
 ╠════════════════════════════════════════════════════╣
-║ Signed:  2 / 120  ██░░░░░░░░░░░░░░░░░░░░  1.7%   ║
-║ Active:  2 slices in flight                       ║
-║ Queue:   borderSweep, revealWipe, then onward     ║
+║ Signed:  3 / 120  ███░░░░░░░░░░░░░░░░░░░  2.5%   ║
+║ Active:  1 slice in flight                        ║
+║ Queue:   focusField, borderSweep, revealWipe      ║
 ╚════════════════════════════════════════════════════╝
 ```
 
@@ -73,7 +75,7 @@ Two isolated worktrees were created from commit
 | Agent | Primitive | Worktree | Branch |
 | --- | --- | --- | --- |
 | Zeno | `shader.focusField` | `/usr/projects/tui-vfx-slice-focus-field` | `slice/focus-field` |
-| Tesla | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` |
+| Tesla | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` — integrated; keep warm for next assignment after commit |
 
 If these Codex subagents are still available, keep them warm and feed follow-up
 slices to the same agents after their current work is reviewed and integrated.
@@ -246,12 +248,11 @@ Run additional tests for any crate or tooling touched by the slice.
 Current active:
 
 1. `shader.focusField`
-2. `shader.glistenBand`
 
 Recommended next queue, unless current slices reveal a better order:
 
-3. `shader.borderSweep`
-4. `shader.revealWipe`
+2. `shader.borderSweep`
+3. `shader.revealWipe`
 5. Remaining shader primitives by complexity and migration demand
 6. Filters
 7. Masks
@@ -282,4 +283,4 @@ git worktree list --porcelain
 7. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
 <!-- <WCTX>v3.1 north-star execution plan: validate recipes at load time, then pass canonical v3.1 structures through to copied compositor-next via vertical slices.</WCTX> -->
-<!-- <CLOG>0.8.0: MINOR — record the shared loader/player-next path and second shader.highlighter vertical slice.
+<!-- <CLOG>0.9.0: MINOR — record shader.glistenBand as the third direct v3.1 slice and first >500 LOC cohesion checkpoint.
+0.8.0: MINOR — record the shared loader/player-next path and second shader.highlighter vertical slice.
 0.7.0: MINOR — clarify the pure v3.1 target: load-time recipe validation, then direct canonical v3.1 flow to compositor-next with no bridge/shim investment.
 0.6.0: MINOR — elevate validation/tooling maturity to an early gate before broad primitive work.
 0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
@@ -780,8 +781,8 @@ Recommended order:
 
 1. `shader.linearGradient` — signed off as the first direct v3.1 slice.
 2. `shader.highlighter` — signed off as the second direct v3.1 slice and first player-next visual-test path consumer.
-3. `shader.focusField`
-4. `shader.glistenBand`
+3. `shader.glistenBand` — signed off as the third direct v3.1 slice with numeric head/tail explicitly unsupported.
+4. `shader.focusField`
 5. `shader.borderSweep`
 6. `shader.revealWipe`
 7. Remaining shader primitives by complexity and migration demand
@@ -1037,4 +1038,4 @@ Only resume broad recipe migration on signed-off primitives.
 ```
 
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->
