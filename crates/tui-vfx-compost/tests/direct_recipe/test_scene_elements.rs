@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
+// <VERS>VERSION: 0.3.3</VERS>
 // <WCTX>Phase 1 scene substrate: prove multi-element composition, z ordering, signed placement clipping, and strict policy rejection.</WCTX>
-// <CLOG>0.3.1: PATCH — assert graphBinding.timing diagnostic path explicitly.
+// <CLOG>0.3.3: PATCH — keep scene test imports rustfmt-aligned.
+// 0.3.2: PATCH — keep vertical clipping fixture line-aware after Phase 2 source materialization.
+// 0.3.1: PATCH — assert graphBinding.timing diagnostic path explicitly.
 // 0.3.0: PATCH — add graph-binding timing rejection regression.
 // 0.2.1: PATCH — centralize repeated scene sizing and render fixture setup.
 // 0.2.0: PATCH — add deferred scene-element policy rejection regressions.
@@ -175,8 +177,8 @@ fn clips_negative_and_overflow_placement_without_rebasing_source_origin() {
 fn clips_vertical_negative_and_bottom_overflow_placement() {
     let mut recipe = linear_gradient_recipe_value();
     set_scene_size(&mut recipe, 2, 2);
-    recipe["sources"]["topClipCard"] = source_with_message("ABCD", 2, 2);
-    recipe["sources"]["bottomClipCard"] = source_with_message("WXYZ", 2, 2);
+    recipe["sources"]["topClipCard"] = source_with_message("AB\nCD", 2, 2);
+    recipe["sources"]["bottomClipCard"] = source_with_message("WX\nYZ", 2, 2);
     recipe["scenes"][0]["elements"] = serde_json::json!([
         element_with_source("topClipElement", "topClipCard", 0, -1, 0),
         element_with_source("bottomClipElement", "bottomClipCard", 0, 1, 1)
@@ -310,4 +312,4 @@ fn rejects_deferred_graph_binding_timing_at_load_time() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.3.3</VERS>

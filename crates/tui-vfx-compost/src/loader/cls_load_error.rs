@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Load errors describe canonical v3.1 acceptance failures for currently supported substrate behavior.</WCTX>
-// <CLOG>0.2.0: MINOR — add scene element policy rejection diagnostics.</CLOG>
+// <CLOG>0.3.0: MINOR — add source descriptor rejection diagnostics.
+// 0.2.0: MINOR — add scene element policy rejection diagnostics.</CLOG>
 
 use std::error::Error;
 use std::fmt;
@@ -29,6 +30,16 @@ pub enum LoadError {
         source_id: String,
         /// Source input id.
         input: String,
+        /// Human-readable reason.
+        reason: String,
+    },
+
+    /// A source descriptor is currently unsupported by the native direct renderer.
+    UnsupportedSourceDescriptor {
+        /// Source instance id.
+        source_id: String,
+        /// Source descriptor id.
+        descriptor: String,
         /// Human-readable reason.
         reason: String,
     },
@@ -85,6 +96,14 @@ impl fmt::Display for LoadError {
                 formatter,
                 "unsupported source input {source_id}.{input}: {reason}"
             ),
+            Self::UnsupportedSourceDescriptor {
+                source_id,
+                descriptor,
+                reason,
+            } => write!(
+                formatter,
+                "unsupported source descriptor {source_id}: {descriptor}: {reason}"
+            ),
             Self::UnsupportedInput {
                 node_id,
                 effect,
@@ -120,4 +139,4 @@ impl From<tui_vfx_contract::DescriptorValidationError> for LoadError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

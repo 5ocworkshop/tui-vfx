@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_scene_element.rs</FILE> - <DESC>Render one source-backed scene element</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 element orchestration materializes canonical sources and clips signed placement.</WCTX>
-// <CLOG>0.1.0: INIT — add element render orchestration for scene composition.</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Element orchestration receives materialized source surfaces from the Phase 2 source substrate before clipping.</WCTX>
+// <CLOG>0.2.1: PATCH — keep render imports rustfmt-aligned after source dispatch wiring.
+// 0.2.0: MINOR — route source materialization through descriptor dispatch seam.
+// 0.1.0: INIT — add element render orchestration for scene composition.</CLOG>
 
 use tui_vfx_contract::{RecipeDocument, RecipeScene, RecipeSceneElement};
 use tui_vfx_types::{Grid, OwnedGrid, SemanticScene, Style};
@@ -10,7 +12,7 @@ use crate::render::{
     ElementClipBounds, RenderError, SampleContext, clip_element_bounds, collect_graph_step_nodes,
 };
 use crate::shaders::LinearGradientNode;
-use crate::source::source_grid_from_inputs;
+use crate::source::materialize_source;
 
 pub(crate) fn render_scene_element(
     recipe: &RecipeDocument,
@@ -29,7 +31,7 @@ pub(crate) fn render_scene_element(
                 element.source_instance.as_str()
             ))
         })?;
-    let source_grid = source_grid_from_inputs(&source.inputs)?;
+    let source_grid = materialize_source(source)?;
     let Some(bounds) = clip_element_bounds(
         element.placement,
         source_grid.width(),
@@ -121,4 +123,4 @@ fn render_source_with_shaders(
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_scene_element.rs</FILE> - <DESC>Render one source-backed scene element</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

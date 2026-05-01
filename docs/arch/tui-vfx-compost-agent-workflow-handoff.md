@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 0.12.8</VERS> -->
-<!-- <WCTX>tui-vfx-compost substrate Phase 1: scene element composition now has native multi-element rendering, z order, signed clipping, and strict deferred-policy rejection.</WCTX> -->
-<!-- <CLOG>0.12.8: PATCH — record graphBinding.timing rejection with deferred scene-element policies.
+<!-- <VERS>VERSION: 0.13.0</VERS> -->
+<!-- <WCTX>tui-vfx-compost substrate Phase 2: source descriptor validation and materialization now have a native source.card seam.</WCTX> -->
+<!-- <CLOG>0.13.0: MINOR — record Phase 2 source substrate status.
+0.12.8: PATCH — record graphBinding.timing rejection with deferred scene-element policies.
 0.12.7: PATCH — record strict Phase 1 deferred scene-element policy rejection.
 0.12.6: PATCH — record Phase 1 scene/element substrate status without changing primitive migration counters.
 0.12.5: PATCH — rename active element graph binding vocabulary and quarantine pipeline wording as proof-only or read-only reference.</CLOG> -->
@@ -156,7 +157,7 @@ Substrate phase status:
 | --- | --- | --- |
 | Phase 0 — Native transition and motion checkpoint | Complete | `docs/arch/v31-native-transition-model.md` remains the controlling transition decision record. |
 | Phase 1 — Scene and element substrate | Complete | Native compost render orchestration now composes all scene elements in stable z-index/declaration paint order, preserves signed placement origin while clipping, and keeps the existing one-element `shader.linearGradient` smoke test green. |
-| Phase 2 — Source substrate | Not started | Primitive migration remains paused until the substrate phases complete. |
+| Phase 2 — Source substrate | Complete | Native compost source validation now rejects unsupported source descriptors/runtime inputs at load time, and source materialization dispatches `source.card` before scene placement/clipping. |
 
 Phase 1 behavior notes:
 
@@ -173,6 +174,20 @@ Phase 1 behavior notes:
   non-clip overflow, placement motion, declarative placement rules, scroll
   factors, element-local graph timing, and other role/cell write policies fail
   during `LoadedRecipe::load` rather than being silently ignored.
+
+Phase 2 behavior notes:
+
+- `materialize_source` is the native source descriptor dispatch seam. It
+  currently accepts only load-validated `source.card` and returns an
+  element-local grid before scene placement and clipping.
+- Source dimensions and scene dimensions are independent. A source may clip into
+  a smaller scene, and a larger scene does not reflow or stretch a smaller
+  source.
+- Unsupported source descriptors, non-literal source values, unsupported
+  `source.card` chrome/unknown inputs, invalid source literal shapes, and
+  out-of-range card dimensions fail during `LoadedRecipe::load`.
+- `source.card` message materialization preserves line boundaries rather than
+  flattening newline-separated text.
 
 ## Primitive Completion Tracker
 
@@ -864,4 +879,4 @@ git worktree list --porcelain
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.8</VERS> -->
+<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->

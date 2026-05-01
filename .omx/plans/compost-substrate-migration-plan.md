@@ -1,7 +1,8 @@
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.4.6</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>Require each substrate phase to start from tui-vfx-compositor reference study and an adaptation plan before implementation.</WCTX> -->
-<!-- <CLOG>0.4.6: PATCH — record graphBinding.timing as rejected until timing substrate.
+<!-- <CLOG>0.5.0: MINOR — add Phase 2 source substrate reference study and adaptation plan.
+0.4.6: PATCH — record graphBinding.timing as rejected until timing substrate.
 0.4.5: PATCH — record Phase 1 strict deferred scene-element policy rejection scope.
 0.4.4: PATCH — add the per-phase reference-study gate and Phase 1 migration/adaptation plan.
 0.4.3: PATCH — tighten timing, proof-harness, wipe-angle, and verification wording for active substrate execution.</CLOG> -->
@@ -351,6 +352,39 @@ Acceptance:
 - Unsupported runtime-sourced source inputs fail at load time.
 - Source dimensions and scene dimensions are tested separately.
 
+Reference study and migration plan:
+
+- Mature reference files studied with `ofpf-*` plus direct reads:
+  - `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs`
+  - `crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs`
+  - `crates/tui-vfx-player/src/fnc_render_scene.rs` for current canonical
+    `source.card` authoring behavior after confirming `tui-vfx-compositor`
+    itself consumes already-materialized grids.
+- Proven behavior to preserve conceptually:
+  - compositor render orchestration receives an already-materialized source
+    `Grid` plus explicit source width/height;
+  - source size and destination scene/render area stay independent;
+  - source creation is testable as an input surface before effects are applied.
+- v3.1 adaptation:
+  - keep `source.card` materialization as a native compost source concern;
+  - introduce a descriptor dispatch seam (`materialize_source`) before scene
+    placement/clipping;
+  - reject unsupported source descriptors, non-literal source values,
+    unsupported `source.card` chrome/unknown inputs, out-of-range card
+    dimensions, and invalid source literal shapes during `LoadedRecipe::load`;
+  - preserve `source.card` message line boundaries during materialization,
+    following the current player source behavior rather than flattening text.
+- Red tests:
+  - `source.card` still renders the existing literal card fixture;
+  - `source.text` descriptor is rejected after canonical descriptor validation;
+  - runtime-sourced `message` is rejected at load time;
+  - unsupported card chrome input is rejected at load time;
+  - missing/wrong-shaped source literals and out-of-range dimensions are
+    rejected during load;
+  - source width clips into a narrower scene independently from scene width;
+  - scene width can exceed source width without source reflow;
+  - multiline card messages keep line boundaries.
+
 ### Phase 3 — Native Effect Stack Skeleton
 
 Goal: define native execution slots for all v3.1 effect families without
@@ -615,4 +649,4 @@ while preserving the pure v3.1 architecture and OFPF modularity.
   masks, mattes, transitions, keyframes, and presets.
 
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.6</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
