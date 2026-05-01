@@ -1,11 +1,11 @@
 <!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Refresh subagent dispatch after OMX default profiles aligned with gpt-5.5 role routing.</WCTX> -->
-<!-- <CLOG>0.1.0: MINOR — add metadata and replace stale role-suppressed/model-pinned dispatch guidance with role-routed OMX profile guidance.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
+<!-- <WCTX>Clarify one-time subagent grounding so follow-on packet prompts do not trigger repeated global orientation.</WCTX> -->
+<!-- <CLOG>0.1.1: PATCH — clarify that accepted `READY FOR WORK PACKET` grounding satisfies later packet grounding requirements.</CLOG> -->
 
 # Orchestration Protocol
 
-Purpose: persistent instructions for how the leader agent should manage subagents and work packets during long-running V3 / library migration work, especially after context compaction or reset.
+Purpose: persistent instructions for how the leader agent should manage subagents and work packets during long-running versioned recipe/compositor migration work, especially after context compaction or reset.
 
 ## 1. Leader vs subagent split
 
@@ -26,51 +26,128 @@ Subagents own bounded lanes only:
 
 Do not outsource core architectural judgment or final verification.
 
-## 2. Mandatory pre-dispatch context
+## 2. Mandatory grounding before packet assignment
 
-Never dispatch a subagent without explicitly requiring it to read the relevant governing docs first.
+Never assign a work packet to a newly launched subagent as its first task.
+Launch the subagent with a single grounding assignment:
 
-Read order matters. Put the highest-value steering files first so the most
-important principles remain near the top of the agent's context window.
+```text
+Read and follow /usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md.
+Complete the grounding report and stop with READY FOR WORK PACKET.
+Do not begin implementation or packet work until the leader assigns a packet.
+```
 
-Required first-pass steering read order for subagents:
-1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
-2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
-3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when touching lower signal/math substrate
-4. current shared briefing document for the active lane
+Grounding is one-time per subagent session. If the same subagent has already
+completed `/usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md`, reported
+`READY FOR WORK PACKET`, and the leader accepted that report, later packet
+prompts must treat shared grounding as satisfied. Do not ask that agent to rerun
+the global grounding pass. The packet should instead tell the agent to confirm
+prior grounding, read only packet-specific docs, and proceed with targeted OFPF
+inspection for the assigned lane. If the agent cannot confirm prior grounding, or
+if context loss makes the prior report unavailable, the leader should refresh or
+rerun grounding before assigning packet work.
 
-Second-pass supporting docs:
-- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
-- `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
-- `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
-- `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
-- `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
-- additional task-specific design/schema docs as needed
+This removes duplicate must-read lists from the process. The grounding file is
+the single source for project goals, philosophy, coding standards, OFPF practice,
+and vocabulary gating before packet work. Work packets then carry only
+packet-specific scope, docs, verification, and reporting instructions.
+
+The leader must wait for the grounding report and check that it is substantive:
+the agent should name the documents read, summarize applicable constraints,
+show high-value OFPF practice commands, and report any unreadable document as a
+blocker or verification gap. A pro-forma "read the docs" acknowledgement is not
+enough.
+
+Document-flow model:
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│ LEADER / ORCHESTRATION VIEW                                         │
+│ steering/ORCHESTRATION.md                                           │
+│                                                                     │
+│ Defines: new subagents ground first; grounded subagents do not       │
+│ repeat global grounding; packets carry task-specific context only.   │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ NEW SUBAGENT?                                                       │
+└───────────────┬───────────────────────────────────────┬─────────────┘
+                │ yes                                   │ no / reused
+                ▼                                       ▼
+┌───────────────────────────────────────┐     ┌──────────────────────────────┐
+│ GROUNDING ASSIGNMENT ONLY             │     │ CHECK PRIOR GROUNDING         │
+│ steering/SUBAGENT-GROUNDING.md        │     │                              │
+│                                       │     │ Has this subagent already:    │
+│ Agent reads global project context:   │     │ - completed grounding         │
+│ - project goals and philosophy        │     │ - reported READY FOR WORK     │
+│ - coding / TDD / OFPF rules           │     │   PACKET                     │
+│ - repository boundaries               │     │ - had leader acceptance       │
+│ - vocabulary guidance                 │     └──────────────┬───────────────┘
+│                                       │                    │
+│ Agent stops with:                     │                    ▼
+│ READY FOR WORK PACKET                 │       ┌────────────────────────────┐
+└───────────────────┬───────────────────┘       │ If yes: do not repeat      │
+                    │                           │ global grounding. Continue │
+                    ▼                           │ to packet-specific docs.   │
+┌───────────────────────────────────────┐       └──────────────┬─────────────┘
+│ LEADER ACCEPTS GROUNDING REPORT       │                      │
+│                                       │                      │
+│ Checks report is substantive, not a   │                      │
+│ ceremonial acknowledgement.           │                      │
+└───────────────────┬───────────────────┘                      │
+                    │                                          │
+                    └──────────────────┬───────────────────────┘
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ WORK PACKET DISPATCH                                                │
+│ steering/work-packets/<packet>.md                                   │
+│ or steering/TASK_PACKET_TEMPLATE.md-derived packet                  │
+│                                                                     │
+│ Packet says: confirm accepted grounding; do not repeat it; read     │
+│ packet-specific docs only; inspect task-scope paths with OFPF; stay │
+│ inside write scope; run exact verification commands.                │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ COMMON EXECUTION RULES                                              │
+│ steering/work-packets/COMMON_EXECUTION_RULES.md                     │
+│                                                                     │
+│ Applies reusable packet rails: grounding status reporting, OFPF      │
+│ first, scope split, exact verification, hot-path and handoff rules. │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ SUBAGENT EXECUTES PACKET                                            │
+│                                                                     │
+│ Final report includes grounding confirmation, packet-specific docs, │
+│ changed files, commands run, pass/fail, blockers, and risks.        │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ LEADER REVIEW / VERIFY / ACCEPT                                     │
+│                                                                     │
+│ Leader owns integration, final verification, semantic review,        │
+│ commit, packet archival, and agent closure.                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 Leader note:
 - this ORCHESTRATION file is primarily leader-facing
 - subagents should not normally be told to read it directly
-- instead, the leader should distill the relevant orchestration rules into the
-  active briefing and the concrete task packet
-
-Reflection step before action:
-- after reading the first-pass steering docs, the subagent should briefly
-  restate to itself (and later in the report if useful) the key repo-boundary
-  rules and the definition of done for the assigned lane
-- only then should it move on to orientation commands and deeper code reading
-
-Every subagent prompt must explicitly instruct the agent to say it read those docs in the final report.
+- instead, the leader should distill the relevant orchestration rules into
+  `SUBAGENT-GROUNDING.md`, the active briefing, and the concrete task packet
 
 ## 3. Orientation first
 
-After the first-pass steering read and short reflection, subagents should take
-orientation snapshots for the repos in scope before deeper code reads:
-- `ofpf-orientation --root /usr/projects/tui-vfx`
-- `ofpf-orientation --root /usr/projects/tui-vfx-recipes`
-- `ofpf-orientation --root /usr/projects/mixed-signals`
-- `ofpf-orientation --root /usr/projects/gt-design` when GTD is in scope
-
-Prefer OFPF tools first for exploration and targeted reads. Fall back to narrow `rg` / `sed` / `jq` only when OFPF is unavailable or insufficient.
+`SUBAGENT-GROUNDING.md` owns the initial OFPF practice pass. Follow-on packet
+prompts own only packet-specific context. After a grounded agent receives a work
+packet, use OFPF tools first for packet-specific exploration and targeted reads.
+Fall back to narrow `rg` / `sed` / `jq` only when OFPF is unavailable or
+insufficient.
 
 ## 4. Work packet format
 
@@ -82,7 +159,7 @@ Each subagent packet should include, in this preferred order:
 5. exact task-scope paths used for grounding
 6. exact write scope
 7. explicit out-of-scope items
-8. must-read docs in order
+8. packet-specific extra docs only; do not repeat global grounding docs
 9. repo-boundary guardrails
 10. first steps / grounding instructions
 11. verification expected (exact shell-ready commands when possible)
@@ -214,12 +291,21 @@ Current role/task routing after the OMX profile refresh:
 - never suppress role selection merely to preserve `gpt-5.5`; role profiles
   are now the supported way to reach the correct model/effort lane
 
-Grounding-first rule for research/evaluation packets:
-- if the packet is testing comprehension or prompt quality, require the helper
-  to complete all grounding work first
-- then require the helper to stop and declare `READY FOR QUESTIONS`
-- only after that should the evaluator ask comprehension questions
-- do not score answers from a helper that skipped the grounding-first stop point
+Grounding-first rule:
+- all newly launched subagents complete `SUBAGENT-GROUNDING.md` first and stop
+  with `READY FOR WORK PACKET`
+- once the leader accepts that report, later packet prompts treat shared
+  grounding as complete; do not make the same subagent repeat the global pass
+- if the packet is testing comprehension or prompt quality, ask questions only
+  after that stop point
+- do not score or rely on answers from a helper that skipped the grounding stop
+  point
+
+
+Version precision:
+- Treat version labels as scope. `V3`, `v3.1`, and V2 are different surfaces.
+- If the active packet is v3.1, subagent prompts and reports must say `v3.1` / `V3.1`, not generic `V3 pipeline` or `V3 migration`, unless explicitly discussing historical V3 artifacts.
+- If an inherited steering doc uses older generic V3 wording, the leader must translate it into the active packet's version-specific scope instead of copying the generic wording into the briefing.
 
 ## 5. Path discipline
 
@@ -320,7 +406,8 @@ During active library migration:
 ## 10. Reporting expectations
 
 Subagent final reports must include:
-- explicit note that must-read docs were read
+- explicit note that `SUBAGENT-GROUNDING.md` was completed before packet work,
+  plus any packet-specific docs read
 - changed files
 - concrete evidence / commands run
 - blockers or recommended next handoff
@@ -413,7 +500,7 @@ Preferred task-packet ordering for bounded lanes:
 5. task-scope grounding paths
 6. exact write scope
 7. explicit out-of-scope items
-8. must-read docs
+8. packet-specific extra docs
 9. repo-boundary reminders
 10. first steps / grounding instructions
 11. hot-path/performance reminders
@@ -441,4 +528,4 @@ Escalation rule:
   dispatching more similar work
 
 <!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->

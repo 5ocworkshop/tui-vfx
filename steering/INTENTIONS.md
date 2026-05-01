@@ -1,7 +1,8 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build. Organized in two parts: Part I durable principles, Part II project-specific rules; numbering stable across the split for cross-reference compatibility.</DESC> -->
-<!-- <VERS>VERSION: 0.8.1</VERS> -->
-<!-- <WCTX>Phase 3 (packet 66) — engine-vs-recipe-player delineation. Add Intention 44 documenting the post-Phase-2 newtype-facade reality and the two-surface authoring model.</WCTX> -->
-<!-- <CLOG>0.8.1: PATCH — refresh Intention 44's Companion block to point at `steering/work-packets/completed/64-…/65-…/66-…` after the trilogy moved out of the active dir.
+<!-- <VERS>VERSION: 0.8.2</VERS> -->
+<!-- <WCTX>Clarify version-precision wording so v3.1 work is not summarized as generic V3 pipeline scope.</WCTX> -->
+<!-- <CLOG>0.8.2: PATCH — clarify version-precision wording around schema and pipeline-touch obligations.
+0.8.1: PATCH — refresh Intention 44's Companion block to point at `steering/work-packets/completed/64-…/65-…/66-…` after the trilogy moved out of the active dir.
 0.8.0: MINOR — add Intention 44 (recipe-JSON signal authoring goes through VfxRecipeSignalSpec; engine direct-API consumers use mixed_signals::* directly). Describes the as-built newtype facade per packet 65, not the obsolete Phase γ wrapper sketch.
 0.7.1: promote two-part reorganization (Part I durable principles, Part II project-specific rules; numbering stable across the split). New Intention-shape subsection under Writing style — Why mandatory, length is judgment not a gate. New How-this-file-is-organized navigation section. Audit-pass edits: renamed second #26 to 26A; fixed grammar nit in Intention 38. Body content otherwise verbatim from v0.6.4.</CLOG> -->
 
@@ -9,7 +10,7 @@
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42), and recipe-JSON signal authoring goes through the `VfxRecipeSignalSpec` facade while engine direct-API consumers use `mixed_signals::*` directly — the two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields (Intention 44).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), versioned shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done with exact version labels (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42), and recipe-JSON signal authoring goes through the `VfxRecipeSignalSpec` facade while engine direct-API consumers use `mixed_signals::*` directly — the two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields (Intention 44).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -269,7 +270,7 @@ Rules:
    live guidance.
 4. Keep index descriptions short and concrete. They should answer "start here
    or not?" without making the reader inspect every file.
-5. Treat missing index updates as a documentation bug, especially in V3 work
+5. Treat missing index updates as a documentation bug, especially in versioned recipe/schema work
    where plans, as-built docs, generated docs, and tooling guides all coexist.
 
 Why: large repos punish treasure hunts. Indexes are how humans and AI agents
@@ -702,7 +703,7 @@ ergonomics of the library itself, so they must feel intentionally professional.
 ## 32. Schema Field Vocabulary Is the Naming Anchor
 
 When docs, directory names, fixture names, examples, rustdocs, and authoring
-guidance refer to a defined V3 schema concept, use the schema field's canonical
+guidance refer to a defined versioned schema concept, use the schema field's canonical
 vocabulary unless there is a deliberate migration/deprecation reason not to.
 
 Rules:
@@ -712,7 +713,7 @@ Rules:
    explicitly discussing a lower-level path primitive.
 2. Keep adjacent concepts visibly distinct. `easings/` is for easing functions;
    `motion_routes/` is for route/path-shape fixtures that use `motion.route`.
-3. When a rename opportunity appears during V3 work, align the human-facing name
+3. When a rename opportunity appears during versioned schema work, align the human-facing name
    with the canonical field vocabulary in the same slice when the blast radius is
    small and testable.
 4. Avoid introducing new aliases in prose, file paths, or recipe IDs unless the
@@ -729,8 +730,9 @@ whether two different terms imply two different behaviors.
 
 ## 34. Pipeline-touch changes carry full family obligations
 
-When a V3 shader, filter, mask, sampler, style, content effect, motion route,
-shadow, scope, binding, or adjacent pipeline file is touched, treat the edit as
+When a v3.1 shader, filter, mask, sampler, style, content effect, motion route,
+shadow, scope, binding, or adjacent pipeline file is touched — or when another
+explicitly named versioned schema surface is touched, treat the edit as
 family work rather than a one-line local patch. The implementation, vocabulary,
 docs, fixtures, and validation evidence must move together.
 
@@ -751,8 +753,8 @@ Rules:
    docs, update the code-side metadata or curated inputs and run the relevant
    drift/coverage validation before claiming the work is done.
 4. **Use canonical vocabulary while the file is open.** Align code comments,
-   docs, recipe names, fixture directories, and rustdocs with the V3 vocabulary
-   guide. Do not add convenient synonyms for schema terms.
+   docs, recipe names, fixture directories, and rustdocs with the applicable
+   versioned vocabulary guide. Do not add convenient synonyms for schema terms.
 5. **Refresh debug/reference recipes when semantics change.** If visual
    semantics, naming, timing, authoring parameters, or parameter defaults change,
    add or update the simplest primitive-first debug recipe plus any composition
@@ -786,7 +788,7 @@ Rules:
    describes a stale model produces investigations that confirm the wrong
    mental model and miss the bug. This rule is the durable counter-force.
 
-Why: pipeline capability is the beating heart of V3. A shader or mask can be
+Why: pipeline capability is central to versioned recipe/compositor work, but version labels are scope. V3 and v3.1 are different surfaces; do not describe v3.1 work as generic V3 pipeline work. A shader or mask can be
 made to compile locally while still leaving stale timing language, undocumented
 schema fields, missing fixtures, duplicated math, or untested authoring
 behavior behind it. Those debts are hardest to detect after context has cooled.
@@ -826,7 +828,7 @@ Why: framing determines search strategy. An "effects library" prompt sends an
 author looking for `apply_effect(grid, params)` APIs and encourages confirmation
 bias when those APIs are found. The architecture-first prompt sends the author
 to the scene graph, composition model, clock, recipe runtime, and flagship
-recipes first. That is the map needed to use V3 seriously.
+recipes first. That is the map needed to use the active versioned recipe/runtime surface seriously.
 
 
 ## 36. The 3x3 line glyph table is the default and fallback font
@@ -1323,4 +1325,4 @@ packets that shipped this surface).
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.8.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.2</VERS> -->
