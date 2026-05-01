@@ -24,7 +24,7 @@ use tui_vfx_contract::{
     DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef, DurationSpec,
     DwellPolicy, EasingSpec, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
     GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
-    NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline,
+    NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementGraphBinding,
     RecipeMetadata, RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec,
     ScrollFactor, ShadowSpec, SignalExpressionSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
     SourceInstanceId, SourceOutputSpec, SourceSpec, StyleColorSource, Surface, SurfaceDiagnostic,
@@ -125,8 +125,8 @@ fn schema_roots() -> Vec<(&'static str, String)> {
             canonical_schema::<RecipeMetadata>(),
         ),
         (
-            "recipe-element-pipeline.schema.json",
-            canonical_schema::<RecipeElementPipeline>(),
+            "recipe-element-graph-binding.schema.json",
+            canonical_schema::<RecipeElementGraphBinding>(),
         ),
         (
             "recipe-scene.schema.json",
@@ -407,7 +407,9 @@ fn source_schema_roots_are_current() {
 fn recipe_schema_roots_are_current() {
     assert_schema_fixture_current::<SourceInstanceId>("source-instance-id.schema.json");
     assert_schema_fixture_current::<RecipeMetadata>("recipe-metadata.schema.json");
-    assert_schema_fixture_current::<RecipeElementPipeline>("recipe-element-pipeline.schema.json");
+    assert_schema_fixture_current::<RecipeElementGraphBinding>(
+        "recipe-element-graph-binding.schema.json",
+    );
     assert_schema_fixture_current::<RecipeScene>("recipe-scene.schema.json");
     assert_schema_fixture_current::<RecipeSceneElement>("recipe-scene-element.schema.json");
     assert_schema_fixture_current::<ScrollFactor>("scroll-factor.schema.json");
@@ -525,9 +527,7 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
         all_schemas
             .contains("Scene element whose surface is produced by a declared source instance")
     );
-    assert!(
-        all_schemas.contains("Optional element-local pipeline reference into the canonical graph")
-    );
+    assert!(all_schemas.contains("Optional element-local graph binding into the canonical graph"));
     assert!(all_schemas.contains("Canonical v3.1 graph container"));
     assert!(all_schemas.contains("Canonical execution topology for a graph"));
     assert!(all_schemas.contains("One effect node in a canonical v3.1 graph"));

@@ -854,7 +854,7 @@ JSON/schema surface, if any:
 : `schemas/v3.1/contract/lifecycle.schema.json`, `phase.schema.json`.
 
 Not the same as:
-: Graph execution, scene visibility execution, template expansion, migration, or source-local pipeline behavior.
+: Graph execution, scene visibility execution, template expansion, migration, or source-local graph behavior.
 
 Example:
 
@@ -1356,7 +1356,7 @@ Not the same as:
 : An effect descriptor. A source instance. A scene element. A legacy stage.
 
 Legacy/source-authoring synonyms, if useful:
-: Old pipeline step ids may lower to node ids if they instantiate effect descriptors. Authoring ladder examples are evidence only.
+: Old graph-bound node ids may lower to node ids if they instantiate effect descriptors. Authoring ladder examples are evidence only.
 
 Example:
 
@@ -1546,10 +1546,10 @@ Definition:
 : A canonical recipe scene element whose local semantic surface is produced by a declared source instance.
 
 Owns / owned by:
-: `RecipeSceneElement` owns element id, optional layer grouping, z-order, placement, source instance reference, optional element-local pipeline reference, clip policy, cell write policy, and role write policy.
+: `RecipeSceneElement` owns element id, optional layer grouping, z-order, placement, source instance reference, optional element-local graph binding, clip policy, cell write policy, and role write policy.
 
 Rust contract type, if any:
-: `RecipeSceneElement`, `ElementId`, `LayerId`, `ElementPlacement`, `SourceInstanceId`, `RecipeElementPipeline`, `ClipPolicy`, `CellWritePolicy`, `RoleWritePolicy`.
+: `RecipeSceneElement`, `ElementId`, `LayerId`, `ElementPlacement`, `SourceInstanceId`, `RecipeElementGraphBinding`, `ClipPolicy`, `CellWritePolicy`, `RoleWritePolicy`.
 
 JSON/schema surface, if any:
 : `schemas/v3.1/contract/recipe-scene-element.schema.json`.
@@ -1566,25 +1566,25 @@ Example:
 A recipe element named `heroTitle` references source instance `heroText`; later source rendering produces the surface that scene composition places.
 ```
 
-### RecipeElementPipeline
+### RecipeElementGraphBinding
 
 Definition:
 : An H1 graph/topology reference seam for element-local or source-local processing after a source has produced a surface.
 
 Owns / owned by:
-: `RecipeElementPipeline` owns the referenced graph id and optional topology subset. `RecipeSceneElement` owns the optional pipeline reference.
+: `RecipeElementGraphBinding` owns the referenced graph id and optional topology subset. `RecipeSceneElement` owns the optional graph binding.
 
 Rust contract type, if any:
-: `RecipeElementPipeline`, `GraphId`, `GraphStep`.
+: `RecipeElementGraphBinding`, `GraphId`, `GraphStep`.
 
 JSON/schema surface, if any:
-: `schemas/v3.1/contract/recipe-element-pipeline.schema.json`.
+: `schemas/v3.1/contract/recipe-element-graph-binding.schema.json`.
 
 Not the same as:
 : Old recipe `pipeline` JSON, proof-only `SurfacePipeline`, runtime execution, or a template/migration syntax.
 
 Legacy/source-authoring synonyms, if useful:
-: Scene layer IO/filter/shader chains are evidence only. H1 canonically references graph/topology; it does not adopt old local pipeline field names.
+: Scene layer IO/filter/shader chains are evidence only. H1 canonically references graph/topology; it does not adopt old local graph-binding field names.
 
 Example:
 
@@ -1797,19 +1797,19 @@ Example:
 }
 ```
 
-### Source-local pipeline
+### Source-local graph binding
 
 Definition:
 : A recognized element-local/source-local processing seam after a source-produced surface exists and before or as it participates in scene/graph composition.
 
 Owns / owned by:
-: H1 provides a reference seam through `RecipeElementPipeline`; execution, lowering, and source-authoring syntax remain deferred.
+: H1 provides a reference seam through `RecipeElementGraphBinding`; execution, lowering, and source-authoring syntax remain deferred.
 
 Rust contract type, if any:
-: `RecipeElementPipeline`, `GraphId`, `GraphStep`.
+: `RecipeElementGraphBinding`, `GraphId`, `GraphStep`.
 
 JSON/schema surface, if any:
-: `schemas/v3.1/contract/recipe-element-pipeline.schema.json`.
+: `schemas/v3.1/contract/recipe-element-graph-binding.schema.json`.
 
 Not the same as:
 : `SurfacePipeline`, which is a proof-only next-crate schema. `GraphSpec`, which is the canonical graph container. Old recipe `pipeline` syntax.
@@ -1820,7 +1820,7 @@ Legacy/source-authoring synonyms, if useful:
 Example:
 
 ```text
-A source-local pipeline may reference graph node `dimCard` for element `heroCard`; H1 validates the reference but does not execute legacy layer-pipeline JSON.
+A source-local graph binding may reference graph node `dimCard` for element `heroCard`; H1 validates the reference but does not execute legacy layer graph/pipeline JSON.
 ```
 
 ### Surface
@@ -1907,7 +1907,7 @@ Do not introduce them into strict v3.1 contract schemas as aliases.
 |---|---|
 | `hint`, `outputs[].hint` | Prefer `NodeOutputSpec`, `GraphValueId`, `GraphValueKind`, and `GraphValueShape`. |
 | `layer` as execution graph | Canonical D1 has only optional `LayerId` grouping on `SceneElement`; a full layer graph is not present. |
-| `scene.layers[]` | Evidence for `SceneElement`, source instances, placement, visibility, and future source-local pipelines. Not a canonical root spelling. |
+| `scene.layers[]` | Evidence for `SceneElement`, source instances, placement, visibility, and future source-local graph bindings. Not a canonical root spelling. |
 | `pipeline` as old recipe container | Canonical graph topology uses `GraphStep::{node,sequence,parallel}`. `SurfacePipeline` is proof-only under `schemas/v3.1/next/`. |
 | `stage` | Usually maps to a `NodeSpec` or `GraphStep` after descriptor/source classification. `PipelineStage` is proof-only. |
 | `{{ asset_id }}` interpolation | Use structural `AssetRef { id }`; interpolation tokens are rejected in canonical asset refs/locators. |
@@ -1953,7 +1953,7 @@ They may appear in planning docs only with an explicit deferral note.
 
 | Term | Deferred until | Current rule |
 |---|---|---|
-| Source-local pipeline execution/lowering | Future source/graph integration phase | H1 provides `RecipeElementPipeline` as a graph/topology reference seam only. |
+| Source-local graph execution/lowering | Future source/graph integration phase | H1 provides `RecipeElementGraphBinding` as a graph/topology reference seam only. |
 | Runtime parameter/signal stores | Runtime phase | Current contract declares values, sources, and bindings; it does not execute live stores. |
 | Binding execution and override precedence | Runtime phase | `BindingSpec` is declarative only. |
 | Phase graph / trigger / dwell / visibility engine | Later lifecycle/event phase | Do not encode visibility predicates as scopes unless they are cell scopes. |

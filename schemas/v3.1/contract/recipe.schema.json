@@ -50,7 +50,7 @@
       "$ref": "#/$defs/RecipeMetadata"
     },
     "scenes": {
-      "description": "Scene declarations referencing source-produced surfaces and optional element pipelines.",
+      "description": "Scene declarations referencing source-produced surfaces and optional element graph bindings.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/RecipeScene"
@@ -2013,19 +2013,19 @@
         }
       ]
     },
-    "RecipeElementPipeline": {
-      "description": "Optional element-local pipeline reference into the canonical graph.",
+    "RecipeElementGraphBinding": {
+      "description": "Optional element-local graph binding into the canonical graph.",
       "type": "object",
       "properties": {
         "graph": {
-          "description": "Graph that owns the nodes used by this element-local pipeline.",
+          "description": "Graph that owns the nodes used by this element-local graph binding.",
           "$ref": "#/$defs/GraphId"
         },
         "timing": {
           "description": "Optional element-local enter/exit timing envelope.",
           "anyOf": [
             {
-              "$ref": "#/$defs/RecipeElementPipelineTiming"
+              "$ref": "#/$defs/RecipeElementGraphTiming"
             },
             {
               "type": "null"
@@ -2033,7 +2033,7 @@
           ]
         },
         "topology": {
-          "description": "Optional pipeline topology subset for this element.",
+          "description": "Optional graph-binding topology subset for this element.",
           "anyOf": [
             {
               "$ref": "#/$defs/GraphStep"
@@ -2049,8 +2049,8 @@
         "graph"
       ]
     },
-    "RecipeElementPipelineTiming": {
-      "description": "Element-local timing for scene layer pipeline effects.\n\nThese values are relative to the parent recipe timeline. They do not choose\na clock policy; the recipe lifecycle clock still owns sample-space\ninterpretation. Renderers use this envelope only to derive a local\n`phase_t` for element-local pipeline steps.",
+    "RecipeElementGraphTiming": {
+      "description": "Element-local timing for scene layer graph-bound effects.\n\nThese values are relative to the parent recipe timeline. They do not choose\na clock policy; the recipe lifecycle clock still owns sample-space\ninterpretation. Renderers use this envelope only to derive a local\n`phase_t` for element-local graph-bound nodes.",
       "type": "object",
       "properties": {
         "enterEase": {
@@ -2204,6 +2204,17 @@
           "description": "Policy for local cells that land outside the final scene bounds.",
           "$ref": "#/$defs/ClipPolicy"
         },
+        "graphBinding": {
+          "description": "Optional element-local graph binding.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecipeElementGraphBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "id": {
           "description": "Stable element identity, distinct from roles and source instances.",
           "$ref": "#/$defs/ElementId"
@@ -2224,17 +2235,6 @@
           "anyOf": [
             {
               "$ref": "#/$defs/SceneElementOverflowPolicy"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pipeline": {
-          "description": "Optional source-local or element-local pipeline reference.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RecipeElementPipeline"
             },
             {
               "type": "null"
@@ -2480,7 +2480,7 @@
           "const": "Highlight"
         },
         {
-          "description": "Shadow content — source layer OR pipeline output.",
+          "description": "Shadow content — source layer or graph/render output.",
           "type": "string",
           "const": "Shadow"
         },
@@ -2770,7 +2770,7 @@
       "type": "object",
       "properties": {
         "baseStyle": {
-          "description": "Optional base style applied before the element-local pipeline.",
+          "description": "Optional base style applied before graph-bound effects.",
           "anyOf": [
             {
               "$ref": "#/$defs/StructuredValue"

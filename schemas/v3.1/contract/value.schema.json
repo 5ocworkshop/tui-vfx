@@ -519,7 +519,7 @@
           "const": "Highlight"
         },
         {
-          "description": "Shadow content — source layer OR pipeline output.",
+          "description": "Shadow content — source layer or graph/render output.",
           "type": "string",
           "const": "Shadow"
         },

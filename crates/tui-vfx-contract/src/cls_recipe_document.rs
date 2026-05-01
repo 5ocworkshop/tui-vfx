@@ -45,7 +45,7 @@ pub struct RecipeDocument {
     pub sources: BTreeMap<SourceInstanceId, SourceSpec>,
     /// Canonical graph containing parameters, signals, bindings, effects, nodes, and topology.
     pub graph: GraphSpec,
-    /// Scene declarations referencing source-produced surfaces and optional element pipelines.
+    /// Scene declarations referencing source-produced surfaces and optional element graph bindings.
     pub scenes: Vec<RecipeScene>,
 }
 

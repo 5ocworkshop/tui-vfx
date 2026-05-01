@@ -5,7 +5,7 @@
 // 0.1.0: INIT — add source-backed scene element shape for canonical recipes.</CLOG>
 
 use crate::{
-    CellWritePolicy, ClipPolicy, ElementId, ElementPlacement, LayerId, RecipeElementPipeline,
+    CellWritePolicy, ClipPolicy, ElementId, ElementPlacement, LayerId, RecipeElementGraphBinding,
     RoleWritePolicy, SceneElementOverflowPolicy, SceneElementPlacementRule, SceneElementSurface,
     SceneElementVisibility, ScrollFactor, SourceInstanceId, StructuredValue,
 };
@@ -24,8 +24,8 @@ pub struct RecipeSceneElement {
     pub placement: ElementPlacement,
     /// Source instance that produces this element-local semantic surface.
     pub source_instance: SourceInstanceId,
-    /// Optional source-local or element-local pipeline reference.
-    pub pipeline: Option<RecipeElementPipeline>,
+    /// Optional element-local graph binding.
+    pub graph_binding: Option<RecipeElementGraphBinding>,
     /// Optional declarative placement rule preserving anchor, sibling-relative, and motion placement semantics.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub placement_rule: Option<SceneElementPlacementRule>,

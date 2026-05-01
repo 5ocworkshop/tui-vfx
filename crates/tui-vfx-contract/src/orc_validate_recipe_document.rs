@@ -3,12 +3,12 @@
 // <WCTX>New kernel Phase I0: validate recipe lifecycle against graph parameters and signals.</WCTX>
 // <CLOG>0.3.0: MINOR — validate reduced-motion replacement policy shape and cycles.
 // 0.2.0: MINOR — validate optional recipe lifecycle sources and predicates.
-// 0.1.0: INIT — validate recipe assets, source instances, graph, scenes, and element pipelines.</CLOG>
+// 0.1.0: INIT — validate recipe assets, source instances, graph, scenes, and element graph bindings.</CLOG>
 
 use std::collections::BTreeSet;
 
 use crate::{
-    DescriptorValidationError, GraphStep, NodeId, RecipeDocument, RecipeElementPipeline,
+    DescriptorValidationError, GraphStep, NodeId, RecipeDocument, RecipeElementGraphBinding,
     RecipeScene, RecipeSceneElement, ReducedMotionKind, TransitionId,
 };
 
@@ -204,8 +204,8 @@ fn validate_scene_element(
             source: element.source_instance.clone(),
         });
     }
-    if let Some(pipeline) = &element.pipeline {
-        validate_element_pipeline(recipe, scene, element, pipeline)?;
+    if let Some(graph_binding) = &element.graph_binding {
+        validate_element_graph_binding(recipe, scene, element, graph_binding)?;
     }
     if let Some(visibility) = &element.visibility {
         visibility.validate(&recipe.graph.parameters, &recipe.graph.signals)?;
@@ -213,27 +213,27 @@ fn validate_scene_element(
     Ok(())
 }
 
-fn validate_element_pipeline(
+fn validate_element_graph_binding(
     recipe: &RecipeDocument,
     scene: &RecipeScene,
     element: &RecipeSceneElement,
-    pipeline: &RecipeElementPipeline,
+    graph_binding: &RecipeElementGraphBinding,
 ) -> Result<(), DescriptorValidationError> {
-    if pipeline.graph != recipe.graph.id {
-        return Err(DescriptorValidationError::UnknownElementPipelineGraph {
+    if graph_binding.graph != recipe.graph.id {
+        return Err(DescriptorValidationError::UnknownElementGraphBindingGraph {
             scene: scene.id.clone(),
             element: element.id.clone(),
-            graph: pipeline.graph.clone(),
+            graph: graph_binding.graph.clone(),
         });
     }
-    let Some(topology) = &pipeline.topology else {
+    let Some(topology) = &graph_binding.topology else {
         return Ok(());
     };
     let mut seen = BTreeSet::new();
-    validate_pipeline_topology(recipe, scene, element, topology, &mut seen)
+    validate_graph_binding_topology(recipe, scene, element, topology, &mut seen)
 }
 
-fn validate_pipeline_topology(
+fn validate_graph_binding_topology(
     recipe: &RecipeDocument,
     scene: &RecipeScene,
     element: &RecipeSceneElement,
@@ -241,17 +241,17 @@ fn validate_pipeline_topology(
     seen: &mut BTreeSet<NodeId>,
 ) -> Result<(), DescriptorValidationError> {
     match step {
-        GraphStep::Node { node } => validate_pipeline_node(recipe, scene, element, node, seen),
+        GraphStep::Node { node } => validate_graph_binding_node(recipe, scene, element, node, seen),
         GraphStep::Sequence { children } | GraphStep::Parallel { children, .. } => {
             for child in children {
-                validate_pipeline_topology(recipe, scene, element, child, seen)?;
+                validate_graph_binding_topology(recipe, scene, element, child, seen)?;
             }
             Ok(())
         }
     }
 }
 
-fn validate_pipeline_node(
+fn validate_graph_binding_node(
     recipe: &RecipeDocument,
     scene: &RecipeScene,
     element: &RecipeSceneElement,
@@ -259,18 +259,20 @@ fn validate_pipeline_node(
     seen: &mut BTreeSet<NodeId>,
 ) -> Result<(), DescriptorValidationError> {
     if !recipe.graph.nodes.contains_key(node) {
-        return Err(DescriptorValidationError::UnknownElementPipelineNode {
+        return Err(DescriptorValidationError::UnknownElementGraphBindingNode {
             scene: scene.id.clone(),
             element: element.id.clone(),
             node: node.clone(),
         });
     }
     if !seen.insert(node.clone()) {
-        return Err(DescriptorValidationError::DuplicateElementPipelineNode {
-            scene: scene.id.clone(),
-            element: element.id.clone(),
-            node: node.clone(),
-        });
+        return Err(
+            DescriptorValidationError::DuplicateElementGraphBindingNode {
+                scene: scene.id.clone(),
+                element: element.id.clone(),
+                node: node.clone(),
+            },
+        );
     }
     Ok(())
 }

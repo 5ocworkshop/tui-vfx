@@ -13,7 +13,7 @@ use crate::{ShadowSpec, StructuredValue};
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SceneElementSurface {
-    /// Optional base style applied before the element-local pipeline.
+    /// Optional base style applied before graph-bound effects.
     pub base_style: Option<StructuredValue>,
     /// Optional attached shadow payload owned by this element surface.
     pub shadow: Option<ShadowSpec>,

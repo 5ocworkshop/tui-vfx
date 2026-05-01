@@ -6,7 +6,7 @@
 // 0.10.0: MINOR — add gradient stop validation error.
 // 0.9.0: MINOR — add descriptor pack identity, collision, and reference errors.
 // 0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
-// 0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
+// 0.7.0: MINOR — add recipe document, source instance, scene, and element graph-binding validation errors.
 // 0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
 // 0.5.0: MINOR — add effect output, graph value, and node output validation errors.
 // 0.4.0: MINOR — add graph and node validation errors.
@@ -168,29 +168,29 @@ pub enum DescriptorValidationError {
         /// Missing source instance id.
         source: SourceInstanceId,
     },
-    /// Recipe scene element pipeline references an undeclared graph.
-    UnknownElementPipelineGraph {
+    /// Recipe scene element graph bindings an undeclared graph.
+    UnknownElementGraphBindingGraph {
         /// Scene that owns the element.
         scene: SceneId,
-        /// Element whose pipeline reference failed.
+        /// Element whose graph binding failed.
         element: ElementId,
         /// Missing graph id.
         graph: GraphId,
     },
-    /// Recipe scene element pipeline references an undeclared graph node.
-    UnknownElementPipelineNode {
+    /// Recipe scene element graph bindings an undeclared graph node.
+    UnknownElementGraphBindingNode {
         /// Scene that owns the element.
         scene: SceneId,
-        /// Element whose pipeline topology failed.
+        /// Element whose graph-binding topology failed.
         element: ElementId,
         /// Missing node id.
         node: NodeId,
     },
-    /// Recipe scene element pipeline repeats a node in its local topology.
-    DuplicateElementPipelineNode {
+    /// Recipe scene element graph binding repeats a node in its local topology.
+    DuplicateElementGraphBindingNode {
         /// Scene that owns the element.
         scene: SceneId,
-        /// Element whose pipeline topology failed.
+        /// Element whose graph-binding topology failed.
         element: ElementId,
         /// Duplicated node id.
         node: NodeId,

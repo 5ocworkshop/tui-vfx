@@ -152,16 +152,16 @@ What it is not:
 - not a Material component policy;
 - not runtime fallback to legacy inputs.
 
-### 5. Element-Local Pipeline Timing
+### 5. Element-Local Graph Timing
 
 Current home:
 
-- `tui_vfx_contract::RecipeElementPipelineTiming`
-- recipe scene element pipeline timing fields such as `enter_ms`, `exit_ms`, `enter_offset_ms`, and `exit_offset_ms`.
+- `tui_vfx_contract::RecipeElementGraphTiming`
+- recipe scene element graph timing fields such as `enter_ms`, `exit_ms`, `enter_offset_ms`, and `exit_offset_ms`.
 
 Purpose:
 
-Element-local pipeline timing lets scene elements derive local enter/exit progress from the parent recipe timeline.
+Element-local graph timing lets scene elements derive local enter/exit progress from the parent recipe timeline.
 
 Conceptual use:
 
@@ -322,7 +322,7 @@ Do not use for:
 
 Status:
 
-- partially exists as `RecipeElementPipelineTiming`;
+- partially exists as `RecipeElementGraphTiming`;
 - should remain a local timeline envelope, not a clock.
 
 Used by:

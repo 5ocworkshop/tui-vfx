@@ -1,7 +1,7 @@
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.3</VERS> -->
 <!-- <WCTX>Plan mode artifact: migrate non-primitive compost substrate first, preserving pure v3.1 shape and OFPF file discipline.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — align the substrate plan with completed native transition/schema decisions and the active tui-vfx-compost docs.</CLOG> -->
+<!-- <CLOG>0.4.3: PATCH — tighten timing, proof-harness, wipe-angle, and verification wording for active substrate execution.</CLOG> -->
 
 # Compost Substrate Migration Plan
 
@@ -55,8 +55,8 @@ wipes, and corner arc in/out variants
 (`crates/tui-vfx-geometry/src/types/cls_wipe_direction.rs:14-34`,
 `crates/tui-vfx-geometry/src/types/cls_wipe_direction.rs:59-182`).
 
-The schema decision must preserve a logical authoring model for normal product
-use cases: a toast can slide from off-screen and fade at the same time; a modal
+The completed native transition model must preserve a logical authoring model
+for normal product use cases: a toast can slide from off-screen and fade at the same time; a modal
 can fade its backdrop while using an iris or wipe reveal; a panel replacement
 can crossfade, wipe, push, dissolve, or morph between two surfaces. Motion is
 therefore not synonymous with transition. Motion is a spatial track that may be
@@ -70,11 +70,19 @@ replacement.
   except where a substrate test needs the existing `shader.linearGradient`.
 - Do not recreate `pipeline/` as a legacy DTO execution layer.
 - Do not add `src/v31/`, `rendering/`, `bridge/`, `adapter/`, or `lowering/`.
+- Do not put the recipe schema version number into compost crate, module, type,
+  or function names; use names such as `LoadedRecipe`, `LoadError`,
+  `SampleContext`, and `render_recipe`.
 - Do not edit `crates/tui-vfx-compositor`; use it as read-only reference.
-- Do not rely on subagents unless the owner explicitly re-enables them.
-- Do not harden timing/effect-stack APIs until the typed transition and motion
-  schema decision is documented; otherwise relation-level semantics can land in
-  the wrong primitive slot.
+- Do not treat `tui-vfx-next` or `schemas/v3.1/next` as part of the active
+  compost substrate verification loop unless they are directly touched by a
+  shared contract/schema change. They remain proof-only/historical artifacts.
+- For this substrate plan, do not assume delegated subagents are available unless
+  the owner explicitly re-enables them. This does not change the broader
+  handoff model for future primitive slices.
+- Do not harden timing/effect-stack APIs in a way that conflicts with the
+  completed native transition model. Relation-level semantics such as crossfade,
+  push, and morph must not be collapsed into single-surface primitive slots.
 
 ## Acceptance Criteria
 
@@ -83,18 +91,21 @@ replacement.
 2. Placement and clipping semantics are tested against canonical v3.1 scene
    element fields (`crates/tui-vfx-contract/src/cls_recipe_scene_element.rs:16-52`).
 3. Source materialization supports the agreed substrate source set, and every
-   unsupported source/input shape fails at `LoadedRecipe::load`, not during
-   rendering.
+   unsupported source/input shape fails during `LoadedRecipe::load`, including
+   its render-contract validation subpass, not during ordinary rendering.
 4. Effect stack execution has native slots for content, style, shader, filter,
-   mask, and sampler families, but only `shader.linearGradient` is executable
-   until additional primitive slices land.
+   mask, and sampler families. No primitive is counted as migrated yet;
+   `shader.linearGradient` may remain a prototype/test candidate until it is
+   redone after substrate work.
 5. Timing/lifecycle handling is represented in a native `SampleContext`/timing
    model and tested before primitives depend on it.
 6. Cell write, role write, z-index, and graph parallel merge semantics are
    implemented or explicitly rejected at load time with tests.
 7. Runtime values (`parameter`, `signal`, `graphValue`, `map`, `sampledField`)
-   are either supported through a native resolver or rejected at load time with
-   precise diagnostics. These source variants exist in the canonical contract
+   are supported through one native resolver where possible. Unsupported
+   value-source variants that are statically knowable fail during
+   `LoadedRecipe::load`; sample-dependent failures flow through one shared
+   resolver diagnostic path. These source variants exist in the canonical contract
    (`crates/tui-vfx-contract/src/cls_value_source.rs:21-70`).
 8. Graph topology sequence/parallel traversal follows canonical `GraphStep`
    semantics or rejects unsupported cases at load time
@@ -113,15 +124,32 @@ replacement.
 
 ## Implementation Phases
 
-### Phase 0 — Typed Transition and Motion Schema Decision — Complete
+### Phase 0 — Native Transition and Motion Substrate Checkpoint — Complete
 
-Goal: preserve the decided canonical v3.1 schema shape for typed transitions so
-substrate code does not bake transition semantics into lower-level primitive
-slots.
+Goal: consume the completed v3.1 native transition model before substrate code
+hardens scene, timing, relation, and effect-stack APIs. This phase does not
+reopen transition schema by default. It verifies that substrate APIs preserve
+the established separation:
 
-Current inventory to ground the decision:
+- transition = bounded state/surface-change interval;
+- motion = transition track or placement behavior, not the whole transition;
+- opacity/style fade = single-surface track/effect behavior;
+- crossfade/push/morph = relation tracks between surfaces;
+- wipe/iris/dissolve/blinds/stipple/braille = visibility tracks;
+- ongoing dwell effects remain graph/effect nodes or sources.
 
-Usage-oracle findings from `/usr/projects/tui-vfx-recipes/recipes`:
+Controlling decision record:
+
+```text
+docs/arch/v31-native-transition-model.md
+```
+
+Record only implementation-impact notes or concrete schema defects found during
+substrate work. Do not add compatibility aliases or reopen transition design
+without a canonical example that proves a contract defect.
+
+Usage-oracle evidence from `/usr/projects/tui-vfx-recipes/recipes` remains useful
+as motivation, not wire-shape authority:
 
 - The recipe corpus has 1,394 parsed JSON recipes. Legacy/current recipe usage
   contains 269 `motion_path` entries across 178 files, with motion types
@@ -129,155 +157,71 @@ Usage-oracle findings from `/usr/projects/tui-vfx-recipes/recipes`:
   `rectilinear`, `projectile`, `step`, `friction`, and `pendulum`.
 - Motion and fade already compose as normal practice: 130 files combine
   `motion_path` with fade style effects. `recipes/default_toast.json` is the
-  canonical example: enter/exit define off-screen linear motion
-  (`/usr/projects/tui-vfx-recipes/recipes/default_toast.json:22-50`) while
-  style defines `fade_in` and `fade_out`
-  (`/usr/projects/tui-vfx-recipes/recipes/default_toast.json:91-100`).
+  canonical example: enter/exit define off-screen linear motion while style
+  defines `fade_in` and `fade_out`.
 - Mask transitions and fade also compose as normal practice: 129 files combine
-  transition-shaped masks with fade style effects. `multi_filter_faded_notice`
-  uses phase duration/easing, filter stacks, and enter/exit wipe masks together
-  (`/usr/projects/tui-vfx-recipes/recipes/multi_filter_faded_notice.json:21-90`).
+  transition-shaped masks with fade style effects.
 - Motion can be more than linear slide. `smooth_arc` uses arc motion for both
-  enter and exit while independently using style effects
-  (`/usr/projects/tui-vfx-recipes/recipes/smooth_arc.json:22-53`,
-  `/usr/projects/tui-vfx-recipes/recipes/smooth_arc.json:79-101`).
-- Interactive state transitions are a separate but related use case.
-  `hll_leave_server` uses `transition_duration_ms`, `state_composition`, and
-  reduced-motion metadata for hover/focus/active style state changes
-  (`/usr/projects/tui-vfx-recipes/recipes/hll_leave_server.json:213-223`,
-  `/usr/projects/tui-vfx-recipes/recipes/hll_leave_server.json:310-319`).
-- The v3.1 canonical debug recipe shape currently has lifecycle phases and
-  resolved scene placement, but no typed transition citizen yet
-  (`/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json:18-57`,
-  `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json:139-160`).
+  enter and exit while independently using style effects.
+- Consumer-driven state changes such as hover/focus/active may select or trigger
+  engine-level transitions through opaque metadata, host signals, parameters, or
+  variants. The engine transition model remains platform-agnostic and does not
+  encode UI state policy.
 
-Schema-shape implication: a transition should be an author-facing lifecycle or
-state-change envelope that coordinates one or more typed tracks. Motion is one
-track type; fade is another; masks/wipes/iris/dissolve are visibility tracks;
-crossfade/push are between-surface relation tracks. This avoids making
-`motion` pretend to be all transitions, and avoids forcing authors to chain
-low-level primitives for normal toast, modal, and replacement cases.
-
-
-- Existing fade support includes `style.fadeIn`, `style.fadeOut`,
-  `style.colorFade`, and `filter.fadeToCanvas`; crossfade is a new
-  between-surface transition and should not be conflated with single-surface
-  fades.
-- Existing wipe support includes `mask.wipe`, `mask.wipeCorner`, and
-  `shader.revealWipe`; the canonical geometry enum supports more directions
-  than the v3.1 descriptor currently exposes
-  (`crates/tui-vfx-geometry/src/types/cls_wipe_direction.rs:14-34`).
-- Existing fixed diagonal wipes are corner-to-corner Manhattan diagonals
-  (`TopLeftToBottomRight`, etc.). A configurable-angle diagonal wipe is new
-  schema surface and should be represented explicitly, not disguised as one of
-  the fixed diagonal enum variants.
-- Existing transition-shaped effects also include `mask.iris`, `mask.dissolve`,
-  `content.dissolve`, `content.morph`, `content.cellMotion`,
-  `content.slideShift`, `filter.motionBlur`, and braille/stipple-like visual
-  effects that may become transition styles after audit.
-- Current lifecycle and timing contracts already name `enter`, `dwell`, and
-  `exit` (`crates/tui-vfx-contract/src/cls_lifecycle_phase.rs:20-26`) and
-  element-local timing (`crates/tui-vfx-contract/src/cls_recipe_element_pipeline_timing.rs:16-35`).
-- Current scene elements already have placement and a loose `motion` payload
-  (`crates/tui-vfx-contract/src/cls_recipe_scene_element.rs:23-43`); Phase 0
-  must decide whether this becomes typed motion tracks, remains temporary
-  metadata, or is replaced by transition-bound motion.
-
-Accepted schema direction to preserve:
+Illustrative shape only; exact wire names are governed by
+`docs/arch/v31-native-transition-model.md`:
 
 ```text
-recipe
-  transitionPresets
-    toast.enter
-      phase: enter
-      target: element.toast
-      duration/easing
-      tracks[]
-        motion.slide
-          from: offscreen.right(marginCells: 1)
-          to: restPlacement
-          path: linear | arc | spring | bounce | ...
-        fade.in
-          applyTo: both
-          from: canvas | transparent | color
-          to: sourceStyle
-    toast.exit
-      phase: exit
-      target: element.toast
-      tracks[]
-        motion.slide(to: offscreen.right(marginCells: 1))
-        fade.out(applyTo: both)
+Recipe-level transitions:
+  toastEnter
+    activePhases: ["enter"]
+    subjects: to = element.toast
+    tracks:
+      - motion.slide, subject: to, from: offscreen/right, to: restPlacement
+      - opacity.fade, subject: to, from: 0, to: 1
 
-    modal.open
-      phase: enter
-      tracks[]
-        fade.in(target: backdrop, applyTo: background)
-        iris(target: modal.surface, focal: center, softEdge: true)
+  toastExit
+    activePhases: ["exit"]
+    subjects: from = element.toast
+    tracks:
+      - motion.slide, subject: from, from: restPlacement, to: offscreen/right
+      - opacity.fade, subject: from, from: 1, to: 0
 
-    panel.replace
-      relation: fromSurface -> toSurface
-      tracks[]
-        crossfade         # new between-surface blend
-        wipe(direction: named | angle)
-        push(direction: named | angle)
+  modalOpen
+    activePhases: ["enter"]
+    tracks:
+      - opacity.fade for backdrop
+      - visibility.iris for modal surface
 
-scene.elements[]
-  placement              # final/resting placement
-  transitions
-    enter: toast.enter
-    exit: toast.exit
-
-interactiveStateTransitions
-  hover/focus/active
-    duration/easing
-    composition: replace | layered
-    accessibility/reducedMotion
+  panelReplace
+    subjects: from + to
+    tracks:
+      - relation.crossfade, relation.push, relation.morph, or visibility.wipe
 ```
 
-The exact field names can change, but the logical shape should preserve these
-separations: final placement is not motion; motion is not the whole transition;
-fades are single-surface style/opacity tracks; crossfade is a between-surface
-relation; wipe/iris/dissolve are visibility tracks; push combines relation plus
-motion.
+Fixed diagonal wipes remain named variants. Arbitrary-angle wipe is a candidate
+future direction form and must not be disguised as one of the fixed diagonal
+variants unless the transition contract explicitly accepts that extension.
 
-Decision questions:
+Implementation-impact checkpoint questions:
 
-1. Is `transition` a top-level named recipe citizen referenced by scene elements,
-   an element-local lifecycle block, or both through named presets plus inline
-   overrides?
-2. Are transition tracks the canonical way to coordinate motion + fade + mask,
-   while primitive families remain the executable building blocks?
-3. What exact wire shape should represent wipe direction? Candidate: a tagged
-   direction value supporting named directions and configurable angles, for
-   example `direction: { kind: angle, degrees: 37.5 }`, alongside named values
-   for cardinal, diagonal, center/edge, and corner-arc wipes.
-4. Which transition types are first-class now: `fade`, `crossfade`, `wipe`,
-   `iris`, `push`, `dissolve`, `morph`, `stippled`, `braille`; and which are
-   deferred until primitive support is proven?
-5. How does reduced-motion policy degrade transition tracks: remove motion but
-   keep fade, shorten duration, or snap instantly?
-
-Normal-use-case acceptance examples:
-
-- Toast enter: final placement is stable, transition adds `motion.slide` from
-  off-screen plus `fade.in`; exit uses inverse slide plus `fade.out` or
-  `fadeToCanvas`.
-- Modal open: backdrop fades while modal surface uses `iris` or `wipe`; the
-  two tracks share phase timing but target different scopes/surfaces.
-- Panel replacement: old and new surfaces can use `crossfade`, `wipe`, `push`,
-  `dissolve`, or `morph` as a relation, not as an accidental chain of generic
-  effects.
-- Diagonal wipe: fixed corner diagonals remain named variants; arbitrary-angle
-  wipe is supported as a distinct angle direction with validation.
+1. Does a substrate API preserve transition interval/subject/timing semantics
+   instead of pushing relation behavior into primitive-local slots?
+2. Does a source/scene/render API keep final placement distinct from motion
+   tracks?
+3. Does a fade use `opacity.fade` or `style.colorFade` semantics instead of a
+   generic `fade.in`/`fade.out` shape?
+4. Do consumer state examples remain host-signal/metadata-driven instead of
+   engine-core UI policy?
 
 Deliverables:
 
-- Update the schema/design document that owns v3.1 transitions.
-- Update descriptor/schema audit notes with the inventory above.
-- Add or update contract tests for the accepted wire shape before implementation.
-- Record recipe-oracle examples for toast slide+fade, modal mask+fade, arbitrary
-  motion path, and interactive state transition.
-- Only after this decision, continue Phase 1 substrate work.
+- Confirm `docs/arch/v31-native-transition-model.md` remains the controlling
+  transition decision record.
+- Record only implementation-impact notes or concrete schema defects discovered
+  during substrate work.
+- Continue Phase 1 substrate work without treating transition schema as a
+  blocker.
 
 ### Phase 1 — Scene and Element Substrate
 
@@ -395,7 +339,8 @@ crates/tui-vfx-compost/tests/direct_recipe/test_timing_lifecycle.rs
 
 Acceptance:
 
-- `SampleContext` carries explicit elapsed/phase inputs without globals.
+- `SampleContext` carries explicit `phaseT`, optional `loopT`, and
+  `absoluteTimeMs` without globals or presentation-FPS coupling.
 - `activePhases` is honored or rejected at load time until supported.
 - Loop timing behavior is tested before loop-dependent primitives use it.
 
@@ -457,8 +402,10 @@ Acceptance:
 
 - Literal values continue to work.
 - Parameter/signal/graphValue/map/sampledField behavior is covered by tests.
-- Unsupported runtime value behavior fails at load time or through a single
-  resolver diagnostic; primitives do not each invent resolver semantics.
+- Unsupported value-source variants that are statically knowable fail during
+  `LoadedRecipe::load`. Sample-dependent failures use one shared resolver
+  diagnostic path. Primitive implementations do not invent local value-source
+  semantics.
 
 ### Phase 7 — Observability and Debuggability
 
@@ -510,7 +457,7 @@ Run these at each phase boundary:
 cargo fmt -p tui-vfx-compost
 cargo check -p tui-vfx-compost
 cargo test -p tui-vfx-compost
-/usr/local/bin/ofpf-sync --check Cargo.toml crates/tui-vfx-compost/... docs/arch/tui-vfx-compost-agent-workflow-handoff.md
+/usr/local/bin/ofpf-sync --check Cargo.toml crates/tui-vfx-compost docs/arch/tui-vfx-compost-agent-workflow-handoff.md .omx/plans/compost-substrate-migration-plan.md
 rg -n 'CompositionSpec|ShaderLayerSpec|SpatialShaderType|src/v31|v31/|lowering|adapter|bridge' crates/tui-vfx-compost
 ```
 
@@ -527,8 +474,8 @@ concepts. README/test text may mention these concepts only as prohibitions.
 | Runtime values become primitive-local hacks | Implement one resolver substrate before allowing non-literal primitive inputs. |
 | Over-rejecting descriptor-valid recipes hides required behavior | Every load-time rejection must include a test and a TODO/follow-up note in the phase summary. |
 | Under-testing visual semantics | Add small deterministic grid assertions before visual player/UI tests; visual tests become an additional layer, not the only proof. |
-| Transition and motion semantics land in primitive-local hacks | Phase 0 blocks substrate implementation until typed transition/motion shape is documented and tested. |
-| Configurable-angle wipe is confused with fixed diagonal variants | Preserve named fixed diagonals and add an explicit angle direction form with validation. |
+| Transition and motion semantics land in primitive-local hacks | Phase 0 uses the completed native transition model as a checkpoint; relation-level semantics must not collapse into primitive-local slots. |
+| Configurable-angle wipe is confused with fixed diagonal variants | Preserve named fixed diagonals; treat arbitrary-angle wipe as a candidate future direction form unless accepted by the transition contract. |
 | Schema overfits legacy field names | Treat recipes as an oracle for use cases and composition patterns, not as wire-shape authority; choose clean v3.1 names. |
 
 ## Quality Gates Per Phase
@@ -547,16 +494,17 @@ concepts. README/test text may mention these concepts only as prohibitions.
 
 ### Decision
 
-Settle typed transition/motion schema, then migrate compost substrate before broad primitive migration.
+Consume the completed native transition/motion model, then migrate compost substrate before broad primitive migration.
 
 ### Drivers
 
-- Transition and motion need a schema-level authoring shape before render substrate APIs harden.
+- Transition and motion already have a controlling v3.1 authoring model that substrate APIs must preserve.
 - Future primitives need stable scene/source/render/timing/write/runtime seams.
 - The abandoned copied-crate tree proved too easy to pollute with legacy DTOs and
   versioned paths.
-- `tui-vfx-compost` already demonstrates the desired crate-level shape with the intended crate-level shape; primitive counters reset to zero until slices are
-  redone on the substrate-first path.
+- `tui-vfx-compost` already demonstrates the intended crate-level shape;
+  primitive counters reset to zero until slices are redone on the
+  substrate-first path.
 
 ### Alternatives Considered
 
@@ -567,19 +515,19 @@ Settle typed transition/motion schema, then migrate compost substrate before bro
 3. **Build every substrate feature in one large phase.** Rejected because timing,
    graph values, merge policy, and procedural sources are independently risky
    and need focused tests.
-4. **Defer transition schema until after substrate.** Rejected because normal
-   use cases such as toast slide+fade and panel crossfade affect scene, timing,
-   relation, and effect-stack boundaries.
+4. **Reopen transition schema before substrate.** Rejected because native
+   transitions are stable enough to execute; reopen only for proven contract
+   defects from canonical examples.
 
 ### Why Chosen
 
-A transition/motion schema gate followed by a substrate-first sequence lets
+A transition/motion consumption checkpoint followed by a substrate-first sequence lets
 `tui-vfx-compost` become a real compositor before many primitives depend on it,
 while preserving the pure v3.1 architecture and OFPF modularity.
 
 ### Consequences
 
-- Substrate migration now has a Phase 0 schema decision gate before code phases.
+- Substrate migration now has a Phase 0 consumption checkpoint for the completed native transition model before code phases.
 - Primitive migration pauses until substrate gates pass.
 - Some descriptor-valid recipes will be rejected temporarily with explicit tests.
 - The eventual crate rename remains simpler because the native API is shaped
@@ -587,7 +535,7 @@ while preserving the pure v3.1 architecture and OFPF modularity.
 
 ### Follow-ups
 
-- Add a typed transition schema decision record before Phase 1 substrate work.
+- Keep `docs/arch/v31-native-transition-model.md` as the controlling decision record; add only implementation-impact notes or proven defect follow-ups.
 - Add a current substrate scoreboard to the handoff doc after Phase 1.
 - Decide when `tui-vfx-player-next` should consume `tui-vfx-compost` for visual
   testing.
@@ -600,4 +548,4 @@ while preserving the pure v3.1 architecture and OFPF modularity.
   masks, mattes, transitions, keyframes, and presets.
 
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.3</VERS> -->

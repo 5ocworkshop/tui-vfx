@@ -87,8 +87,8 @@ pub mod cls_phase_spec;
 pub mod cls_phase_timing;
 pub mod cls_preview_loopback_spec;
 pub mod cls_recipe_document;
-pub mod cls_recipe_element_pipeline;
-pub mod cls_recipe_element_pipeline_timing;
+pub mod cls_recipe_element_graph_binding;
+pub mod cls_recipe_element_graph_timing;
 pub mod cls_recipe_id;
 pub mod cls_recipe_metadata;
 pub mod cls_recipe_scene;
@@ -243,8 +243,8 @@ pub use cls_phase_spec::PhaseSpec;
 pub use cls_phase_timing::PhaseTiming;
 pub use cls_preview_loopback_spec::PreviewLoopbackSpec;
 pub use cls_recipe_document::RecipeDocument;
-pub use cls_recipe_element_pipeline::RecipeElementPipeline;
-pub use cls_recipe_element_pipeline_timing::RecipeElementPipelineTiming;
+pub use cls_recipe_element_graph_binding::RecipeElementGraphBinding;
+pub use cls_recipe_element_graph_timing::RecipeElementGraphTiming;
 pub use cls_recipe_id::RecipeId;
 pub use cls_recipe_metadata::RecipeMetadata;
 pub use cls_recipe_scene::RecipeScene;
@@ -343,7 +343,7 @@ pub mod schema_roots {
         DurationSpec, DwellPolicy, EasingSpec, EffectDescriptor, EffectInputSpec, EffectOutputSpec,
         GradientSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy,
         GraphValueShape, LifecycleSpec, NamedEasing, NodeOutputSource, NodeOutputSpec, NodeSpec,
-        ParameterSpec, PhaseSpec, PreviewLoopbackSpec, RecipeDocument, RecipeElementPipeline,
+        ParameterSpec, PhaseSpec, PreviewLoopbackSpec, RecipeDocument, RecipeElementGraphBinding,
         RecipeMetadata, RecipeScene, RecipeSceneElement, ReducedMotionPolicy, Scene, SceneAnchor,
         SceneElement, SceneElementOverflowPolicy, SceneElementPlacementRule, SceneElementSurface,
         SceneElementVisibility, SceneOutcome, ScopeSpec, ScrollFactor, ShadowSpec,

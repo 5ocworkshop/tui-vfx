@@ -1,5 +1,5 @@
 // <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Proof-pipeline schema generation checks for v3.1 clean-room incubator</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.4.1</VERS>
 // <WCTX>New kernel Phase E0: keep only proof-pipeline schema roots in tui-vfx-next after contract split.</WCTX>
 // <CLOG>0.4.0: MINOR — move stable contract schema checks to tui-vfx-contract and retain sampler/pipeline proof roots here.
 // 0.3.2: TEST — include public SceneOutcome in checked schema roots.</CLOG>
@@ -34,11 +34,13 @@ fn assert_object_shapes_are_strict(schema: &serde_json::Value, path: &str) {
     match schema {
         serde_json::Value::Object(map) => {
             if map.get("type") == Some(&serde_json::Value::String("object".to_string())) {
-                assert_eq!(
-                    map.get("additionalProperties"),
-                    Some(&serde_json::Value::Bool(false)),
-                    "object schema at {path} must deny additional properties"
-                );
+                match map.get("additionalProperties") {
+                    Some(serde_json::Value::Bool(false)) => {}
+                    Some(serde_json::Value::Object(_)) if map.get("properties").is_none() => {}
+                    actual => panic!(
+                        "object schema at {path} must deny additional properties or constrain map values, got {actual:?}"
+                    ),
+                }
             }
             for (key, value) in map {
                 assert_object_shapes_are_strict(value, &format!("{path}/{key}"));
@@ -131,4 +133,4 @@ fn checked_in_proof_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Proof-pipeline schema generation checks for v3.1 clean-room incubator</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

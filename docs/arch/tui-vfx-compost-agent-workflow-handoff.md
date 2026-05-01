@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 0.12.2</VERS> -->
+<!-- <VERS>VERSION: 0.12.5</VERS> -->
 <!-- <WCTX>tui-vfx-compost clean-sheet build handoff: pure v3.1 end-to-end, exact write scopes, no runtime bridges, no copied crates.</WCTX> -->
-<!-- <CLOG>0.12.2: PATCH — reset primitive migration counters to zero, classify prior primitive work as reference only, and keep primitive fan-out blocked behind substrate completion.</CLOG> -->
+<!-- <CLOG>0.12.5: PATCH — rename active element graph binding vocabulary and quarantine pipeline wording as proof-only or read-only reference.</CLOG> -->
 
 # tui-vfx-compost Agent Workflow Handoff
 
@@ -67,7 +67,7 @@ The target path is:
 
 ```text
 canonical v3.1 RecipeDocument
-  → LoadedV31Recipe::load(...)
+  → LoadedRecipe::load(...)
   → load-time descriptor/catalog/direct-render validation
   → tui-vfx-compost runtime implementation reads v3.1 nodes/source directly
   → robust referenced runtime/primitive logic, reshaped to v3.1 schema fields
@@ -379,8 +379,16 @@ The compost tree should stay conceptually proximate to `tui-vfx-compositor/src/`
 where that helps orientation, but it should not copy whole directories or carry
 legacy DTO structure forward. Bring over the minimum non-primitive runtime
 substrate needed for scenes, sources, render context, frame output, sampling,
-loop/procedural behavior, and pipeline orchestration, then adapt it to canonical
+loop/procedural behavior, and render orchestration, then adapt it to canonical
 v3.1 structures directly.
+
+
+`tui-vfx-next` is a historical clean-room proof harness, not the active compost
+implementation target. Its `SurfacePipeline` / `PipelineStage` schema artifacts
+prove old ordered-stage semantics only; do not use them as compost vocabulary.
+The active way for one effect node to inform another is the canonical graph value
+bus: `NodeSpec.outputs` publishes via `NodeOutputSpec`, and later inputs consume
+those values with `ValueSource::GraphValue`.
 
 The rejected pattern is any new layer that translates canonical v3.1 nodes into
 old compositor DTOs. Do not recreate a `v31/`, `rendering/`, `bridge/`,
@@ -443,6 +451,17 @@ crates/tui-vfx-compost/src/
     fnc_render_recipe.rs                          # thin orchestration only
     mod.rs                                        # narrow export/dispatch edit only
 
+  runtime/                                        # shared v3.1 runtime value/source/signal resolver
+    README.md                                     # boundary note: not loader, player UI, or adapter
+    cls_runtime_context.rs                        # loaded recipe + sample context view
+    cls_resolved_value.rs                         # resolved typed runtime value
+    fnc_resolve_value_source.rs                   # shared resolver entrypoint
+    fnc_resolve_parameter.rs                      # parameter source resolution
+    fnc_resolve_signal.rs                         # signal source resolution
+    fnc_resolve_graph_value.rs                    # graph value lookup/resolution
+    fnc_resolve_sampled_field.rs                  # sampled field source resolution
+    mod.rs                                        # narrow export only
+
   shaders/                                        # shader.* primitive execution from canonical v3.1 fields
     cls_shader_node.rs                            # typed direct shader node/value wrapper if needed
     col_shader_input.rs                           # shared shader input helper if needed
@@ -466,9 +485,9 @@ crates/tui-vfx-compost/src/
     fnc_<sampler_primitive>_<helper>.rs           # split-out helper when needed
     mod.rs                                        # narrow export/registration edit only
 
-  pipeline/                                       # compositor execution orchestration, not schema lowering
-    orc_render_pipeline.rs                        # expected edit only if direct primitive execution requires it
-    fnc_render_pipeline_*.rs                      # expected edit only for existing pipeline behavior
+  render/                                         # compositor execution orchestration, not schema lowering
+    orc_render_graph.rs                           # expected edit/new only for graph orchestration
+    fnc_render_graph_*.rs                         # split-out render orchestration helpers when needed
     mod.rs                                        # narrow export/registration edit only
 
   traits/                                         # stable runtime traits
@@ -538,7 +557,7 @@ Every primitive slice must be vertical and complete before signoff. The worker r
 3. Add or update a failing regression first.
 4. Observe RED when practical and record if the clean RED step is impossible.
 5. Implement the smallest direct v3.1 renderer/load-validation support.
-6. Reject unsupported descriptor-valid semantics at `LoadedV31Recipe::load`.
+6. Reject unsupported descriptor-valid semantics at `LoadedRecipe::load`.
 7. Accept only descriptor-canonical v3.1 values.
 8. Reject unresolved runtime-sourced inputs for the current direct path.
 9. Run targeted tests.
@@ -562,7 +581,7 @@ tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 - `shader.focusField.channelTarget` defaults to foreground behavior when absent;
   tests should set `background` explicitly when asserting background color changes.
 
-- `LoadedV31Recipe::load` is the single acceptance point for direct v3.1
+- `LoadedRecipe::load` is the single acceptance point for direct v3.1
   execution.
 - `tui-vfx-player-next` or any future player path must delegate to the same
   compost v3.1 loader and renderer. It must not own a second recipe-loader logic set.
@@ -572,7 +591,7 @@ tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 - Do not mirror aliases from older/copy runtime internals unless those aliases
   are descriptor-canonical v3.1 values.
 - Descriptor-valid-but-unsupported values should fail loudly at load time with
-  `V31LoadError::UnsupportedDirectInput`.
+  `LoadError::UnsupportedInput`, `LoadError::UnsupportedSourceInput`, or `LoadError::UnsupportedEffect`.
 - Current `shader.highlighter` direct decisions:
   - `highlightMode`: supports `band`; rejects descriptor-valid `row` and
     `centerOut` until direct compositor semantics exist.
@@ -596,7 +615,10 @@ Follow repo workflow:
 - v3.1 only.
 - No bridge/shim/legacy aliases.
 - No `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, or legacy-shaped lowering layer in the v3.1 path.
-- Validation happens at `LoadedV31Recipe::load`.
+- Validation happens at `LoadedRecipe::load`.
+- Do not put the recipe schema version number into compost crate, module,
+  type, or function names; use names such as `LoadedRecipe`, `LoadError`,
+  `SampleContext`, and `render_recipe`.
 - Primitive execution reads canonical v3.1 node/source fields directly.
 - Use OFPF tools to inspect descriptors and existing reference compositor/style
   implementation.
@@ -618,7 +640,7 @@ Keep the change minimal and vertical:
 - Prove RED unsupported when practical.
 - Implement supported descriptor-canonical subset using existing referenced behavior.
 - Reject unsupported descriptor-valid semantics at load with
-  V31LoadError::UnsupportedDirectInput.
+  LoadError::UnsupportedInput / UnsupportedSourceInput / UnsupportedEffect as appropriate.
 - Validate every authored source/effect input remains literal.
 
 Run cargo fmt and targeted tests.
@@ -815,4 +837,4 @@ git worktree list --porcelain
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.5</VERS> -->

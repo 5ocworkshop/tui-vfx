@@ -5,7 +5,7 @@
 // 0.2.0: MINOR — assert scrollFactor absent/present recipe scene element serde behavior.
 // 0.1.2: PATCH — initialize absent scrollFactor in recipe scene element test fixtures.
 // 0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
-// 0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element pipeline validation.</CLOG>
+// 0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element graph binding validation.</CLOG>
 
 mod support;
 
@@ -16,7 +16,7 @@ use tui_vfx_contract::{
     AssetFormat, AssetId, AssetKind, AssetLocator, AssetRef, AssetRequirement, AssetSpec,
     CellWritePolicy, ClipPolicy, DescriptorValidationError, EffectId, EffectOutputId, ElementId,
     ElementPlacement, GraphId, GraphStep, GraphValueShape, NodeId, ParameterId, RecipeDocument,
-    RecipeElementPipeline, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
+    RecipeElementGraphBinding, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
     RoleWritePolicy, SceneAnchor, SceneElementOverflowPolicy, SceneElementPlacementRule,
     SceneElementSurface, SceneElementVisibility, SceneId, ScopeSpec, ScrollFactor, ShadowBlendMode,
     ShadowCompositeMode, ShadowEdge, ShadowFalloff, ShadowInset, ShadowOffset, ShadowSpec,
@@ -121,7 +121,7 @@ fn scene_element() -> RecipeSceneElement {
         z_index: 0,
         placement: ElementPlacement { x: 0, y: 0 },
         source_instance: SourceInstanceId::new("heroText"),
-        pipeline: Some(RecipeElementPipeline {
+        graph_binding: Some(RecipeElementGraphBinding {
             graph: GraphId::new("heroFade"),
             timing: None,
             topology: Some(GraphStep::Node {
@@ -478,26 +478,26 @@ fn recipe_rejects_unknown_scene_source_instance() {
 }
 
 #[test]
-fn recipe_rejects_unknown_element_pipeline_graph() {
+fn recipe_rejects_unknown_element_graph_binding_graph() {
     let mut recipe = valid_recipe();
     recipe.scenes[0].elements[0]
-        .pipeline
+        .graph_binding
         .as_mut()
         .unwrap()
         .graph = GraphId::new("otherGraph");
 
     assert!(matches!(
         recipe.validate(),
-        Err(DescriptorValidationError::UnknownElementPipelineGraph { graph, .. })
+        Err(DescriptorValidationError::UnknownElementGraphBindingGraph { graph, .. })
             if graph.as_str() == "otherGraph"
     ));
 }
 
 #[test]
-fn recipe_rejects_unknown_element_pipeline_node() {
+fn recipe_rejects_unknown_element_graph_binding_node() {
     let mut recipe = valid_recipe();
     recipe.scenes[0].elements[0]
-        .pipeline
+        .graph_binding
         .as_mut()
         .unwrap()
         .topology = Some(GraphStep::Node {
@@ -506,16 +506,16 @@ fn recipe_rejects_unknown_element_pipeline_node() {
 
     assert!(matches!(
         recipe.validate(),
-        Err(DescriptorValidationError::UnknownElementPipelineNode { node, .. })
+        Err(DescriptorValidationError::UnknownElementGraphBindingNode { node, .. })
             if node.as_str() == "missingNode"
     ));
 }
 
 #[test]
-fn recipe_rejects_duplicate_element_pipeline_node() {
+fn recipe_rejects_duplicate_element_graph_binding_node() {
     let mut recipe = valid_recipe();
     recipe.scenes[0].elements[0]
-        .pipeline
+        .graph_binding
         .as_mut()
         .unwrap()
         .topology = Some(GraphStep::Sequence {
@@ -531,7 +531,7 @@ fn recipe_rejects_duplicate_element_pipeline_node() {
 
     assert!(matches!(
         recipe.validate(),
-        Err(DescriptorValidationError::DuplicateElementPipelineNode { node, .. })
+        Err(DescriptorValidationError::DuplicateElementGraphBindingNode { node, .. })
             if node.as_str() == "fadeIn"
     ));
 }

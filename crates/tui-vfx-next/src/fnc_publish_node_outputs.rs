@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-next/src/fnc_publish_node_outputs.rs</FILE> - <DESC>Publish declared node outputs into graph value deltas</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>New kernel Phase G4: keep topology execution coordinator below OFPF hard limits.</WCTX>
-// <CLOG>0.1.0: INIT — extract node output publication from graph-step execution.</CLOG>
+// <CLOG>0.1.1: PATCH — read outputSource after the contract naming audit.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -18,7 +18,7 @@ pub(crate) fn publish_node_outputs(
 ) -> Result<GraphValueDelta, GraphExecutionError> {
     let mut delta = BTreeMap::new();
     for (id, output) in outputs {
-        let value = match &output.source {
+        let value = match &output.output_source {
             NodeOutputSource::EffectOutput { id } => effect_outputs
                 .get(id)
                 .cloned()
@@ -34,4 +34,4 @@ pub(crate) fn publish_node_outputs(
 }
 
 // <FILE>crates/tui-vfx-next/src/fnc_publish_node_outputs.rs</FILE> - <DESC>Publish declared node outputs into graph value deltas</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

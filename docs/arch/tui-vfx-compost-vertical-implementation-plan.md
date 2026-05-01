@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 2.0.3</VERS> -->
+<!-- <VERS>VERSION: 2.0.6</VERS> -->
 <!-- <WCTX>tui-vfx-compost clean-sheet build: active plan is pure v3.1 substrate first, then primitive migration.</WCTX> -->
-<!-- <CLOG>2.0.3: PATCH — reset primitive migration status to zero and clarify substrate validation/value-source boundaries before the first future primitive proof.</CLOG> -->
+<!-- <CLOG>2.0.6: PATCH — use graph binding/render orchestration vocabulary and keep proof pipeline artifacts out of the active compost path.</CLOG> -->
 
 # tui-vfx-compost Vertical Implementation Plan
 
@@ -46,7 +46,7 @@ The intended data path is:
 ```text
 v3.1 recipe
   → load-time validation / canonicalization
-  → LoadedV31Recipe
+  → LoadedRecipe
   → compost scene/source/render substrate
   → compost primitive runtime
   → rendered frame output
@@ -69,15 +69,18 @@ structures directly.
    defect.
 6. **Validation happens at load.** Unsupported semantics fail loudly at the
    v3.1 loader/validator boundary.
-7. **OFPF layout discipline is mandatory.** Prefer clear, small, professionally
+7. **No versioned code names.** Do not put the recipe schema version number
+   into compost crate, module, type, or function names; use names such as
+   `LoadedRecipe`, `LoadError`, `SampleContext`, and `render_recipe`.
+8. **OFPF layout discipline is mandatory.** Prefer clear, small, professionally
    named modules. Around 300 LOC is the normal target; files above 500 LOC need a
    split or written cohesion justification.
-8. **TDD is mandatory.** Add or update the failing proof first, observe RED when
+9. **TDD is mandatory.** Add or update the failing proof first, observe RED when
    practical, implement GREEN, then refactor/de-slop.
-9. **Documentation is part of completion.** Code, tests, generated artifacts,
+10. **Documentation is part of completion.** Code, tests, generated artifacts,
    hand-maintained docs, and signoff notes must be updated before a phase is
    complete.
-10. **Every phase ends at a commit boundary.** Run de-slop, architect review,
+11. **Every phase ends at a commit boundary.** Run de-slop, architect review,
     code review, verification, and commit before moving to the next phase.
 
 ## Completed Work
@@ -135,9 +138,13 @@ validation/   source/effect/scene/render contract checks
 source/       source materialization from canonical source instances
 render/       frame output, sample context, graph step collection, orchestration
 context/      compositor context only if needed for direct v3.1 execution
-pipeline/     render sequencing only if needed; no DTO lowering
 utils/        small pure helpers reused across substrate or primitives
 ```
+
+
+Effect-to-effect data flow is still supported through graph vocabulary, not
+pipeline vocabulary: node outputs publish graph-local values and later node
+inputs consume them through `ValueSource::GraphValue`.
 
 Do not create these forbidden shapes:
 
@@ -173,7 +180,7 @@ Acceptance:
   fields are consumed directly.
 - Text/card/asset/procedural support is added only as far as the first direct
   scene tests require.
-- Unsupported source descriptors fail during `LoadedV31Recipe::load`, including
+- Unsupported source descriptors fail during `LoadedRecipe::load`, including
   its render-contract validation subpass, with explicit diagnostics. Render-time
   diagnostics are reserved for sample-dependent failures that cannot be known at
   load.
@@ -270,6 +277,7 @@ crates/tui-vfx-compost/src/
     styles/
   source/
   render/
+  runtime/
   shaders/
   filters/
   masks/
@@ -286,7 +294,6 @@ crates/tui-vfx-compositor/src/
   filters/
   masks/
   samplers/
-  pipeline/
   traits/
   types/
   utils/
@@ -335,4 +342,4 @@ Resume at the first incomplete phase. As of this version, the next incomplete
 phase is non-primitive substrate migration.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 2.0.3</VERS> -->
+<!-- <VERS>END OF VERSION: 2.0.6</VERS> -->

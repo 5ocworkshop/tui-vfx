@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/v31-native-transition-model.md</FILE> - <DESC>Architecture rationale and canonical shape for native v3.1 transition specs and tracks</DESC> -->
-<!-- <VERS>VERSION: 0.4.1</VERS> -->
+<!-- <VERS>VERSION: 0.4.2</VERS> -->
 <!-- <WCTX>v3.1 schema audit: make transitions first-class without adding legacy execution layers.</WCTX> -->
-<!-- <CLOG>0.4.1: PATCH — clarify schema-approved canonicalization only and shared-kernel guidance for overlapping transition tracks and primitives.</CLOG> -->
+<!-- <CLOG>0.4.2: PATCH — record fixed-diagonal versus arbitrary-angle wipe policy for native visibility tracks.</CLOG> -->
 
 # Native v3.1 Transition Model
 
@@ -244,6 +244,13 @@ style.glistenBand
 
 The list is intentionally small enough to document and validate, but broad
 enough to cover current recipe evidence.
+
+## Wipe geometry policy
+
+Fixed diagonal wipes are named corner-to-corner variants. Arbitrary-angle wipe
+is a candidate future `visibility.wipe` direction/geometry form and must be
+represented explicitly if accepted. It must not be smuggled into one of the
+fixed diagonal variants.
 
 Conservative promotion rule:
 
@@ -493,5 +500,5 @@ chains.
   name.
 - Add visual reference examples for each transition track family.
 
-<!-- <FILE>docs/arch/v31-native-transition-model.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.1</VERS> -->
+<!-- <FILE>docs/arch/v31-native-transition-model.md</FILE> - <DESC>Architecture rationale and canonical shape for native v3.1 transition specs and tracks</DESC> -->
+<!-- <VERS>END OF VERSION: 0.4.2</VERS> -->

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/support.rs</FILE> - <DESC>Shared fixtures for compost direct recipe tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Keep canonical v3.1 recipe fixtures separate from per-primitive tests.</WCTX>
-// <CLOG>0.1.0: INIT — add linearGradient fixture for compost RED tests.</CLOG>
+// <CLOG>0.1.1: PATCH — use sourceDescriptor and sourceInstance in the canonical fixture.</CLOG>
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -48,7 +48,7 @@ pub(crate) fn linear_gradient_recipe_value() -> serde_json::Value {
         "sourceDescriptors": {},
         "sources": {
             "mainCard": {
-                "source": "source.card",
+                "sourceDescriptor": "source.card",
                 "inputs": {
                     "message": { "kind": "literal", "value": { "kind": "text", "value": "ABC" } },
                     "width": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
@@ -89,7 +89,7 @@ pub(crate) fn linear_gradient_recipe_value() -> serde_json::Value {
                         },
                         "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
                         "intensity": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
-                        "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+                        "channelTarget": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
                     },
                     "outputs": {},
                     "activePhases": [],
@@ -110,8 +110,8 @@ pub(crate) fn linear_gradient_recipe_value() -> serde_json::Value {
                 "layer": "primary",
                 "zIndex": 0,
                 "placement": { "x": 0, "y": 0 },
-                "source": "mainCard",
-                "pipeline": null,
+                "sourceInstance": "mainCard",
+                "graphBinding": null,
                 "clipPolicy": "clip",
                 "cellWritePolicy": "writeCell",
                 "roleWritePolicy": { "kind": "preserveDestination" }
@@ -121,4 +121,4 @@ pub(crate) fn linear_gradient_recipe_value() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/support.rs</FILE> - <DESC>Shared fixtures for compost direct recipe tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

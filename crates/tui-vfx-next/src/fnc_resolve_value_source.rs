@@ -1,5 +1,5 @@
 // <FILE>crates/tui-vfx-next/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve declarative ValueSource values for proof graph execution</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.2.1</VERS>
 // <WCTX>New kernel Phase G4: resolve graph-local values alongside parameters and signals.</WCTX>
 // <CLOG>0.2.0: MINOR — return ProofValue and consume graph value bus entries.
 // 0.1.0: INIT — resolve literals, parameters, signals, and numeric maps without runtime stores.</CLOG>
@@ -51,6 +51,12 @@ pub fn resolve_value_source(
             y,
             fallback.as_ref(),
         ),
+        ValueSource::SignalExpression { fallback, .. } => Ok(ProofValue::Frame(
+            fallback.clone().unwrap_or(Value::Number(0.0)),
+        )),
+        ValueSource::PhaseProgress { .. } | ValueSource::Clock { .. } => {
+            Ok(ProofValue::Frame(Value::Number(0.0)))
+        }
     }
 }
 
@@ -194,4 +200,4 @@ pub fn resolved_value_matches_kind(value: &ProofValue, expected: ValueKind) -> b
 }
 
 // <FILE>crates/tui-vfx-next/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve declarative ValueSource values for proof graph execution</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Render directly from canonical RecipeDocument: source materialization, graph traversal, and native shader execution only.</WCTX>
-// <CLOG>0.1.0: INIT — add direct native render entrypoint for linearGradient slice.</CLOG>
+// <CLOG>0.1.1: PATCH — read scene element sourceInstance after the contract naming audit.</CLOG>
 
 use tui_vfx_contract::{RecipeDocument, RecipeSceneElement};
 use tui_vfx_types::{Grid, OwnedGrid, RoleTag, SemanticScene, Style};
@@ -22,13 +22,16 @@ pub fn render_recipe(loaded: &LoadedRecipe, sample: &SampleContext) -> Result<Fr
         .elements
         .first()
         .ok_or_else(|| RenderError::Unsupported("recipe scene has no element".to_string()))?;
-    let source = recipe.sources.get(&element.source).ok_or_else(|| {
-        RenderError::Unsupported(format!(
-            "scene element `{}` references missing source `{}`",
-            element.id.as_str(),
-            element.source.as_str()
-        ))
-    })?;
+    let source = recipe
+        .sources
+        .get(&element.source_instance)
+        .ok_or_else(|| {
+            RenderError::Unsupported(format!(
+                "scene element `{}` references missing source `{}`",
+                element.id.as_str(),
+                element.source_instance.as_str()
+            ))
+        })?;
 
     let source_grid = source_grid_from_inputs(&source.inputs)?;
     let mut destination = SemanticScene::from_grid_with_default_role(
@@ -64,9 +67,9 @@ fn shader_nodes_for_element<'a>(
 ) -> Result<Vec<LinearGradientNode<'a>>, RenderError> {
     let mut node_ids = Vec::new();
     let topology = element
-        .pipeline
+        .graph_binding
         .as_ref()
-        .and_then(|pipeline| pipeline.topology.as_ref())
+        .and_then(|graph_binding| graph_binding.topology.as_ref())
         .or(recipe.graph.topology.as_ref());
     collect_graph_step_nodes(topology, &mut node_ids);
     if node_ids.is_empty() {
@@ -135,4 +138,4 @@ fn render_source_with_shaders(
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

@@ -8,7 +8,7 @@ use tui_vfx_compost::{LoadError, LoadedRecipe, SampleContext, render_recipe};
 use tui_vfx_types::Color;
 
 #[test]
-fn rejects_non_v31_recipe_before_rendering() {
+fn rejects_unsupported_recipe_version_before_rendering() {
     let catalog = primitive_catalog();
     let mut recipe = linear_gradient_recipe_value();
     recipe["version"] = serde_json::Value::String("3.2".to_string());

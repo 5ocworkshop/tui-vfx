@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/validation/shaders/fnc_validate_linear_gradient_inputs.rs</FILE> - <DESC>Validate native linearGradient inputs</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>linearGradient is the first compost shader slice and consumes canonical v3.1 fields directly.</WCTX>
-// <CLOG>0.1.0: INIT — add linearGradient load validation.</CLOG>
+// <CLOG>0.1.1: PATCH — validate canonical channelTarget instead of old applyTo.</CLOG>
 
 use tui_vfx_contract::{EffectInputId, NodeId, NodeSpec, Value};
 
@@ -38,11 +38,11 @@ pub(crate) fn validate_linear_gradient_inputs(
     require_enum_value(
         node_id,
         node,
-        "applyTo",
+        "channelTarget",
         &["foreground", "background", "both"],
     )?;
     Ok(())
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/shaders/fnc_validate_linear_gradient_inputs.rs</FILE> - <DESC>Validate native linearGradient inputs</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

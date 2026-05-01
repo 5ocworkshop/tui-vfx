@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/loader/cls_loaded_recipe.rs</FILE> - <DESC>Load-validated native v3.1 recipe wrapper</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>LoadedRecipe owns the accepted canonical v3.1 RecipeDocument and stays thin.</WCTX>
-// <CLOG>0.1.0: INIT — add native loaded recipe wrapper.</CLOG>
+// <CLOG>0.1.1: PATCH — reject unsupported recipe versions before descriptor validation.</CLOG>
 
 use tui_vfx_contract::{DescriptorCatalog, RecipeDocument};
 
@@ -18,13 +18,13 @@ pub struct LoadedRecipe {
 impl LoadedRecipe {
     /// Validate a canonical v3.1 recipe once at load time.
     pub fn load(recipe: RecipeDocument, catalog: &DescriptorCatalog) -> Result<Self, LoadError> {
-        recipe.validate_with_catalog(catalog)?;
         if recipe.version != "3.1" || recipe.graph.version != "3.1" {
             return Err(LoadError::UnsupportedVersion {
                 recipe_version: recipe.version.clone(),
                 graph_version: recipe.graph.version.clone(),
             });
         }
+        recipe.validate_with_catalog(catalog)?;
         validate_render_contract(&recipe)?;
         Ok(Self { recipe })
     }
@@ -36,4 +36,4 @@ impl LoadedRecipe {
 }
 
 // <FILE>crates/tui-vfx-compost/src/loader/cls_loaded_recipe.rs</FILE> - <DESC>Load-validated native v3.1 recipe wrapper</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

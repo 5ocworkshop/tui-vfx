@@ -120,7 +120,7 @@ pub enum RoleTag {
     Indicator,
     /// Emphasized content (search hits, etc.).
     Highlight,
-    /// Shadow content — source layer OR pipeline output.
+    /// Shadow content — source layer or graph/render output.
     Shadow,
     /// Ornamental cells (dividers, ornaments).
     Decoration,
