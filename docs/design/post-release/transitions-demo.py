@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.3.1</VERS>
-# <WCTX>Replace 'B' in scope mode with a structurally-distinct toast panel (off-white body, green accent stripe, gray border) instead of another landscape — the previous choice (Day/Night/Plasma) shared mountain geometry across scenes, hiding the visual artifacts of wipe / iris / dissolve / morph inside the rect because the underlying cell content was similar on both sides of the transition.</WCTX>
-# <CLOG>0.3.1: add render_toast() — solid-colour panel with off-white body, mint-green accent stripe (2 cells wide on the left), and gray 1-cell border, sized to fill the active scope rect exactly. When scope is on, b_buf is the toast instead of the pair-selected scene; the underlying 'A' (pair-selected first scene) remains the surround. Solid-block content makes wipe edges, iris circles, dissolve stippling, push slides, and morph warps clearly visible against the destination panel.</CLOG>
+# <VERS>VERSION: 0.4.0</VERS>
+# <WCTX>Add an eighth transition primitive — braille — that operates at the dot level (8 dots per terminal cell via U+2800..U+28FF) for 8× sub-cell particle density vs the existing cell-level transitions. Emits braille glyphs with fg=B-color and bg=A-color per cell, and exposes four sub-variants (dissolve / rain / typewriter / shimmer) cycled with the 'b' key, which also auto-selects the braille slot. Render path now dispatches between half-cell ▌ emit and per-cell glyph emit; scope composite handles the mixed case (per-cell braille inside rect, ▌-converted a_buf outside) for clean composition with the toast model.</WCTX>
+# <CLOG>0.4.0: add four braille variants — dissolve (per-dot noise threshold), rain (dots fill top-down with per-cell stagger), typewriter (dots reveal in reading order across all cells), shimmer (frame-rotating per-dot mask gives sparkle); single 'braille' slot (transition #8) with 'b' key cycling variant and auto-selecting slot if not active; new BRAILLE_NOISE grid (8 thresholds × W × SCENE_H) and _BRAILLE_BITS table for (dot_x, dot_y) → bit lookup. Adds _emit_per_cell(), _half_cell_to_per_cell(), and _scope_composite_braille() so braille works both at full-screen and inside the scope rect over a ▌-emitted surround. HEADER_H 6→7 and SCENE_H 12→11 to fit a Braille variant selector row in the header.</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -11,9 +11,9 @@ Run:   python3 transitions-demo.py
        python3 transitions-demo.py --transition iris --easing ease-out-back
        python3 transitions-demo.py --duration 1.5 --hold 2.5
 
-Keys:  1..7     transition primitive
-                  1 crossfade · 2 wipe   · 3 iris  · 4 push
-                  5 dissolve  · 6 morph  · 7 stippled
+Keys:  1..8     transition primitive
+                  1 crossfade · 2 wipe   · 3 iris    · 4 push
+                  5 dissolve  · 6 morph  · 7 stippled · 8 braille
        e        cycle easing (linear → in-out-quad → in-out-cubic
                               → in-out-sine → out-back → in-out-elastic)
        d        cycle direction for wipe / push
@@ -21,6 +21,9 @@ Keys:  1..7     transition primitive
        t        cycle scene pair (Day↔Night → Day↔Plasma → Night↔Plasma)
        h        toggle temporal value-dither (sub-frame integer precision)
        s        cycle scope rectangle (off → small → medium → large → tall)
+       b        cycle braille variant (dissolve → rain → typewriter →
+                shimmer); pressing 'b' from any other transition auto-
+                selects the braille slot first
        space    trigger transition NOW (skip the current hold)
        p        pause / resume motion (also pauses the auto-cycle)
        +/-      lengthen / shorten transition duration (250 ms steps)
@@ -46,7 +49,7 @@ is broadcast to every cell. Any easing × any primitive combination
 therefore composes; press 'e' to cycle easings while a transition is
 in flight and the change applies on the next frame.
 
-THE SEVEN PRIMITIVES
+THE EIGHT PRIMITIVES
 
   crossfade  Per-cell linear interpolation. Trivial; the baseline.
   wipe       Front travels across the screen at progress * width.
@@ -73,6 +76,20 @@ THE SEVEN PRIMITIVES
              integrates the alternation into a smooth fade WITHOUT
              RGB blending — useful when A→B colours blend ugly
              (red→green going through grey is the canonical example).
+
+  braille    Dot-level transitions via U+2800..U+28FF — each terminal
+             cell carries 8 dots in a 2×4 grid, fg colour for "on" dots,
+             bg colour for "off". Same 2-colours-per-cell constraint as
+             half-block, but 8× the per-cell decisions. Four sub-variants
+             cycled with 'b':
+               dissolve    per-dot noise threshold; reads as particles
+                           emerging
+               rain        dots fill cell top-down with per-cell stagger;
+                           reads as liquid filling cells
+               typewriter  dots reveal in reading order across all cells;
+                           reads as ASCII art being drawn
+               shimmer     frame-rotating per-dot mask plus progress-based
+                           population growth; reads as sparkle
 
 THREE SCENES, THREE PAIRS
 
@@ -163,8 +180,34 @@ import tty
 
 W, H        = 78, 18
 SUB_W       = W * 2
-HEADER_H    = 6    # rows: type / easing / pair / progress-raw / progress-eased / blank
+HEADER_H    = 7    # help / type / easing / braille-variant / pair / progress-raw / progress-eased
 SCENE_H     = H - HEADER_H
+
+# Braille dot-bit mapping for U+2800..U+28FF: each cell carries 2 cols × 4 rows
+# of dots, with the bit per (dot_x, dot_y) position fixed by Unicode.
+# _BRAILLE_BITS[dot_x][dot_y] → bit index (0..7); add (1 << bit) per "on" dot
+# and emit chr(0x2800 + mask).
+_BRAILLE_BITS = (
+    (0, 1, 2, 6),   # dot_x = 0 (left col):  dots 1, 2, 3, 7
+    (3, 4, 5, 7),   # dot_x = 1 (right col): dots 4, 5, 6, 8
+)
+
+# Reading-order sequence for the typewriter variant: dot index 0..7 as the eye
+# would scan a cell — top-row left, top-row right, second-row left, second-row
+# right, third-row left/right, fourth-row left/right.
+_TYPEWRITER_BIT_ORDER = (0, 3, 1, 4, 2, 5, 6, 7)
+
+# Per-(row, col, dot) noise grid for the braille-dissolve threshold. Built
+# once at startup; deterministic so the dissolve pattern is repeatable.
+def _build_braille_noise():
+    rng = random.Random(7777)
+    return [[[rng.random() for _ in range(8)] for _ in range(W)] for _ in range(SCENE_H)]
+
+BRAILLE_NOISE = _build_braille_noise()
+
+BRAILLE_VARIANTS = ("dissolve", "rain", "typewriter", "shimmer")
+_BRAILLE_SHORT   = {"dissolve": "diss", "rain": "rain",
+                    "typewriter": "type", "shimmer": "shim"}
 
 # 4×4 Bayer matrix — used both by the stippled transition and by the
 # temporal value-dither inside _lerp. Frame-shifted per-frame so the eye
@@ -748,6 +791,111 @@ def trans_morph(a_buf, b_buf, p, params):
             out[y][x] = _lerp(a_sample, b_sample, p, x, y)
     return out
 
+def _cell_mean(buf, cx, cy):
+    """Return the mean RGB of a half-cell terminal cell (the two sub-x cells)."""
+    a = buf[cy][2 * cx]
+    b = buf[cy][2 * cx + 1]
+    return ((a[0] + b[0]) >> 1, (a[1] + b[1]) >> 1, (a[2] + b[2]) >> 1)
+
+# ----------------------------------------------------------------------------
+# Braille variants — return per-cell (glyph, fg, bg) buffers, not half-cell.
+# ----------------------------------------------------------------------------
+
+def _trans_braille_dissolve(a_buf, b_buf, p, params):
+    """Particles emerging: per-dot noise threshold, mask grows as p > t."""
+    out = []
+    for y in range(SCENE_H):
+        row = []
+        thresh_row = BRAILLE_NOISE[y]
+        for cx in range(W):
+            a_col = _cell_mean(a_buf, cx, y)
+            b_col = _cell_mean(b_buf, cx, y)
+            mask = 0
+            thresh = thresh_row[cx]
+            for dot_idx in range(8):
+                if p > thresh[dot_idx]:
+                    mask |= (1 << dot_idx)
+            row.append((chr(0x2800 + mask), b_col, a_col))
+        out.append(row)
+    return out
+
+def _trans_braille_rain(a_buf, b_buf, p, params):
+    """Liquid fill: dots fill each cell top-down with a per-cell stagger so
+    cells aren't synchronised — looks like rain settling row by row."""
+    out = []
+    for y in range(SCENE_H):
+        row = []
+        for cx in range(W):
+            a_col = _cell_mean(a_buf, cx, y)
+            b_col = _cell_mean(b_buf, cx, y)
+            stagger = BRAILLE_NOISE[y][cx][0] * 0.30
+            local_p = (p - stagger) / max(1e-6, 1.0 - stagger)
+            local_p = 0.0 if local_p < 0 else 1.0 if local_p > 1 else local_p
+            fill_rows = int(local_p * 4 + 1e-9)   # 0..4 rows of dots filled
+            mask = 0
+            for dot_y in range(fill_rows):
+                mask |= (1 << _BRAILLE_BITS[0][dot_y])
+                mask |= (1 << _BRAILLE_BITS[1][dot_y])
+            row.append((chr(0x2800 + mask), b_col, a_col))
+        out.append(row)
+    return out
+
+def _trans_braille_typewriter(a_buf, b_buf, p, params):
+    """Reading-order reveal: dots appear left-to-right, top-to-bottom across
+    all cells. Looks like ASCII art being drawn one stroke at a time."""
+    total_dots = W * SCENE_H * 8
+    revealed   = int(p * total_dots + 0.5)
+    out = []
+    for y in range(SCENE_H):
+        row = []
+        for cx in range(W):
+            a_col = _cell_mean(a_buf, cx, y)
+            b_col = _cell_mean(b_buf, cx, y)
+            cell_start = (y * W + cx) * 8
+            n_in_cell  = 0 if revealed < cell_start else 8 if revealed >= cell_start + 8 else revealed - cell_start
+            mask = 0
+            for k in range(n_in_cell):
+                mask |= (1 << _TYPEWRITER_BIT_ORDER[k])
+            row.append((chr(0x2800 + mask), b_col, a_col))
+        out.append(row)
+    return out
+
+def _trans_braille_shimmer(a_buf, b_buf, p, params):
+    """Sparkle: per-dot threshold rotates by frame so individual dots flicker
+    on/off; the population of 'on' dots still grows with p, but at any moment
+    the pattern is shifting. Eye integrates over consecutive frames."""
+    f = _FRAME_STATE['frame']
+    out = []
+    for y in range(SCENE_H):
+        row = []
+        thresh_row = BRAILLE_NOISE[y]
+        for cx in range(W):
+            a_col = _cell_mean(a_buf, cx, y)
+            b_col = _cell_mean(b_buf, cx, y)
+            mask = 0
+            thresh = thresh_row[cx]
+            for dot_idx in range(8):
+                t = thresh[(dot_idx + f) & 7]
+                if p > t:
+                    mask |= (1 << dot_idx)
+            row.append((chr(0x2800 + mask), b_col, a_col))
+        out.append(row)
+    return out
+
+_BRAILLE_FUNCS = {
+    "dissolve":   _trans_braille_dissolve,
+    "rain":       _trans_braille_rain,
+    "typewriter": _trans_braille_typewriter,
+    "shimmer":    _trans_braille_shimmer,
+}
+
+def trans_braille(a_buf, b_buf, p, params):
+    """Dispatch to one of the four braille variants. Returns a per-cell
+    (glyph, fg, bg) buffer rather than a half-cell buffer — render() detects
+    this and uses the per-cell emit path."""
+    variant = params.get('braille_variant', 'dissolve')
+    return _BRAILLE_FUNCS[variant](a_buf, b_buf, p, params)
+
 def trans_stippled(a_buf, b_buf, p, params):
     """Frame-rotating Bayer dither — every cell is wholly A or wholly B at any
     one moment, never a blend. The Bayer threshold is shifted by the current
@@ -773,9 +921,11 @@ TRANSITIONS = {
     "dissolve":  trans_dissolve,
     "morph":     trans_morph,
     "stippled":  trans_stippled,
+    "braille":   trans_braille,    # per-cell glyph buffer; render() detects
 }
 
-TRANSITION_ORDER = ("crossfade", "wipe", "iris", "push", "dissolve", "morph", "stippled")
+TRANSITION_ORDER = ("crossfade", "wipe", "iris", "push", "dissolve", "morph",
+                    "stippled", "braille")
 
 # Direction is meaningful for wipe and push.
 DIRECTION_ORDER = ("left", "right", "up", "down", "diagonal")
@@ -794,10 +944,10 @@ def _progress_bar(value, width):
     return cells.ljust(width, " ")
 
 _TYPE_SHORT = {
-    "crossfade": "fade",   "wipe":     "wipe",
-    "iris":      "iris",   "push":     "push",
-    "dissolve":  "dissol", "morph":    "morph",
-    "stippled":  "stipple",
+    "crossfade": "fade ",   "wipe":     "wipe ",
+    "iris":      "iris ",   "push":     "push ",
+    "dissolve":  "diss ",   "morph":    "morph",
+    "stippled":  "stipl",   "braille":  "brail",
 }
 
 _EASE_SHORT = {
@@ -807,12 +957,12 @@ _EASE_SHORT = {
 }
 
 def _render_header(out, state):
-    out.append("Transitions  —  1-7 type · e ease · t pair · h dither · s scope · "
+    out.append("Transitions  —  1-8 type · e ease · t pair · h dither · s scope · b braille · "
                "d dir · space go · p pause · +/- dur · 0 reset · q quit\n")
     out.append("Type:    ")
     for i, name in enumerate(TRANSITION_ORDER, start=1):
         marker = "▶" if state['transition'] == name else " "
-        out.append(f"{marker}{i}:{_TYPE_SHORT[name]:<8}")
+        out.append(f"{marker}{i}:{_TYPE_SHORT[name]:<6}")
     out.append("\n")
 
     out.append("Easing:  ")
@@ -820,6 +970,14 @@ def _render_header(out, state):
         marker = "▶" if state['easing'] == name else " "
         out.append(f"{marker}{_EASE_SHORT[name]:<11}")
     out.append("\n")
+
+    out.append("Braille: ")
+    braille_active = state['transition'] == 'braille'
+    for i, name in enumerate(BRAILLE_VARIANTS):
+        is_current = i == state['braille_variant_idx']
+        marker = "▶" if (braille_active and is_current) else "·" if is_current else " "
+        out.append(f"{marker}{i+1}:{_BRAILLE_SHORT[name]:<6}")
+    out.append(f"  press 'b' to cycle{CLEAR_EOL}\n")
 
     out.append("Pair:    ")
     for i, (a, b) in enumerate(PAIRS):
@@ -858,6 +1016,32 @@ def _emit_buf(out, buf):
             out.append(HALF)
         out.append(RESET + "\n")
 
+def _emit_per_cell(out, scene):
+    """Emit a per-cell scene where each entry is (glyph, fg, bg). Used for the
+    braille transition (where the glyph carries the dot mask) and for the
+    scope-mixed mode where braille cells inside the rect coexist with ▌-based
+    a_buf cells outside."""
+    for row in scene:
+        last_pair = None
+        for glyph, fg, bg in row:
+            if (fg, bg) != last_pair:
+                out.append(fgbg(fg, bg))
+                last_pair = (fg, bg)
+            out.append(glyph)
+        out.append(RESET + "\n")
+
+def _half_cell_to_per_cell(half_buf):
+    """Wrap a half-cell buffer (SCENE_H × SUB_W of RGB) as a per-cell buffer
+    (SCENE_H × W of (HALF-glyph, fg=left, bg=right)) so it can be spliced
+    next to braille cells in a single per-cell row for the scope composite."""
+    out = []
+    for row in half_buf:
+        cells = []
+        for cx in range(W):
+            cells.append((HALF, row[2 * cx], row[2 * cx + 1]))
+        out.append(cells)
+    return out
+
 def render(state, a_buf, b_buf):
     # Publish per-frame state for _lerp() and trans_stippled().
     _FRAME_STATE['frame']  = state['frame_count']
@@ -865,6 +1049,9 @@ def render(state, a_buf, b_buf):
 
     out = [HOME, RESET]
     _render_header(out, state)
+
+    is_braille_phase = (state['transition'] == 'braille' and
+                        state['phase'] in ('a_to_b', 'b_to_a'))
 
     if state['phase'] == 'hold_a':
         scene = a_buf
@@ -882,34 +1069,53 @@ def render(state, a_buf, b_buf):
             ry = (SCENE_H - rh) // 2
             focal = ((rx + rw / 2.0) * 2, ry + rh / 2.0)
         params = {
-            'direction': state['direction'],
-            'focal':     focal,
+            'direction':       state['direction'],
+            'focal':           focal,
+            'braille_variant': BRAILLE_VARIANTS[state['braille_variant_idx']],
         }
         scene = TRANSITIONS[state['transition']](from_buf, to_buf, state['eased_progress'], params)
     else:
         scene = a_buf  # safety net
 
-    # Scope: composite scene inside the rect, a_buf outside. Outside the rect
-    # always shows scene A — the "base" — regardless of phase, so the rect
-    # reads as a toast / panel animating over a stable underlying scene.
+    # Scope: composite scene inside the rect, a_buf outside. Two paths —
+    # half-cell (▌) for the standard transitions, per-cell glyph for braille.
     rect = SCOPE_RECTS[state['scope_idx']]
     if rect is not None:
         rw, rh = rect
         rx = (W - rw) // 2
         ry = (SCENE_H - rh) // 2
-        # Convert cell-x bounds to sub-x bounds.
-        sub_x_lo = rx * 2
-        sub_x_hi = sub_x_lo + rw * 2
-        composed = []
-        for y in range(SCENE_H):
-            if ry <= y < ry + rh:
-                row = a_buf[y][:sub_x_lo] + scene[y][sub_x_lo:sub_x_hi] + a_buf[y][sub_x_hi:]
-            else:
-                row = a_buf[y][:]
-            composed.append(row)
-        scene = composed
 
-    _emit_buf(out, scene)
+        if is_braille_phase:
+            # `scene` is per-cell (W tuples per row); a_buf is half-cell.
+            # Convert a_buf to per-cell ▌ form, then splice braille inside the rect.
+            a_per = _half_cell_to_per_cell(a_buf)
+            composed = []
+            for y in range(SCENE_H):
+                if ry <= y < ry + rh:
+                    row = a_per[y][:rx] + scene[y][rx:rx + rw] + a_per[y][rx + rw:]
+                else:
+                    row = a_per[y][:]
+                composed.append(row)
+            scene = composed
+            _emit_per_cell(out, scene)
+        else:
+            sub_x_lo = rx * 2
+            sub_x_hi = sub_x_lo + rw * 2
+            composed = []
+            for y in range(SCENE_H):
+                if ry <= y < ry + rh:
+                    row = a_buf[y][:sub_x_lo] + scene[y][sub_x_lo:sub_x_hi] + a_buf[y][sub_x_hi:]
+                else:
+                    row = a_buf[y][:]
+                composed.append(row)
+            scene = composed
+            _emit_buf(out, scene)
+    else:
+        # No scope: emit on the appropriate path for the buffer kind.
+        if is_braille_phase:
+            _emit_per_cell(out, scene)
+        else:
+            _emit_buf(out, scene)
     sys.stdout.write("".join(out))
     sys.stdout.flush()
 
@@ -950,7 +1156,7 @@ _PAIR_NAMES = tuple(f"{a}-{b}" for a, b in PAIRS)
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Seven-primitive transition demo over Day / Night / Plasma scenes.")
+        description="Eight-primitive transition demo over Day / Night / Plasma scenes.")
     parser.add_argument("--transition", choices=TRANSITION_ORDER, default="crossfade",
                         help="initial transition primitive (default: crossfade).")
     parser.add_argument("--easing", choices=EASING_ORDER, default="in-out-cubic",
@@ -967,6 +1173,9 @@ def parse_args():
                         help="restrict transitions to a centred rectangle in the scene "
                              "(default: off — full-screen). Cycle at runtime with 's'. "
                              "Outside the rect always shows scene A — the toast model.")
+    parser.add_argument("--braille-variant", choices=BRAILLE_VARIANTS, default="dissolve",
+                        help="initial braille sub-variant when transition='braille' "
+                             "(default: dissolve). Cycle at runtime with 'b'.")
     parser.add_argument("--duration", type=float, default=1.0, metavar="SEC",
                         help="transition duration in seconds (default: 1.0).")
     parser.add_argument("--hold", type=float, default=1.5, metavar="SEC",
@@ -990,10 +1199,11 @@ def main():
         'hold':         args.hold,
         'paused':       False,
 
-        'pair_idx':     _PAIR_NAMES.index(args.pair),
-        'dither_value': bool(args.dither),
-        'scope_idx':    SCOPE_NAMES.index(args.scope),
-        'frame_count':  0,
+        'pair_idx':           _PAIR_NAMES.index(args.pair),
+        'dither_value':       bool(args.dither),
+        'scope_idx':          SCOPE_NAMES.index(args.scope),
+        'braille_variant_idx': BRAILLE_VARIANTS.index(args.braille_variant),
+        'frame_count':        0,
 
         'phase':        'hold_a',
         'phase_start':  time.perf_counter(),
@@ -1054,6 +1264,15 @@ def main():
                     if key in ("s", "S"):
                         state['scope_idx'] = (state['scope_idx'] + 1) % len(SCOPE_NAMES)
                         continue
+                    if key in ("b", "B"):
+                        # Auto-select braille slot if not active; otherwise
+                        # cycle through the four braille variants.
+                        if state['transition'] != 'braille':
+                            state['transition'] = 'braille'
+                        else:
+                            state['braille_variant_idx'] = (
+                                state['braille_variant_idx'] + 1) % len(BRAILLE_VARIANTS)
+                        continue
                     if key in (" ",):
                         # Trigger now: jump to the next transition phase from
                         # whichever hold we're in, or restart the current
@@ -1086,17 +1305,18 @@ def main():
                         state['duration'] = max(0.10, state['duration'] - 0.25)
                         continue
                     if key == "0":
-                        state['transition']   = args.transition
-                        state['easing']       = args.easing
-                        state['direction']    = args.direction
-                        state['duration']     = args.duration
-                        state['hold']         = args.hold
-                        state['pair_idx']     = _PAIR_NAMES.index(args.pair)
-                        state['dither_value'] = bool(args.dither)
-                        state['scope_idx']    = SCOPE_NAMES.index(args.scope)
-                        state['phase']        = 'hold_a'
-                        state['phase_start']  = time.perf_counter()
-                        state['paused']       = False
+                        state['transition']           = args.transition
+                        state['easing']               = args.easing
+                        state['direction']            = args.direction
+                        state['duration']             = args.duration
+                        state['hold']                 = args.hold
+                        state['pair_idx']             = _PAIR_NAMES.index(args.pair)
+                        state['dither_value']         = bool(args.dither)
+                        state['scope_idx']            = SCOPE_NAMES.index(args.scope)
+                        state['braille_variant_idx'] = BRAILLE_VARIANTS.index(args.braille_variant)
+                        state['phase']                = 'hold_a'
+                        state['phase_start']          = time.perf_counter()
+                        state['paused']               = False
                         continue
 
             now = time.perf_counter()
@@ -1167,4 +1387,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.3.1</VERS>
+# <VERS>END OF VERSION: 0.4.0</VERS>
