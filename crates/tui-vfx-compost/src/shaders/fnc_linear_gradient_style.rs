@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/shaders/fnc_linear_gradient_style.rs</FILE> - <DESC>Execute native linearGradient style from canonical v3.1 fields</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Reuse the proven LinearGradientShader math while constructing it from canonical v3.1 NodeSpec fields.</WCTX>
-// <CLOG>0.1.1: PATCH — read canonical channelTarget for gradient application.</CLOG>
+// <VERS>VERSION: 0.1.2</VERS>
+// <WCTX>Reuse the proven LinearGradientShader math while keeping the compost crate clippy-clean.</WCTX>
+// <CLOG>0.1.2: PATCH — use unwrap_or_default for default gradient construction.</CLOG>
 
 use tui_vfx_contract::{GradientSpec, NodeSpec};
 use tui_vfx_style::models::{ColorSpace, Gradient, LinearGradientApplyTo, LinearGradientShader};
@@ -37,7 +37,7 @@ pub(crate) fn linear_gradient_style(
 fn gradient_from_node(node: &NodeSpec) -> Gradient {
     gradient_input(node, "gradient")
         .map(gradient_from_spec)
-        .unwrap_or_else(Gradient::default)
+        .unwrap_or_default()
 }
 
 fn gradient_from_spec(spec: &GradientSpec) -> Gradient {
@@ -63,4 +63,4 @@ fn apply_to_from_node(node: &NodeSpec) -> LinearGradientApplyTo {
 }
 
 // <FILE>crates/tui-vfx-compost/src/shaders/fnc_linear_gradient_style.rs</FILE> - <DESC>Execute native linearGradient style from canonical v3.1 fields</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.1.2</VERS>

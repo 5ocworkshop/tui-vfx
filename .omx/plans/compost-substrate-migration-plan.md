@@ -1,7 +1,10 @@
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.4.3</VERS> -->
-<!-- <WCTX>Plan mode artifact: migrate non-primitive compost substrate first, preserving pure v3.1 shape and OFPF file discipline.</WCTX> -->
-<!-- <CLOG>0.4.3: PATCH — tighten timing, proof-harness, wipe-angle, and verification wording for active substrate execution.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.6</VERS> -->
+<!-- <WCTX>Require each substrate phase to start from tui-vfx-compositor reference study and an adaptation plan before implementation.</WCTX> -->
+<!-- <CLOG>0.4.6: PATCH — record graphBinding.timing as rejected until timing substrate.
+0.4.5: PATCH — record Phase 1 strict deferred scene-element policy rejection scope.
+0.4.4: PATCH — add the per-phase reference-study gate and Phase 1 migration/adaptation plan.
+0.4.3: PATCH — tighten timing, proof-harness, wipe-angle, and verification wording for active substrate execution.</CLOG> -->
 
 # Compost Substrate Migration Plan
 
@@ -123,6 +126,29 @@ replacement.
     replacement.
 
 ## Implementation Phases
+
+### Required per-phase reference study gate
+
+Before implementation in each substrate phase, first study the mature
+`tui-vfx-compositor` logic that owns the closest proven behavior for that phase.
+Use `ofpf-*` as the lead inspection path:
+
+1. `ofpf-inspect` the relevant mature files.
+2. `ofpf-tests` and `ofpf-refs` the reference entrypoints when behavior depends
+   on existing tests or downstream call shapes.
+3. `ofpf-around` the exact proven loops, helpers, and diagnostics that need to
+   be carried forward.
+4. Write a phase-specific migration/adaptation plan that lists:
+   - reference files and behavior studied;
+   - which behavior will be migrated as-is conceptually;
+  - which non-canonical or schema-specific surfaces must be replaced by
+    canonical v3.1 structures;
+   - which behavior is deferred to a later substrate phase;
+   - red tests that prove the migrated behavior in `tui-vfx-compost`.
+
+Do not start broad phase implementation from invention. If no matching mature
+logic exists, record that explicitly and ground the phase in contract/vocabulary
+documents before coding.
 
 ### Phase 0 — Native Transition and Motion Substrate Checkpoint — Complete
 
@@ -251,6 +277,47 @@ Acceptance:
 - Later z-index appears over earlier z-index.
 - Negative/overflow placement clips safely.
 - Current one-element linearGradient test still passes.
+
+Reference study and migration plan:
+
+- Mature reference files studied with `ofpf-*`:
+  - `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs`
+  - `crates/tui-vfx-compositor/src/pipeline/cls_render_area.rs`
+  - `crates/tui-vfx-compositor/src/pipeline/fnc_render_pipeline_with_spec_area.rs`
+  - `crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs`
+  - `crates/tui-vfx-compositor/tests/test_render_pipeline_role_awareness.rs`
+- Proven behavior to preserve conceptually:
+  - render into a caller-owned destination grid at an explicit offset;
+  - keep width/height/offset grouped as a render-area concern;
+  - run source-cell copy and effect application through one destination write
+    path;
+  - preserve deterministic ordering by caller-provided traversal order;
+  - keep role-channel writeback separate from cell writeback.
+- v3.1 adaptation:
+  - replace legacy render-area parameters with `RecipeSceneElement.placement`
+    and explicit signed clipping against `RecipeScene.width`/`height`;
+  - replace single source/destination call shape with `RecipeScene` allocation
+    plus per-`RecipeSceneElement` render orchestration;
+  - use canonical `zIndex` plus declaration order for paint order;
+  - continue reading graph binding/topology directly from canonical v3.1
+    `RecipeSceneElement` / `RecipeDocument` fields.
+- Deferred:
+  - source role materialization and full role write policy remain Phase 5 work;
+    Phase 1 only preserves destination roles and rejects deferred role policies
+    at load time;
+  - richer scene-element semantics remain later substrate work; Phase 1 rejects
+    `clipPolicy: warn`, visibility phases/predicates, surface styling/shadows,
+    non-clip overflow, placement motion, declarative placement rules, scroll
+    factors, element-local graph timing, and non-`writeCell` cell policies
+    rather than silently ignoring them;
+  - unsupported source descriptors and richer source materialization remain
+    Phase 2 work;
+  - full effect-family stack order remains Phase 3 work.
+- Red tests:
+  - multiple scene elements render into one frame;
+  - higher `zIndex` paints after lower `zIndex`;
+  - equal `zIndex` preserves declaration-order paint behavior;
+  - negative and overflow placement clip without rebasing source origin.
 
 ### Phase 2 — Source Substrate
 
@@ -548,4 +615,4 @@ while preserving the pure v3.1 architecture and OFPF modularity.
   masks, mattes, transitions, keyframes, and presets.
 
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.6</VERS> -->

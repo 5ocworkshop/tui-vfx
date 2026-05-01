@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Load errors describe canonical v3.1 acceptance failures without legacy compositor DTO vocabulary.</WCTX>
-// <CLOG>0.1.0: INIT — add native load error type.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Load errors describe canonical v3.1 acceptance failures for currently supported substrate behavior.</WCTX>
+// <CLOG>0.2.0: MINOR — add scene element policy rejection diagnostics.</CLOG>
 
 use std::error::Error;
 use std::fmt;
@@ -45,6 +45,16 @@ pub enum LoadError {
         reason: String,
     },
 
+    /// A scene element policy is currently unsupported by the native direct renderer.
+    UnsupportedSceneElementPolicy {
+        /// Scene element id.
+        element_id: String,
+        /// Scene element policy field.
+        policy: String,
+        /// Human-readable reason.
+        reason: String,
+    },
+
     /// The native renderer does not yet support this effect.
     UnsupportedEffect {
         /// Graph-local node id.
@@ -84,6 +94,14 @@ impl fmt::Display for LoadError {
                 formatter,
                 "unsupported input {node_id}.{input} for {effect}: {reason}"
             ),
+            Self::UnsupportedSceneElementPolicy {
+                element_id,
+                policy,
+                reason,
+            } => write!(
+                formatter,
+                "unsupported scene element policy {element_id}.{policy}: {reason}"
+            ),
             Self::UnsupportedEffect { node_id, effect } => {
                 write!(formatter, "unsupported effect {node_id}: {effect}")
             }
@@ -102,4 +120,4 @@ impl From<tui_vfx_contract::DescriptorValidationError> for LoadError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

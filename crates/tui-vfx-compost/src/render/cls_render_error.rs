@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/cls_render_error.rs</FILE> - <DESC>Native render diagnostics</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Render errors stay native and do not mention legacy lowering DTOs.</WCTX>
-// <CLOG>0.1.0: INIT — add render error type.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Render errors stay native and avoid non-canonical construction vocabulary.</WCTX>
+// <CLOG>0.1.1: PATCH — remove non-canonical migration vocabulary from metadata.
+// 0.1.0: INIT — add render error type.</CLOG>
 
 use std::error::Error;
 use std::fmt;
@@ -24,4 +25,4 @@ impl fmt::Display for RenderError {
 impl Error for RenderError {}
 
 // <FILE>crates/tui-vfx-compost/src/render/cls_render_error.rs</FILE> - <DESC>Native render diagnostics</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

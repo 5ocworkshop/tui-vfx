@@ -1,7 +1,10 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 0.12.5</VERS> -->
-<!-- <WCTX>tui-vfx-compost clean-sheet build handoff: pure v3.1 end-to-end, exact write scopes, no runtime bridges, no copied crates.</WCTX> -->
-<!-- <CLOG>0.12.5: PATCH — rename active element graph binding vocabulary and quarantine pipeline wording as proof-only or read-only reference.</CLOG> -->
+<!-- <VERS>VERSION: 0.12.8</VERS> -->
+<!-- <WCTX>tui-vfx-compost substrate Phase 1: scene element composition now has native multi-element rendering, z order, signed clipping, and strict deferred-policy rejection.</WCTX> -->
+<!-- <CLOG>0.12.8: PATCH — record graphBinding.timing rejection with deferred scene-element policies.
+0.12.7: PATCH — record strict Phase 1 deferred scene-element policy rejection.
+0.12.6: PATCH — record Phase 1 scene/element substrate status without changing primitive migration counters.
+0.12.5: PATCH — rename active element graph binding vocabulary and quarantine pipeline wording as proof-only or read-only reference.</CLOG> -->
 
 # tui-vfx-compost Agent Workflow Handoff
 
@@ -146,6 +149,30 @@ Human-facing progress banner:
 ║ Queue: primitive slices paused until substrate is green      ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
+
+Substrate phase status:
+
+| Phase | Status | Evidence |
+| --- | --- | --- |
+| Phase 0 — Native transition and motion checkpoint | Complete | `docs/arch/v31-native-transition-model.md` remains the controlling transition decision record. |
+| Phase 1 — Scene and element substrate | Complete | Native compost render orchestration now composes all scene elements in stable z-index/declaration paint order, preserves signed placement origin while clipping, and keeps the existing one-element `shader.linearGradient` smoke test green. |
+| Phase 2 — Source substrate | Not started | Primitive migration remains paused until the substrate phases complete. |
+
+Phase 1 behavior notes:
+
+- `Frame.applied_effect_kinds` is currently paint-order evidence, not a
+  de-duplicated catalog. Multi-element scenes record each visible element's
+  applied effect ids in scene paint order.
+- `RecipeSceneElement.layer` remains lightweight grouping metadata in Phase 1.
+  Paint order is `zIndex` plus declaration order until a later layer-policy
+  substrate explicitly changes that rule.
+- Phase 1 accepts only the semantics it executes: resolved `placement`,
+  clip-only bounds behavior, `cellWritePolicy: writeCell`, and
+  `roleWritePolicy: preserveDestination`. Deferred scene-element policies such
+  as `clipPolicy: warn`, visibility predicates/phases, surface styling/shadows,
+  non-clip overflow, placement motion, declarative placement rules, scroll
+  factors, element-local graph timing, and other role/cell write policies fail
+  during `LoadedRecipe::load` rather than being silently ignored.
 
 ## Primitive Completion Tracker
 
@@ -837,4 +864,4 @@ git worktree list --porcelain
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.8</VERS> -->

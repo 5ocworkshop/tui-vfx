@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_shader_linear_gradient.rs</FILE> - <DESC>Compost direct linearGradient tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>First compost vertical slice proves canonical v3.1 load + render without v31 path or legacy lowering.</WCTX>
-// <CLOG>0.1.0: INIT — add RED tests for native compost linearGradient slice.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>First compost vertical slice proves canonical v3.1 load and render without non-canonical DTO construction.</WCTX>
+// <CLOG>0.1.1: PATCH — remove non-canonical migration vocabulary from metadata and test names.
+// 0.1.0: INIT — add RED tests for native compost linearGradient slice.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{LoadError, LoadedRecipe, SampleContext, render_recipe};
@@ -64,7 +65,7 @@ fn rejects_runtime_sourced_linear_gradient_inputs_at_load_time() {
 }
 
 #[test]
-fn load_validated_linear_gradient_renders_without_legacy_lowering() {
+fn load_validated_linear_gradient_renders_without_noncanonical_dto_construction() {
     let catalog = primitive_catalog();
     let loaded = LoadedRecipe::load(recipe_from_value(linear_gradient_recipe_value()), &catalog)
         .expect("recipe validates at load time");
@@ -81,4 +82,4 @@ fn load_validated_linear_gradient_renders_without_legacy_lowering() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_shader_linear_gradient.rs</FILE> - <DESC>Compost direct linearGradient tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

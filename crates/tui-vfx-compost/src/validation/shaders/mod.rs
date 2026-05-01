@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/validation/shaders/mod.rs</FILE> - <DESC>Native shader input validation dispatch</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Only signed shader slices appear here; no legacy shader adapter dispatch.</WCTX>
-// <CLOG>0.1.0: INIT — add linearGradient validation dispatch.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Only signed shader slices appear here; non-canonical shader DTO vocabulary stays out.</WCTX>
+// <CLOG>0.1.1: PATCH — remove non-canonical migration vocabulary from metadata.
+// 0.1.0: INIT — add linearGradient validation dispatch.</CLOG>
 
 mod fnc_validate_linear_gradient_inputs;
 
@@ -22,4 +23,4 @@ pub(crate) fn validate_shader_inputs(node_id: &NodeId, node: &NodeSpec) -> Resul
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/shaders/mod.rs</FILE> - <DESC>Native shader input validation dispatch</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
