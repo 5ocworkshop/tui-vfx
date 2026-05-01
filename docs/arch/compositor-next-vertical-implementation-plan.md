@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
 <!-- <WCTX>v3.1 north-star execution plan: preserve hardened compositor behavior by copying first, then align a compositor-next crate to schema-driven primitive contracts through vertical slices.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
+<!-- <CLOG>0.6.0: MINOR — elevate validation/tooling maturity to an early gate before broad primitive work.
+0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
 0.4.0: MINOR — add IndexedField source descriptor as first from-scratch workflow test.
 0.3.0: MINOR — add bounded descriptor/schema hindsight audit before workbench generation.
 0.2.3: PATCH — set 300 LOC target and require split or strong justification above 500 LOC.
@@ -71,47 +72,53 @@ This avoids the failure mode where broad horizontal work appears complete at one
    - Existing compositor tests should pass in copied crate.
    - Add smoke tests proving compositor-next behavior matches current compositor before schema-boundary changes.
 
-6. **Run a bounded descriptor/schema hindsight audit.**
+6. **Bring v3.1 validation tooling to first-class status before broad primitive work.**
+   - Treat tooling as part of the product, not an afterthought after primitives are implemented.
+   - Baseline the current v3.1 tools against V2-era capabilities: structural validation, frame/timeline sampling, frame diff, per-cell capture, fixture QC, field coverage, adapter gaps, and oracle comparison.
+   - Keep `render-frame`, `render-timeline`, `render-frame-diff`, `capture-cells`, `fixture-qc`, `primitive-field-coverage`, `primitive-adapter-gap`, and migration reports in the early execution path.
+   - Add or fix tooling before scaling a primitive family when validation cannot localize failures at least to recipe/frame/cell/primitive-field level.
+
+7. **Run a bounded descriptor/schema hindsight audit.**
    - Identify common primitive fields and duplicated semantic concepts before generating scaffolding around them.
    - Classify commonality without reopening unbounded schema redesign.
    - Feed accepted common concepts into Primitive Workbench generation.
    - Include timing/cadence concepts explicitly: presentation target frame rate, recipe/source/effect update cadence, fixed-step versus continuous sampling, and absolute elapsed time requirements such as the Madeira flag procedural source.
 
-7. **Design one representative co-located primitive tree.**
+8. **Design one representative co-located primitive tree.**
    - Start with one shader primitive, likely `shader.highlighter` or `shader.focusField`.
    - Include descriptor, generated assets, runtime adapter, fixtures, tests, docs, and migration mapping.
 
-8. **Build the Primitive Workbench MVP.**
+9. **Build the Primitive Workbench MVP.**
    - Read descriptor/schema.
    - Emit typed inputs, accessors, validation manifest, fixture skeleton, control metadata, and migration skeleton.
    - Do not generate visual behavior.
 
-9. **Wire one primitive end-to-end.**
+10. **Wire one primitive end-to-end.**
    - Use existing compositor implementation.
    - Replace ad hoc hand mapping with generated v3.1-derived input surface.
    - Prove strict backend output still matches existing behavior.
 
-10. **Design timing/cadence semantics before broad primitive generation.**
+11. **Design timing/cadence semantics before broad primitive generation.**
     - Keep presentation frame rate separate from recipe semantics.
     - Treat player/backend `fps` as a runtime playback control unless the schema audit accepts an optional presentation hint.
     - Add or formalize a reusable update-clock/update-rate concept only when a primitive/source genuinely needs deterministic fixed-step sampling.
     - Preserve absolute elapsed time as a first-class runtime sample input for continuous procedural sources such as Madeira flag wave/fireworks generation.
     - Decide whether cadence can be inherited from recipe to scene element to source/effect, and document the fallback behavior.
 
-11. **Extract common primitive utilities.**
+12. **Extract common primitive utilities.**
    - Apply the 3+ repetition rule.
    - Share helpers for colors, gradients, bindable progress, apply-to routing, directions, falloff, seeded noise, subcell encoding, diagnostics, and migration normalization when repetition is proven.
 
-12. **Repeat by primitive family, but still primitive-by-primitive.**
+13. **Repeat by primitive family, but still primitive-by-primitive.**
     - Shaders first.
     - Then filters, masks, samplers, and style effects.
     - Each primitive gets generated scaffolding, runtime wiring, parity validation, and signoff before the next primitive.
 
-13. **Update player/backend integration.**
+14. **Update player/backend integration.**
     - Player targets compositor-next through named v3.1-derived contracts.
     - Current compositor backend remains available until compositor-next is proven.
 
-14. **Only then resume recipe migration in owned slices.**
+15. **Only then resume recipe migration in owned slices.**
     - Migration becomes: V2 source recipe → v3.1 recipe → compositor-next native primitive.
     - Validation compares old oracle against compositor-next output.
     - Existing `v3.1/debug_recipes/` remains visible as reference until owner-approved archival/reseed.
@@ -550,6 +557,30 @@ Acceptance criteria:
 - Owner-decision items are explicit and do not block unrelated vertical primitive slices.
 - The audit does not introduce compatibility aliases solely to make legacy JSON validate.
 
+### Phase 3.75 — Validation Tooling Maturity Gate
+
+Before broad primitive implementation, make validation tooling strong enough to prevent blind migration. The v2 tools set the usability bar: a contributor should be able to sample frames, inspect per-cell evidence, diff samples, and localize a failure without manually reading renderer internals first.
+
+Current v3.1 tooling already includes these important surfaces:
+
+- `render-frame` / `render-ir` for single-sample player evidence;
+- `render-timeline` with schema `v3.1.player.frameTimeline.1`;
+- `render-frame-diff` with schema `v3.1.player.frameDiff.1`;
+- `capture-cells` SQLite output with schema `v3.1.player.cellCapture.sqlite.1`, including dense cells, frame timing, diagnostics, provenance, layers, and graph values;
+- `fixture-qc` for combined validation, render, field-coverage, adapter-gap, timeline, and diff smoke evidence;
+- `primitive-field-coverage`, `primitive-adapter-gap`, `migration-gap`, `migration-mapping-batch`, `schema-readiness`, and `implementation-readiness` reports.
+
+The early tooling gate must decide whether these are sufficient for the first vertical primitive. If not, tool gaps are first-class blockers for scaling, not optional polish.
+
+Minimum acceptance criteria:
+
+1. One command sequence can validate a primitive fixture structurally, render it, sample a timeline, diff two samples, and capture dense per-cell evidence.
+2. Per-frame evidence includes sample timing (`phaseT`, `loopT`, absolute/sample milliseconds where applicable), dimensions, render hash, non-empty cell count, rows, sparse cells, diagnostics, and style-known/substrate provenance.
+3. Dense capture can answer row/column/glyph/style/role questions for every sampled frame and preserve scene/source/layer provenance when available.
+4. Reports distinguish structural validity, player rendering, backend/compositor execution, adapter support, field coverage, and parity/oracle status.
+5. Known limitations are documented before primitive scaling. In particular, `capture-cells --sample-ms` intentionally fixes all frames at one elapsed sample; omit `--sample-ms` when sweeping frames over `--duration-ms`.
+6. If v2-era tooling has a capability that v3.1 still lacks and that capability is needed to sign off the first primitive, implement the v3.1 equivalent before continuing the primitive family.
+
 ### Phase 4 — Primitive Workbench MVP Design
 
 1. Define the co-located primitive source-tree layout.
@@ -821,11 +852,12 @@ Each primitive must pass:
 5. Old compositor vs compositor-next parity smoke.
 6. Player/backend strict compositor-next execution.
 7. Fixture QC.
-8. Primitive field coverage.
-9. Unsupported-field diagnostics.
-10. V2 oracle parity where source evidence exists.
-11. Commonality extraction review.
-12. OFPF/file-size review for touched files.
+8. Timeline, frame-diff, and dense cell-capture evidence when visual behavior changes over time or needs localization.
+9. Primitive field coverage.
+10. Unsupported-field diagnostics.
+11. V2 oracle parity where source evidence exists.
+12. Commonality extraction review.
+13. OFPF/file-size review for touched files.
 
 ### Per-Family Optional Gates
 
