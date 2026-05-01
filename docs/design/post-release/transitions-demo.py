@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.1.0</VERS>
-# <WCTX>Promote transitions to first-class demo content: cross-fade, wipe, iris, push, dissolve, morph as named primitives with knobs (duration, easing, direction), so the difference between linear and ease-in-out feel is visible side-by-side.</WCTX>
-# <CLOG>0.1.0: new file; two scenes (sunset Day with sun + warm gradient, starry Night with twinkling stars + moon + cool gradient, both sharing the procedural mountain silhouette); six transition primitives keyed to 1-6, six easings cycled with 'e', four-direction parameter cycled with 'd', auto-cycling A→B→A→B with adjustable transition duration via +/-, manual trigger via space; deadline-aware frame loop; header surfaces transition type marker, easing marker, raw-and-eased progress with a stippled progress bar, direction, phase, and measured fps.</CLOG>
+# <VERS>VERSION: 0.2.0</VERS>
+# <WCTX>Land cross-scene crossfades and the 60 Hz refresh-rate dither tricks: add a structurally-orthogonal plasma scene plus a scene-pair selector so crossfade has actual content to interpolate, add a 7th 'stippled' transition that uses a frame-rotating Bayer matrix to bypass RGB blending (eye integrates over time), and add a global temporal value-dither toggle that improves the 8-bit truecolor lerp precision visibly without changing semantics.</WCTX>
+# <CLOG>0.2.0: add render_plasma() — animated sum-of-sines × tri-channel sin palette, no horizon/mountains; SCENES dict and PAIRS tuple with 't' key cycling Day↔Night / Day↔Plasma / Night↔Plasma; trans_stippled() — frame-rotating Bayer-4 dither selects A or B per cell with no colour blending, the eye integrates over consecutive frames; module-global _FRAME_STATE plus 'h' toggle drives a sub-frame value dither inside _lerp() that swaps each channel between floor and ceil based on the same frame-shifted Bayer threshold, removing the banding that made integer-quantised lerps visible at slow durations; HEADER_H 5→6, SCENE_H 13→12 to fit the new Pair line; bumped TRANSITIONS to 7 (stippled added).</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -11,13 +11,15 @@ Run:   python3 transitions-demo.py
        python3 transitions-demo.py --transition iris --easing ease-out-back
        python3 transitions-demo.py --duration 1.5 --hold 2.5
 
-Keys:  1..6     transition primitive
-                  1 crossfade  · 2 wipe   · 3 iris
-                  4 push       · 5 dissolve · 6 morph
+Keys:  1..7     transition primitive
+                  1 crossfade · 2 wipe   · 3 iris  · 4 push
+                  5 dissolve  · 6 morph  · 7 stippled
        e        cycle easing (linear → in-out-quad → in-out-cubic
                               → in-out-sine → out-back → in-out-elastic)
        d        cycle direction for wipe / push
                   (left → right → up → down → diagonal)
+       t        cycle scene pair (Day↔Night → Day↔Plasma → Night↔Plasma)
+       h        toggle temporal value-dither (sub-frame integer precision)
        space    trigger transition NOW (skip the current hold)
        p        pause / resume motion (also pauses the auto-cycle)
        +/-      lengthen / shorten transition duration (250 ms steps)
@@ -43,7 +45,7 @@ is broadcast to every cell. Any easing × any primitive combination
 therefore composes; press 'e' to cycle easings while a transition is
 in flight and the change applies on the next frame.
 
-THE SIX PRIMITIVES
+THE SEVEN PRIMITIVES
 
   crossfade  Per-cell linear interpolation. Trivial; the baseline.
   wipe       Front travels across the screen at progress * width.
@@ -63,6 +65,38 @@ THE SIX PRIMITIVES
              (A) and outward (B) maximally at progress=0.5. The
              samples are then crossfaded by progress. Reads as the
              two scenes pulling toward and through each other.
+  stippled   Frame-rotating Bayer-4 dither: each cell shows ALL of A
+             or ALL of B at any one moment, never a blend. The Bayer
+             threshold rotates per frame, so as progress sweeps from
+             0 → 1 the population of B-cells grows and the eye
+             integrates the alternation into a smooth fade WITHOUT
+             RGB blending — useful when A→B colours blend ugly
+             (red→green going through grey is the canonical example).
+
+THREE SCENES, THREE PAIRS
+
+The Day and Night scenes share the same procedural mountain silhouette
+on purpose — the eye anchors on the unchanging geometry while the sky
+gradient and the sun-or-moon swap out. That continuity is great for
+spatial transitions (wipe, iris, push) but makes crossfade read as "Day
+mountain becoming Night mountain" rather than "scene A becoming scene
+B". The Plasma scene is structurally orthogonal: animated sum-of-sines
+mapped to a continuously-cycling tri-channel palette, no horizon or
+ground. Pair it against Day or Night and crossfade gets actual
+structural difference to interpolate. Press 't' at runtime to cycle
+through the three pairs.
+
+TEMPORAL VALUE-DITHER (the 60 Hz trick)
+
+8-bit-per-channel truecolor gives 256 levels per channel. A linear lerp
+quantised through `int()` produces visible banding when the per-frame
+delta is small (slow durations, gentle easings, big screens). At 60 Hz
+we can dither across consecutive frames: each channel rounds to floor
+or ceil based on a frame-shifted Bayer threshold, so a true value of
+127.3 shows as 127 ~70% of the time and 128 ~30% of the time. The eye
+integrates to the perceived 127.3 — effectively several extra bits of
+precision at the cost of an imperceptible shimmer at 60 Hz. Press 'h'
+to toggle the dither and watch the difference on a slow crossfade.
 
 THE SIX EASINGS (Penner, 1999)
 
@@ -92,8 +126,24 @@ import tty
 
 W, H        = 78, 18
 SUB_W       = W * 2
-HEADER_H    = 5    # rows reserved for header (transition / easing / progress / timing / blank)
+HEADER_H    = 6    # rows: type / easing / pair / progress-raw / progress-eased / blank
 SCENE_H     = H - HEADER_H
+
+# 4×4 Bayer matrix — used both by the stippled transition and by the
+# temporal value-dither inside _lerp. Frame-shifted per-frame so the eye
+# integrates the screen-door pattern into smooth motion / smooth precision.
+BAYER_4 = (
+    ( 0,  8,  2, 10),
+    (12,  4, 14,  6),
+    ( 3, 11,  1,  9),
+    (15,  7, 13,  5),
+)
+BAYER_DENOM = 16.0
+
+# Per-frame state used by _lerp() and trans_stippled(). Set in render().
+# Module-global is the cheapest way to thread these into every per-cell call
+# without changing every transition's signature.
+_FRAME_STATE = {'frame': 0, 'dither': False}
 
 # ============================================================================
 # Themes (per-scene colour palettes)
@@ -321,6 +371,46 @@ def render_night(now):
     return buf
 
 # ============================================================================
+# Plasma scene — structurally orthogonal to Day/Night for crossfade contrast
+# ============================================================================
+# No horizon, no mountains, no ground. A four-term sum-of-sines drives a phase
+# that's mapped to RGB through three sin waves at 0° / 120° / 240° — a smooth
+# continuously-cycling palette. The whole thing rotates with `now`, so the
+# scene is alive even during a hold phase.
+
+def render_plasma(now):
+    buf = _empty_buf()
+    cx_sub = SUB_W   / 2.0
+    cy_row = SCENE_H / 2.0
+    for y in range(SCENE_H):
+        dy_eff = (y - cy_row) * 4.4    # aspect-correct y to cell-widths
+        for sub_x in range(SUB_W):
+            dx = sub_x - cx_sub
+            v = (math.sin(sub_x * 0.06 + now * 1.2)
+               + math.sin(y      * 0.40 + now * 0.8)
+               + math.sin((sub_x + y * 4) * 0.04 + now * 0.6)
+               + math.sin(math.sqrt(dx * dx + dy_eff * dy_eff) * 0.05 + now * 0.4))
+            phase = v * 1.7 + now * 0.35
+            r = int(127 + 127 * math.sin(phase))
+            g = int(127 + 127 * math.sin(phase + 2.094))   # +120°
+            b = int(127 + 127 * math.sin(phase + 4.189))   # +240°
+            buf[y][sub_x] = (r, g, b)
+    return buf
+
+SCENES = {
+    "day":    render_day,
+    "night":  render_night,
+    "plasma": render_plasma,
+}
+
+# Pair = (A_scene_name, B_scene_name). Cycled with the 't' key at runtime.
+PAIRS = (
+    ("day",   "night"),
+    ("day",   "plasma"),
+    ("night", "plasma"),
+)
+
+# ============================================================================
 # Easing functions (Penner)
 # ============================================================================
 
@@ -365,14 +455,34 @@ EASING_ORDER = ("linear", "in-out-quad", "in-out-cubic",
 # All work over the same SCENE_H × SUB_W half-cell buffers. `p` is the
 # already-eased progress in [0, 1]. `params` carries direction / focal etc.
 
-def _lerp(a, b, t):
-    # Round-half-up via +0.5 before int(); without it, t = 0.999… gives
-    # int(254.97) = 254 instead of 255 at the wipe / iris soft boundary.
-    return (
-        int(a[0] + (b[0] - a[0]) * t + 0.5),
-        int(a[1] + (b[1] - a[1]) * t + 0.5),
-        int(a[2] + (b[2] - a[2]) * t + 0.5),
-    )
+def _lerp(a, b, t, x=0, y=0):
+    """Per-channel lerp with optional temporal value-dither.
+
+    Without dither: round-half-up via +0.5 before int() so t=0.999… gives
+    255, not 254 at the wipe / iris soft boundary.
+
+    With dither (when _FRAME_STATE['dither'] is on): each channel rounds
+    to floor or ceil based on a frame-shifted Bayer threshold derived
+    from (x, y, frame). Across consecutive frames the eye integrates the
+    alternating values — a true float of 127.3 reads as 127 about 70% of
+    the time and 128 about 30%, perceived as 127.3. Buys ~2 effective
+    bits of channel precision at 60 Hz; invisible shimmer.
+    """
+    if not _FRAME_STATE['dither']:
+        return (
+            int(a[0] + (b[0] - a[0]) * t + 0.5),
+            int(a[1] + (b[1] - a[1]) * t + 0.5),
+            int(a[2] + (b[2] - a[2]) * t + 0.5),
+        )
+    f = _FRAME_STATE['frame']
+    threshold = BAYER_4[(y + f) & 3][(x + f * 3) & 3] / BAYER_DENOM
+    out = []
+    for i in range(3):
+        v = a[i] + (b[i] - a[i]) * t
+        floor_v = int(v) if v >= 0 else int(v) - 1
+        frac = v - floor_v
+        out.append(floor_v + 1 if frac > threshold else floor_v)
+    return (out[0], out[1], out[2])
 
 def _clamp01(v):
     return 0.0 if v < 0 else 1.0 if v > 1 else v
@@ -382,7 +492,7 @@ def trans_crossfade(a_buf, b_buf, p, params):
     for y in range(SCENE_H):
         a_row, b_row, o_row = a_buf[y], b_buf[y], out[y]
         for x in range(SUB_W):
-            o_row[x] = _lerp(a_row[x], b_row[x], p)
+            o_row[x] = _lerp(a_row[x], b_row[x], p, x, y)
     return out
 
 # Wipe directions express as a unit vector (dx, dy) and a softness band.
@@ -416,7 +526,7 @@ def trans_wipe(a_buf, b_buf, p, params):
         for x in range(SUB_W):
             proj = x * dx + y * dy_eff
             local_p = _clamp01(0.5 + (front - proj) / (2 * softness))
-            o_row[x] = _lerp(a_row[x], b_row[x], local_p)
+            o_row[x] = _lerp(a_row[x], b_row[x], local_p, x, y)
     return out
 
 def trans_iris(a_buf, b_buf, p, params):
@@ -438,7 +548,7 @@ def trans_iris(a_buf, b_buf, p, params):
         for x in range(SUB_W):
             r = math.sqrt((x - fx) ** 2 + dy_eff * dy_eff)
             local_p = _clamp01(0.5 + (front - r) / (2 * softness))
-            o_row[x] = _lerp(a_row[x], b_row[x], local_p)
+            o_row[x] = _lerp(a_row[x], b_row[x], local_p, x, y)
     return out
 
 PUSH_DIRECTIONS = {
@@ -494,7 +604,7 @@ def trans_dissolve(a_buf, b_buf, p, params):
         a_row, b_row, o_row, t_row = a_buf[y], b_buf[y], out[y], DISSOLVE_GRID[y]
         for x in range(SUB_W):
             local_p = _clamp01((extended_p - t_row[x]) / softness + 0.5)
-            o_row[x] = _lerp(a_row[x], b_row[x], local_p)
+            o_row[x] = _lerp(a_row[x], b_row[x], local_p, x, y)
     return out
 
 def _sample_nn(buf, x, y):
@@ -535,7 +645,24 @@ def trans_morph(a_buf, b_buf, p, params):
                 b_y = cy_row + uy * b_r / 4.4
                 a_sample = _sample_nn(a_buf, a_x, a_y)
                 b_sample = _sample_nn(b_buf, b_x, b_y)
-            out[y][x] = _lerp(a_sample, b_sample, p)
+            out[y][x] = _lerp(a_sample, b_sample, p, x, y)
+    return out
+
+def trans_stippled(a_buf, b_buf, p, params):
+    """Frame-rotating Bayer dither — every cell is wholly A or wholly B at any
+    one moment, never a blend. The Bayer threshold is shifted by the current
+    frame so as `p` sweeps from 0 → 1 the population of B-cells grows; the eye
+    integrates the alternating per-frame patterns into a smooth fade WITHOUT
+    RGB blending. Useful when crossfade midtones look ugly (red→green via
+    grey is the classic case)."""
+    f = _FRAME_STATE['frame']
+    out = _empty_buf()
+    for y in range(SCENE_H):
+        a_row, b_row, o_row = a_buf[y], b_buf[y], out[y]
+        yk = (y + f) & 3
+        for x in range(SUB_W):
+            threshold = BAYER_4[yk][(x + f * 3) & 3] / BAYER_DENOM
+            o_row[x] = b_row[x] if threshold < p else a_row[x]
     return out
 
 TRANSITIONS = {
@@ -545,9 +672,10 @@ TRANSITIONS = {
     "push":      trans_push,
     "dissolve":  trans_dissolve,
     "morph":     trans_morph,
+    "stippled":  trans_stippled,
 }
 
-TRANSITION_ORDER = ("crossfade", "wipe", "iris", "push", "dissolve", "morph")
+TRANSITION_ORDER = ("crossfade", "wipe", "iris", "push", "dissolve", "morph", "stippled")
 
 # Direction is meaningful for wipe and push.
 DIRECTION_ORDER = ("left", "right", "up", "down", "diagonal")
@@ -565,20 +693,40 @@ def _progress_bar(value, width):
     cells = "█" * full + (tip if full < width else "")
     return cells.ljust(width, " ")
 
+_TYPE_SHORT = {
+    "crossfade": "fade",   "wipe":     "wipe",
+    "iris":      "iris",   "push":     "push",
+    "dissolve":  "dissol", "morph":    "morph",
+    "stippled":  "stipple",
+}
+
+_EASE_SHORT = {
+    "linear":         "linear",   "in-out-quad":    "io-quad",
+    "in-out-cubic":   "io-cubic", "in-out-sine":    "io-sine",
+    "out-back":       "o-back",   "in-out-elastic": "io-elastic",
+}
+
 def _render_header(out, state):
-    out.append("Transitions  —  1-6 type · e easing · d direction · space trigger · "
-               "p pause · +/- duration · 0 reset · q quit\n")
+    out.append("Transitions  —  1-7 type · e ease · t pair · h dither · d dir · "
+               "space go · p pause · +/- dur · 0 reset · q quit\n")
     out.append("Type:    ")
     for i, name in enumerate(TRANSITION_ORDER, start=1):
         marker = "▶" if state['transition'] == name else " "
-        out.append(f"{marker}{i}:{name:<10}")
+        out.append(f"{marker}{i}:{_TYPE_SHORT[name]:<8}")
     out.append("\n")
 
     out.append("Easing:  ")
     for name in EASING_ORDER:
         marker = "▶" if state['easing'] == name else " "
-        out.append(f"{marker}{name:<14}")
+        out.append(f"{marker}{_EASE_SHORT[name]:<11}")
     out.append("\n")
+
+    out.append("Pair:    ")
+    for i, (a, b) in enumerate(PAIRS):
+        marker = "▶" if state['pair_idx'] == i else " "
+        label = f"{a}↔{b}"
+        out.append(f"{marker}{label:<14}")
+    out.append(f"  dither:{' on ' if state['dither_value'] else ' off'}{CLEAR_EOL}\n")
 
     raw = state['raw_progress']
     e   = state['eased_progress']
@@ -586,10 +734,10 @@ def _render_header(out, state):
     bar_eased = _progress_bar(e,   20)
     direction = state['direction'] if state['transition'] in ("wipe", "push") else "—"
     phase = state['phase']
-    out.append(f"Progress: raw   |{bar_raw}| {raw:5.3f}    direction: {direction:<8}  phase: {phase:<14}\n")
+    out.append(f"Progress: raw   |{bar_raw}| {raw:5.3f}  dir: {direction:<8}  phase: {phase:<10}{CLEAR_EOL}\n")
     fps_str = f"{state['ema_fps']:5.1f}" if state['ema_fps'] > 0 else "  -- "
     ms_str  = f"{state['ema_ms']:5.1f}" if state['ema_ms'] > 0 else "  -- "
-    out.append(f"          eased |{bar_eased}| {e:5.3f}    duration:  {state['duration']:4.2f}s  "
+    out.append(f"          eased |{bar_eased}| {e:5.3f}  dur: {state['duration']:4.2f}s  "
                f"target {state['target_fps']} · {fps_str} fps · {ms_str} ms{CLEAR_EOL}\n")
 
 # ============================================================================
@@ -609,6 +757,10 @@ def _emit_buf(out, buf):
         out.append(RESET + "\n")
 
 def render(state, a_buf, b_buf):
+    # Publish per-frame state for _lerp() and trans_stippled().
+    _FRAME_STATE['frame']  = state['frame_count']
+    _FRAME_STATE['dither'] = state['dither_value']
+
     out = [HOME, RESET]
     _render_header(out, state)
 
@@ -664,15 +816,23 @@ def read_key():
 # CLI
 # ============================================================================
 
+_PAIR_NAMES = tuple(f"{a}-{b}" for a, b in PAIRS)
+
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Six-primitive transition demo over Day / Night scenes.")
+        description="Seven-primitive transition demo over Day / Night / Plasma scenes.")
     parser.add_argument("--transition", choices=TRANSITION_ORDER, default="crossfade",
                         help="initial transition primitive (default: crossfade).")
     parser.add_argument("--easing", choices=EASING_ORDER, default="in-out-cubic",
                         help="initial easing curve (default: in-out-cubic).")
     parser.add_argument("--direction", choices=DIRECTION_ORDER, default="left",
                         help="initial direction for wipe/push (default: left).")
+    parser.add_argument("--pair", choices=_PAIR_NAMES, default=_PAIR_NAMES[0],
+                        help="initial scene pair (default: day-night). "
+                             "Cycle at runtime with 't'.")
+    parser.add_argument("--dither", action="store_true",
+                        help="enable temporal value-dither in the lerp from the start. "
+                             "Toggle at runtime with 'h'.")
     parser.add_argument("--duration", type=float, default=1.0, metavar="SEC",
                         help="transition duration in seconds (default: 1.0).")
     parser.add_argument("--hold", type=float, default=1.5, metavar="SEC",
@@ -695,6 +855,10 @@ def main():
         'duration':     args.duration,
         'hold':         args.hold,
         'paused':       False,
+
+        'pair_idx':     _PAIR_NAMES.index(args.pair),
+        'dither_value': bool(args.dither),
+        'frame_count':  0,
 
         'phase':        'hold_a',
         'phase_start':  time.perf_counter(),
@@ -733,8 +897,10 @@ def main():
                         break
                     if key in ("q", "Q"):
                         return
-                    if key in ("1", "2", "3", "4", "5", "6"):
-                        state['transition'] = TRANSITION_ORDER[int(key) - 1]
+                    if key in ("1", "2", "3", "4", "5", "6", "7"):
+                        idx = int(key) - 1
+                        if idx < len(TRANSITION_ORDER):
+                            state['transition'] = TRANSITION_ORDER[idx]
                         continue
                     if key in ("e", "E"):
                         i = EASING_ORDER.index(state['easing'])
@@ -743,6 +909,12 @@ def main():
                     if key in ("d", "D"):
                         i = DIRECTION_ORDER.index(state['direction'])
                         state['direction'] = DIRECTION_ORDER[(i + 1) % len(DIRECTION_ORDER)]
+                        continue
+                    if key in ("t", "T"):
+                        state['pair_idx'] = (state['pair_idx'] + 1) % len(PAIRS)
+                        continue
+                    if key in ("h", "H"):
+                        state['dither_value'] = not state['dither_value']
                         continue
                     if key in (" ",):
                         # Trigger now: jump to the next transition phase from
@@ -776,14 +948,16 @@ def main():
                         state['duration'] = max(0.10, state['duration'] - 0.25)
                         continue
                     if key == "0":
-                        state['transition'] = args.transition
-                        state['easing']     = args.easing
-                        state['direction']  = args.direction
-                        state['duration']   = args.duration
-                        state['hold']       = args.hold
-                        state['phase']      = 'hold_a'
-                        state['phase_start']= time.perf_counter()
-                        state['paused']     = False
+                        state['transition']   = args.transition
+                        state['easing']       = args.easing
+                        state['direction']    = args.direction
+                        state['duration']     = args.duration
+                        state['hold']         = args.hold
+                        state['pair_idx']     = _PAIR_NAMES.index(args.pair)
+                        state['dither_value'] = bool(args.dither)
+                        state['phase']        = 'hold_a'
+                        state['phase_start']  = time.perf_counter()
+                        state['paused']       = False
                         continue
 
             now = time.perf_counter()
@@ -800,12 +974,14 @@ def main():
                 state['raw_progress']   = raw
                 state['eased_progress'] = EASINGS[state['easing']](raw)
 
-            # Render scenes.
-            a_buf = render_day(now)
-            b_buf = render_night(now)
+            # Render scenes for the active pair.
+            a_name, b_name = PAIRS[state['pair_idx']]
+            a_buf = SCENES[a_name](now)
+            b_buf = SCENES[b_name](now)
 
             t0 = time.perf_counter()
             render(state, a_buf, b_buf)
+            state['frame_count'] += 1
             t1 = time.perf_counter()
 
             render_ms       = (t1 - t0) * 1000.0
@@ -843,4 +1019,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.1.0</VERS>
+# <VERS>END OF VERSION: 0.2.0</VERS>
