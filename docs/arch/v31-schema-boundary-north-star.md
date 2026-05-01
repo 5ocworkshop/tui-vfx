@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>Top-down v3.1 architecture discussion: make schema-owned contracts the discipline for crate boundaries and downstream tooling.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — document source.indexedField as zero-schema from-scratch primitive validation case.
+<!-- <CLOG>0.5.0: MINOR — distinguish presentation cadence, semantic update cadence, and absolute sample time in boundary model.
+0.4.0: MINOR — document source.indexedField as zero-schema from-scratch primitive validation case.
 0.3.0: MINOR — add descriptor/schema hindsight audit principle.
 0.2.0: MINOR — add co-located primitive source tree and commonality extraction principles.
 0.1.0: INIT — document schema-boundary north star, block diagram, and crate responsibility model.</CLOG> -->
@@ -20,7 +21,7 @@ The boundary contract between crates should be one of:
 
 1. the canonical v3.1 schema;
 2. a declared subset/projection of the canonical v3.1 schema;
-3. schema plus explicit runtime sample context;
+3. schema plus explicit runtime sample context such as `phaseT`, `loopT`, absolute elapsed time, and runtime presentation cadence;
 4. a deliberately documented derived evidence/report contract.
 
 Crates should not depend on arbitrary internal structs from other crates unless those structs are themselves the named boundary contract.
@@ -202,6 +203,8 @@ Generated code should reduce hand-written inconsistency, not replace human seman
 Own sampled player evidence and backend inputs:
 
 - sampled phase/time/signals;
+- absolute elapsed sample time for continuous procedural sources;
+- runtime presentation cadence when the player/backend needs it, kept separate from recipe semantics;
 - resolved scenes/sources;
 - rows and styled cells;
 - graph value snapshots;
@@ -446,7 +449,17 @@ Before generating large amounts of primitive scaffolding, run a bounded descript
 
 The purpose is schema hardening, not unbounded redesign. Accepted common concepts should feed generated helpers, descriptor fragments, migration mapping tables, and validation manifests. Rejected collapses should be documented so future agents do not rediscover the same ambiguity.
 
-Examples of concepts worth auditing include progress, apply-to routing, color channels, direction/axis/edge geometry, seed, density, speed/frequency, radius/falloff/feather, threshold, intensity, glyph sets, and bindability.
+Examples of concepts worth auditing include progress, apply-to routing, color channels, direction/axis/edge geometry, seed, density, speed/frequency, presentation cadence, semantic update cadence, absolute elapsed sample time, radius/falloff/feather, threshold, intensity, glyph sets, and bindability.
+
+## Timing Boundary Rule
+
+Do not use `fps` as a catch-all schema concept. The boundary model should distinguish:
+
+- **presentation cadence**: how often a player/backend tries to draw frames;
+- **semantic update cadence**: how often a recipe/source/effect recomputes state when fixed-step behavior is desired;
+- **sample time**: the actual `phaseT`, optional `loopT`, and absolute elapsed time used for one deterministic sample.
+
+The current Madeira flag v3.1 recipes demonstrate why this matters. The procedural flag wave and fireworks need absolute elapsed time so motion can advance even when normalized `phaseT`/`loopT` remain fixed, and authored preview loopback ramps use elapsed time to honor durations. A compositor-next/workbench timing model must preserve that seam instead of baking wall-time behavior into individual primitives ad hoc.
 
 ## Commonality Extraction Rule
 

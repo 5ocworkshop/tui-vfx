@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>v3.1 north-star execution plan: preserve hardened compositor behavior by copying first, then align a compositor-next crate to schema-driven primitive contracts through vertical slices.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add IndexedField source descriptor as first from-scratch workflow test.
+<!-- <CLOG>0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
+0.4.0: MINOR — add IndexedField source descriptor as first from-scratch workflow test.
 0.3.0: MINOR — add bounded descriptor/schema hindsight audit before workbench generation.
 0.2.3: PATCH — set 300 LOC target and require split or strong justification above 500 LOC.
 0.2.2: PATCH — clarify OFPF line counts are soft guidelines and closely coupled code may stay together.
@@ -74,6 +75,7 @@ This avoids the failure mode where broad horizontal work appears complete at one
    - Identify common primitive fields and duplicated semantic concepts before generating scaffolding around them.
    - Classify commonality without reopening unbounded schema redesign.
    - Feed accepted common concepts into Primitive Workbench generation.
+   - Include timing/cadence concepts explicitly: presentation target frame rate, recipe/source/effect update cadence, fixed-step versus continuous sampling, and absolute elapsed time requirements such as the Madeira flag procedural source.
 
 7. **Design one representative co-located primitive tree.**
    - Start with one shader primitive, likely `shader.highlighter` or `shader.focusField`.
@@ -89,20 +91,27 @@ This avoids the failure mode where broad horizontal work appears complete at one
    - Replace ad hoc hand mapping with generated v3.1-derived input surface.
    - Prove strict backend output still matches existing behavior.
 
-10. **Extract common primitive utilities.**
+10. **Design timing/cadence semantics before broad primitive generation.**
+    - Keep presentation frame rate separate from recipe semantics.
+    - Treat player/backend `fps` as a runtime playback control unless the schema audit accepts an optional presentation hint.
+    - Add or formalize a reusable update-clock/update-rate concept only when a primitive/source genuinely needs deterministic fixed-step sampling.
+    - Preserve absolute elapsed time as a first-class runtime sample input for continuous procedural sources such as Madeira flag wave/fireworks generation.
+    - Decide whether cadence can be inherited from recipe to scene element to source/effect, and document the fallback behavior.
+
+11. **Extract common primitive utilities.**
    - Apply the 3+ repetition rule.
    - Share helpers for colors, gradients, bindable progress, apply-to routing, directions, falloff, seeded noise, subcell encoding, diagnostics, and migration normalization when repetition is proven.
 
-11. **Repeat by primitive family, but still primitive-by-primitive.**
+12. **Repeat by primitive family, but still primitive-by-primitive.**
     - Shaders first.
     - Then filters, masks, samplers, and style effects.
     - Each primitive gets generated scaffolding, runtime wiring, parity validation, and signoff before the next primitive.
 
-12. **Update player/backend integration.**
+13. **Update player/backend integration.**
     - Player targets compositor-next through named v3.1-derived contracts.
     - Current compositor backend remains available until compositor-next is proven.
 
-13. **Only then resume recipe migration in owned slices.**
+14. **Only then resume recipe migration in owned slices.**
     - Migration becomes: V2 source recipe → v3.1 recipe → compositor-next native primitive.
     - Validation compares old oracle against compositor-next output.
     - Existing `v3.1/debug_recipes/` remains visible as reference until owner-approved archival/reseed.
@@ -519,9 +528,12 @@ Candidate common contracts:
 - direction/axis/edge/side/corner geometry;
 - seeded randomness;
 - temporal speed/frequency;
+- presentation cadence, semantic update cadence, and absolute sample time;
 - radius/falloff/feather;
 - glyph/charset selection;
 - density/threshold/intensity controls.
+
+Timing/cadence is a required audit topic. Do not collapse it into `fps`: presentation cadence, semantic update cadence, and sample time are different contracts. The Madeira flag fixtures are the reference case because `source.procedural` flag/fireworks motion advances from absolute elapsed time, while authored loopback ramps also use elapsed time to honor their duration.
 
 Deliverables:
 

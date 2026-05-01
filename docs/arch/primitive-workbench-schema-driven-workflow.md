@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/primitive-workbench-schema-driven-workflow.md</FILE> - <DESC>Draft architecture for schema-driven primitive scaffolding, migration, and validation workflow</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>Top-down v3.1 architecture discussion: make descriptors/schema the source of truth for primitive implementation workflow.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add IndexedField as first from-scratch workbench validation primitive.
+<!-- <CLOG>0.5.0: MINOR — add timing/cadence concepts and Madeira absolute-time fixture to workbench inputs.
+0.4.0: MINOR — add IndexedField as first from-scratch workbench validation primitive.
 0.3.0: MINOR — add schema hindsight audit as pre-generation input.
 0.2.0: MINOR — prefer co-located primitive source trees and add commonality extraction discipline.
 0.1.1: PATCH — clarify that the final accepted primitive resides in the compositor/runtime layer.
@@ -219,6 +220,8 @@ This does not mean every generated artifact must be committed in final form. The
 ## What Tooling Should Generate
 
 The proposed tool, tentatively called **Primitive Workbench**, should read descriptor packs and v3.1 contract schemas, then generate boring and error-prone plumbing.
+
+Timing-sensitive primitives and sources need a deliberately named sample contract. The workbench should not collapse everything into `fps`. It should treat runtime presentation cadence, semantic update cadence, and sample time as separate concepts. The Madeira flag fixtures are the first concrete reference case: their procedural wave/fireworks sources and authored preview loopback ramps use absolute elapsed sample time, not only normalized `phaseT`/`loopT`.
 
 Candidate generated outputs:
 
