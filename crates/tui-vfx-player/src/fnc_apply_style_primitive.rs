@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
 // <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Player adapter style parity: preserve source color channels while applying recipe style primitives.</WCTX>
-// <CLOG>0.7.0: MINOR — add bounded rigid shake style rendering.
+// <CLOG>0.8.0: MINOR — align style.rainbow player evidence with compositor RainbowCycleShader hue rotation.
+// 0.7.0: MINOR — add bounded rigid shake style rendering.
 // 0.6.0: MINOR — add bounded style.glitch evidence rendering.
 // 0.5.0: MINOR — add bounded style.rainbow evidence rendering.
 // 0.4.1: PATCH — align neon flicker default color with V2 style oracle.</CLOG>
@@ -349,15 +350,27 @@ fn apply_rainbow(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let _rotation_speed = resolve_effect_number(node, request, "rotationSpeed", 1.0);
+    let rotation_speed = resolve_effect_number(node, request, "rotationSpeed", 1.0).max(0.0) as f32;
+    let hue = (request.phase_t as f32 * rotation_speed * 360.0).rem_euclid(360.0);
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
-        apply_style_to_scope_cell(
-            styled_grid,
+        let existing = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned();
+        let Some(existing) = existing else {
+            continue;
+        };
+        let foreground = resolved_color_from_rgba_label(&existing.foreground)
+            .map(|color| rainbow_resolved_color(color, hue).rgba_label())
+            .unwrap_or(existing.foreground);
+        styled_grid.set_cell_style(
             x,
             y,
-            "foreground",
-            ResolvedColor::rgb(0, 255, 254).rgba_label(),
-            None,
+            &foreground,
+            &existing.background,
+            existing.modifiers,
+            existing.role,
         );
     }
 }
@@ -559,6 +572,18 @@ fn resolved_color_from_rgba_label(label: &str) -> Option<ResolvedColor> {
         parts.next()?.parse().ok()?,
         parts.next()?.parse().ok()?,
     ))
+}
+
+fn rainbow_resolved_color(color: ResolvedColor, hue: f32) -> ResolvedColor {
+    let (_old_hue, saturation, lightness) = rgb_to_hsl(color.r, color.g, color.b);
+    let new_saturation = if saturation < 0.1 { 1.0 } else { saturation };
+    let new_lightness = if !(0.05..=0.95).contains(&lightness) {
+        0.5
+    } else {
+        lightness
+    };
+    let (r, g, b) = hsl_to_rgb(hue, new_saturation, new_lightness);
+    ResolvedColor::new(r, g, b, color.a)
 }
 
 fn legacy_color_fade_label(

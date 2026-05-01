@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.46.0: MINOR — lower style.moduloColumns into compositor LinearGradientShader layers scoped by StyleRegion::Modulo and remove backend style-stage emulation.
+// <CLOG>0.47.0: MINOR — lower style.rainbow into compositor RainbowCycleShader layers and remove backend style-stage emulation.
+// 0.46.0: MINOR — lower style.moduloColumns into compositor LinearGradientShader layers scoped by StyleRegion::Modulo and remove backend style-stage emulation.
 // 0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
 // 0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
 // 0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
@@ -61,8 +62,8 @@ use tui_vfx_style::models::{
     GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
     HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
     LinearGradientShader, ModifierWindowShader, ModuloAxis, NeonFlickerShader, PulseWaveShader,
-    RadarShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion, TextContrast,
-    WaveDirection, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    RadarShader, RainbowCycleShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion,
+    TextContrast, WaveDirection, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -171,8 +172,6 @@ pub enum NativeContentStage {
 /// Native style transform stage owned by the compositor backend adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum NativeStyleStage {
-    /// Apply V2-compatible rainbow foreground cycling.
-    Rainbow { rotation_speed: f64 },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
     /// Apply player-compatible HSL color shift styling to existing channels.
@@ -543,7 +542,7 @@ fn lower_node_into_spec(
         "style.italicWindow" => lower_style_italic_window(node, spec, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, spec, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
-        "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
+        "style.rainbow" => lower_style_rainbow(node, spec, request, warnings),
         "style.glitch" => lower_style_glitch(node, spec, request, warnings),
         "style.spatial" => lower_style_spatial(node, spec, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
@@ -1879,7 +1878,7 @@ fn lower_style_neon_flicker(
 
 fn lower_style_rainbow(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1892,8 +1891,12 @@ fn lower_style_rainbow(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::Rainbow {
-        rotation_speed: number_input(node, request, "rotationSpeed", 1.0).max(0.0),
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::RainbowCycle(RainbowCycleShader {
+            rotation_speed: resolved_number_input(node, request, "rotationSpeed", 1.0).max(0.0)
+                as f32,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }

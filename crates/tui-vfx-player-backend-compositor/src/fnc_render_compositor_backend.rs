@@ -261,9 +261,6 @@ fn scene_ir_with_native_content_stages(
     }
     for stage in &lowered_spec.style_stages {
         match stage {
-            NativeStyleStage::Rainbow { rotation_speed } => {
-                apply_rainbow_style_stage(&mut staged, *rotation_speed)
-            }
             NativeStyleStage::ColorFade {
                 target,
                 color_space,
@@ -690,23 +687,6 @@ fn apply_slide_shift_content_stage(
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
-}
-
-fn apply_rainbow_style_stage(report: &mut PlayerRenderIrReport, _rotation_speed: f64) {
-    let width = report_width(report).max(1);
-    let height = report_height(report);
-    for y in 0..height {
-        for x in 0..width {
-            set_report_cell_style(
-                report,
-                x,
-                y,
-                Some(rgba_label(0, 255, 254, 255).as_str()),
-                None,
-                None,
-            );
-        }
-    }
 }
 
 fn apply_color_fade_style_stage(

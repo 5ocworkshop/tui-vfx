@@ -10,7 +10,7 @@ use crate::models::{
     EdgeSheenShader, FocusFieldShader, FocusedRowGradientShader, GlistenBandShader,
     GlitchLinesShader, GlowShader, Gradient, HighlighterShader, LinearGradientShader,
     ModifierWindowShader, NeonFlickerShader, OrbitShader, PulseWaveShader, RadarShader,
-    RadialSpiralShader, ReflectShader, RevealWipeShader, SpatialShaderType,
+    RadialSpiralShader, RainbowCycleShader, ReflectShader, RevealWipeShader, SpatialShaderType,
     StochasticSparkleShader, SubCellShakeShader, TracePathShader, TracePropagationShader,
     WayfindingNodeShader,
 };
@@ -260,6 +260,9 @@ fn roundtrips_all_individual_spatial_shader_variants_back_to_legacy_shader() {
         WayfindingNodeShader::default(),
     ));
     assert_legacy_roundtrip(SpatialShaderType::NeonFlicker(NeonFlickerShader::default()));
+    assert_legacy_roundtrip(SpatialShaderType::RainbowCycle(RainbowCycleShader {
+        rotation_speed: 1.5,
+    }));
     assert_legacy_roundtrip(SpatialShaderType::StochasticSparkle(
         StochasticSparkleShader::default(),
     ));

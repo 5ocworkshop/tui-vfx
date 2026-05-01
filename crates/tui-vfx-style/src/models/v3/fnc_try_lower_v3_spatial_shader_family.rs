@@ -88,6 +88,9 @@ fn try_lower_composed(
         VfxSpatialComposedPrimitive::ModifierWindow(shader) => {
             Ok(SpatialShaderType::ModifierWindow(shader.clone()))
         }
+        VfxSpatialComposedPrimitive::RainbowCycle(shader) => {
+            Ok(SpatialShaderType::RainbowCycle(shader.clone()))
+        }
     }
 }
 
