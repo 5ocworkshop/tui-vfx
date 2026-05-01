@@ -8,6 +8,7 @@ Assume the assigned subagent is a junior-but-capable engineer:
 - do not expect them to infer repo boundaries correctly from vibe alone
 - do not assume they will naturally stay narrow without written out-of-scope bullets
 - require concrete verification and reporting
+- require proof that grounding docs were read and followed, not merely listed
 
 ## gpt-5.5 low lane lessons
 When dispatching an unroled `gpt-5.5` low agent:
@@ -34,19 +35,38 @@ When dispatching an unroled `gpt-5.5` low agent:
 - one mid-flight status check after localized compile failures is useful; repeated
   interruptions are unnecessary when the agent is clearly converging
 
+## Shared grounding handoff
+`/usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md` owns the global grounding
+read list, OFPF practice pass, and `READY FOR WORK PACKET` report. Do not copy
+that read list into packets.
+
+Packet execution starts from one of two states:
+- accepted grounding exists for this subagent session: confirm it briefly, do not
+  repeat it, then read only packet-specific docs;
+- accepted grounding cannot be confirmed: stop and report that the leader must
+  run or refresh grounding before packet work continues.
+
 ## OFPF rules
-- Start with `ofpf-orientation --root <repo>` for each repo in scope.
-- Use OFPF reads first: orientation, hotspots, inspect, focus, around.
+- Use OFPF reads first for packet-specific inspection: orientation, hotspots,
+  inspect, focus, around.
 - Keep reads surgical before broad file reads.
 - Do not drift into broad cleanup while on a blocker packet.
+- For compositor-next lanes, copy the existing hardened compositor first and
+  migrate vertically; do not rewrite horizontally or retarget old backends
+  before evidence proves the new path.
 
 ## TDD / regression discipline
 - If behavior is subtle or easy to regress, prefer adding or tightening a focused regression test before broad edits.
 - If tests already exist for the seam, extend the narrowest relevant one instead of adding broad snapshot churn.
+- Preserve V2 fallback/oracle paths until owner-approved removal. For v3.1
+  migration work, treat current recipe artifacts as reference/exploratory
+  evidence unless a vertical slice explicitly owns them.
 
 ## Reporting contract
 Every final report should include:
-- docs read confirmation
+- shared grounding confirmation (`READY FOR WORK PACKET` previously accepted, or
+  fresh grounding completed for this packet)
+- packet-specific docs read confirmation
 - 3 short reflection bullets
 - exact task-scope paths used for grounding
 - changed files (full paths)
@@ -80,9 +100,10 @@ The preferred packet structure is:
 5. task-scope paths for grounding
 6. exact write scope
 7. explicit out-of-scope items
-8. must-read docs
+8. packet-specific extra docs
 9. repo-boundary guardrails
-10. first steps / grounding instructions
+10. first steps / grounding instructions that confirm prior shared grounding
+    instead of repeating it
 11. exact verification commands
 12. reporting contract
 13. closing task reminder
@@ -93,6 +114,8 @@ If the packet touches runtime/render paths, explicitly check for:
 - repeated context rebuilding inside nested loops
 - recomputation that can be hoisted
 - normalized-time vs elapsed-time confusion in cadence-bearing code
+- file-size/OFPF pressure: target roughly 300 LOC where practical; files above
+  500 LOC need a split plan or written cohesion justification
 
 ## Key-binding checklist
 If the packet touches keyboard bindings:

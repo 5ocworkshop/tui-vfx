@@ -1,0 +1,21 @@
+{
+  "schema": "tui-vfx.primitive-validation-manifest.v1",
+  "descriptorId": "shader.linearGradient",
+  "fixturePath": "fixtures/minimal.v31.json",
+  "fieldCoveragePath": "tests/field_coverage.toml",
+  "parityTest": "crates/tui-vfx-compositor-next/tests/test_old_compositor_parity.rs",
+  "expectedGeneratedArtifacts": [
+    "generated/linear_gradient_input_manifest.json",
+    "generated/linear_gradient_inputs.rs",
+    "generated/linear_gradient_accessors.rs",
+    "generated/linear_gradient_control_catalog.json",
+    "generated/linear_gradient_validation_manifest.json"
+  ],
+  "commands": [
+    "cargo test -p tui-vfx-player --test test_compositor_next_primitive_tree",
+    "cargo test -p tui-vfx-compositor-next --test test_old_compositor_parity",
+    "cargo test -p tui-vfx-compositor-next"
+  ],
+  "generationStatus": "bootstrap-descriptor-derived-scaffold",
+  "provenance": "Generated during compositor-next Ralph slice from primitives/shader/linear_gradient/descriptor.v31.json; future Primitive Workbench tooling must own deterministic regeneration before broad primitive generation."
+}

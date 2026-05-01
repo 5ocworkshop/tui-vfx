@@ -1,0 +1,799 @@
+// <FILE>tui-vfx-compositor-next/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
+// <VERS>VERSION: 2.5.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: carry NoiseDither chunk grouping through the compositor spec so player-authored chunkSize fields lower without semantic loss.</WCTX>
+// <CLOG>2.5.0: add NoiseDither.chunk_size with a default to preserve existing JSON while representing grouped dither cells.
+// 2.4.0: replace local WipeDirection definition with a `pub use tui_vfx_geometry::WipeDirection` re-export. Local definition kept zero behavioural changes — same variants, same serde, same aliases — but is now a single source of truth that also carries the new CornerOutFrom* / CornerInTo* variants. All existing recipes continue to parse identically. The MaskSpec docs still cite the same direction families.
+// 2.3.2: V3 MASK lane hardening</CLOG>
+
+//! # Mask Specifications
+//!
+//! Masks control the visibility of content during transitions. All masks operate
+//! on a progress value `t` in the range `0.0..=1.0`, where:
+//!
+//! - `t = 0.0`: Content is fully hidden (or fully visible for "hide" masks)
+//! - `t = 1.0`: Content is fully visible (or fully hidden for "hide" masks)
+//!
+//! ## Available Masks
+//!
+//! | Mask | Description | Best For |
+//! |------|-------------|----------|
+//! | [`MaskSpec::Wipe`] | Linear edge reveal | Classic film transitions |
+//! | [`MaskSpec::Dissolve`] | Random pixel fade | Dream sequences, magical effects |
+//! | [`MaskSpec::Iris`] | Spotlight from center | Dramatic reveals |
+//! | [`MaskSpec::Radial`] | Circular expansion | Impact effects |
+//! | [`MaskSpec::Blinds`] | Venetian blinds | Presentation style |
+//! | [`MaskSpec::Checkers`] | Checkerboard pattern | Retro/game aesthetic |
+//! | [`MaskSpec::Cellular`] | Organic patterns | Creative/artistic transitions |
+//!
+//! ## Soft Edges
+//!
+//! Many masks support a `soft_edge` parameter that adds gradient blending at
+//! the transition boundary. This creates smoother, more polished transitions
+//! compared to hard pixel boundaries.
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! use tui_vfx_compositor_next::types::{IrisShape, MaskSpec, WipeDirection};
+//!
+//! // Classic left-to-right wipe reveal
+//! let wipe = MaskSpec::Wipe {
+//!     reveal: Some(WipeDirection::LeftToRight),
+//!     hide: None,
+//!     direction: None,
+//!     soft_edge: true,
+//! };
+//!
+//! // Dramatic iris reveal
+//! let iris = MaskSpec::Iris {
+//!     shape: IrisShape::Circle,
+//!     soft_edge: true,
+//! };
+//! ```
+
+use crate::masks::cls_cellular::CellularPattern;
+use crate::masks::cls_path_reveal::RevealPathType;
+use crate::masks::cls_radial::RadialOrigin;
+use serde::{Deserialize, Serialize};
+
+// `WipeDirection` is the canonical wipe-direction vocabulary, hosted in
+// tui-vfx-geometry so the Wipe mask, the RevealWipe shader, and the V3
+// grouped reveal family all consume one source of truth. The full variant
+// list — cardinal, diagonal, source aliases, centre-out / edges-in, and
+// the corner-out / corner-in quadrant arcs — lives there. This re-export
+// preserves the historical `tui_vfx_compositor_next::types::WipeDirection`
+// import path so existing callers compile without change.
+pub use tui_vfx_geometry::WipeDirection;
+
+/// Orientation for blinds and similar directional masks.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum Orientation {
+    /// Horizontal blinds (slats run left-right, open top-to-bottom).
+    #[default]
+    Horizontal,
+
+    /// Vertical blinds (slats run top-bottom, open left-to-right).
+    Vertical,
+}
+
+/// Shape for iris/spotlight masks.
+///
+/// The iris shape determines the geometry of the expanding/contracting
+/// reveal area centered on the screen.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum IrisShape {
+    /// Circular iris (classic spotlight effect).
+    ///
+    /// Creates a smooth, organic reveal from the center.
+    #[default]
+    Circle,
+
+    /// Diamond-shaped iris (rotated square).
+    ///
+    /// Creates a more geometric, angular reveal.
+    Diamond,
+
+    /// Rectangular/box-shaped iris.
+    ///
+    /// Useful for UI elements that are rectangular in nature.
+    Box,
+}
+
+/// Dither matrix size for noise dither masks.
+///
+/// Larger matrices produce more gradual dithering patterns
+/// but require more computation.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum DitherMatrix {
+    /// 4×4 Bayer dithering matrix.
+    ///
+    /// Faster computation, more visible pattern. Good for retro aesthetics.
+    #[default]
+    Bayer4,
+
+    /// 8×8 Bayer dithering matrix.
+    ///
+    /// Smoother gradients, less visible pattern. Better for subtle transitions.
+    Bayer8,
+}
+
+/// Organic materialization mask configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Materialize {
+    /// Origin point that biases where the reveal begins.
+    #[serde(default)]
+    pub origin: RadialOrigin,
+    /// Seed for deterministic noise breakup.
+    #[serde(default)]
+    pub seed: u64,
+    /// Size of grouped materialization chunks.
+    #[serde(default = "default_materialize_chunk_size")]
+    pub chunk_size: u8,
+    /// Noise amplitude added to the reveal threshold.
+    #[serde(default = "default_materialize_noise")]
+    pub noise: f32,
+    /// Whether to soften the reveal edge.
+    #[serde(default = "default_materialize_soft_edge")]
+    pub soft_edge: bool,
+}
+
+fn default_materialize_chunk_size() -> u8 {
+    1
+}
+
+fn default_materialize_noise() -> f32 {
+    0.18
+}
+
+fn default_materialize_soft_edge() -> bool {
+    true
+}
+
+fn default_noise_dither_chunk_size() -> u8 {
+    1
+}
+
+impl Default for Materialize {
+    fn default() -> Self {
+        Self {
+            origin: RadialOrigin::Center,
+            seed: 0,
+            chunk_size: default_materialize_chunk_size(),
+            noise: default_materialize_noise(),
+            soft_edge: default_materialize_soft_edge(),
+        }
+    }
+}
+
+/// Complete mask specification with all parameters.
+///
+/// This enum provides full configuration for each mask type,
+/// allowing masks to be serialized/deserialized and customized.
+///
+/// # Schema Design Philosophy
+///
+/// Field names are chosen to read as plain English. For example, wipe masks use
+/// `reveal` and `hide` fields rather than a generic `direction` + `invert` because:
+///
+/// ```json
+/// { "type": "wipe", "reveal": "left_to_right" }  // "wipe that reveals left to right"
+/// { "type": "wipe", "hide": "left_to_right" }    // "wipe that hides left to right"
+/// ```
+///
+/// This self-documenting approach makes themes readable without technical knowledge.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+#[derive(Default)]
+pub enum MaskSpec {
+    /// No mask applied — content is fully visible.
+    ///
+    /// Use this when you want to disable masking without removing the mask
+    /// configuration entirely.
+    #[default]
+    None,
+
+    /// Linear wipe reveal/hide from one edge to another.
+    ///
+    /// The classic film-style transition. Content is progressively revealed
+    /// or hidden as a line sweeps across the screen.
+    ///
+    /// # Parameters
+    ///
+    /// Provide `reveal` to specify direction where content appears, or `hide` to specify
+    /// direction where content disappears. If both are set, `hide` takes priority.
+    /// If neither is set, defaults to reveal left-to-right.
+    ///
+    /// - `reveal`: Direction content appears (e.g., `left_to_right`)
+    /// - `hide`: Direction content disappears (takes priority over `reveal`)
+    /// - `soft_edge`: Enable gradient blending at the wipe boundary
+    ///
+    /// # Direction Variants
+    ///
+    /// - **Cardinal**: `left_to_right`, `right_to_left`, `top_to_bottom`, `bottom_to_top`
+    /// - **Diagonal**: `top_left_to_bottom_right`, `top_right_to_bottom_left`, etc.
+    /// - **Barn Door**: `horizontal_center_out`, `vertical_center_out` (curtains opening)
+    ///
+    /// # Examples
+    ///
+    /// ```json
+    /// { "type": "wipe", "reveal": "left_to_right" }
+    /// { "type": "wipe", "hide": "left_to_right", "soft_edge": true }
+    /// { "type": "wipe", "reveal": "horizontal_center_out" }
+    /// ```
+    Wipe {
+        /// Direction for reveal — content appears traveling in this direction.
+        ///
+        /// Mutually exclusive with `hide`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reveal: Option<WipeDirection>,
+
+        /// Direction for hide — content disappears traveling in this direction.
+        ///
+        /// Mutually exclusive with `reveal`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        hide: Option<WipeDirection>,
+
+        /// Legacy field — alias for `reveal`. Prefer using `reveal` for clarity.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        direction: Option<WipeDirection>,
+
+        /// Enable soft edge blending at the wipe boundary.
+        ///
+        /// When `true`, adds a gradient at the transition edge for a smoother look.
+        /// Recommended value: use `true` for polished transitions.
+        #[serde(default)]
+        soft_edge: bool,
+    },
+
+    /// Random pixel dissolve effect.
+    ///
+    /// Pixels are randomly revealed/hidden, creating a film dissolve or
+    /// "materializing" effect. Great for dream sequences, magical effects,
+    /// or retro aesthetics.
+    ///
+    /// # Parameters
+    ///
+    /// - `seed`: Random seed for reproducible patterns
+    /// - `chunk_size`: Size of dissolve units (1 = fine grain, 4+ = blocky/retro)
+    ///
+    /// # Tips
+    ///
+    /// - `chunk_size: 1-2` — Subtle shimmer, elegant transitions
+    /// - `chunk_size: 4-8` — Retro/pixelated feel, visible blocks
+    Dissolve {
+        /// Random seed for deterministic, reproducible dissolve patterns.
+        seed: u64,
+
+        /// Size of dissolve chunks in cells.
+        ///
+        /// - `1`: Single-pixel dissolve (finest grain)
+        /// - `2-3`: Subtle chunking
+        /// - `4+`: Visible blocks (retro/pixelated aesthetic)
+        chunk_size: u8,
+    },
+
+    /// Checkerboard pattern reveal.
+    ///
+    /// Content is revealed in alternating checker cells, creating a
+    /// classic retro TV or game aesthetic.
+    ///
+    /// # Parameters
+    ///
+    /// - `cell_size`: Size of each checker cell in terminal cells
+    Checkers {
+        /// Size of each checker cell in terminal cells.
+        ///
+        /// Larger values create bigger, more visible checkers.
+        cell_size: u16,
+    },
+
+    /// Venetian blinds effect.
+    ///
+    /// Multiple horizontal or vertical slats open progressively,
+    /// creating a window blinds effect. Professional presentation style.
+    ///
+    /// # Parameters
+    ///
+    /// - `orientation`: Horizontal (slats run left-right) or Vertical
+    /// - `count`: Number of blinds/slats
+    Blinds {
+        /// Orientation of the blinds.
+        ///
+        /// - `Horizontal`: Slats run left-right, open top-to-bottom
+        /// - `Vertical`: Slats run top-bottom, open left-to-right
+        orientation: Orientation,
+
+        /// Number of blind slats.
+        ///
+        /// More blinds = thinner slats, faster-feeling transition.
+        count: u16,
+    },
+
+    /// Iris/spotlight reveal from center.
+    ///
+    /// A shape expands from (or contracts to) the center of the screen,
+    /// like a camera iris or spotlight. Classic dramatic reveal effect.
+    ///
+    /// # Parameters
+    ///
+    /// - `shape`: Geometry of the iris (Circle, Diamond, Box)
+    /// - `soft_edge`: Enable gradient blending at the iris boundary
+    ///
+    /// # Shapes
+    ///
+    /// - `Circle`: Smooth, organic spotlight (most common)
+    /// - `Diamond`: Angular, geometric feel
+    /// - `Box`: Rectangular reveal, good for UI elements
+    Iris {
+        /// Shape of the iris aperture.
+        shape: IrisShape,
+
+        /// Enable soft edge blending at the iris boundary.
+        soft_edge: bool,
+    },
+
+    /// Diamond-shaped expand from center.
+    ///
+    /// A diamond shape expands outward from the center. Similar to
+    /// [`Iris`](Self::Iris) with `Diamond` shape but optimized for
+    /// this specific pattern.
+    Diamond {
+        /// Enable soft edge blending at the diamond boundary.
+        soft_edge: bool,
+    },
+
+    /// Dithered noise pattern reveal.
+    ///
+    /// Uses Bayer dithering matrices to create ordered noise patterns.
+    /// Creates a subtle, technical feel compared to random dissolve.
+    ///
+    /// # Parameters
+    ///
+    /// - `seed`: Random seed for pattern variation
+    /// - `matrix`: Dither matrix size (Bayer4 or Bayer8)
+    /// - `chunk_size`: Size of grouped dither cells
+    ///
+    /// # Matrix Selection
+    ///
+    /// - `Bayer4`: 4×4 matrix, more visible pattern, retro aesthetic
+    /// - `Bayer8`: 8×8 matrix, smoother gradients, subtler effect
+    NoiseDither {
+        /// Random seed for pattern variation.
+        seed: u64,
+
+        /// Dither matrix size.
+        ///
+        /// Larger matrices produce smoother but less distinctive patterns.
+        matrix: DitherMatrix,
+
+        /// Size of grouped dither cells.
+        ///
+        /// A value greater than one makes neighboring cells share the same
+        /// dither threshold, matching debug-recipes that author `chunkSize`.
+        #[serde(default = "default_noise_dither_chunk_size")]
+        chunk_size: u8,
+    },
+
+    /// Organic materialization reveal that blends an origin-biased field with deterministic noise.
+    Materialize {
+        /// Origin point that biases where the reveal begins.
+        #[serde(default)]
+        origin: RadialOrigin,
+
+        /// Seed for deterministic breakup.
+        #[serde(default)]
+        seed: u64,
+
+        /// Chunk size for grouped reveal cells.
+        #[serde(default = "default_materialize_chunk_size")]
+        chunk_size: u8,
+
+        /// Noise amplitude (0.0-1.0).
+        #[serde(default = "default_materialize_noise")]
+        noise: f32,
+
+        /// Enable a soft reveal edge.
+        #[serde(default = "default_materialize_soft_edge")]
+        soft_edge: bool,
+    },
+
+    /// Path-based reveal (spiral, radial sweep, etc.).
+    ///
+    /// Content is revealed following a geometric path pattern.
+    /// Creates dynamic, animated-feeling transitions.
+    ///
+    /// # Parameters
+    ///
+    /// - `path`: The path pattern (Spiral, Radial sweep, etc.)
+    /// - `soft_edge`: Enable gradient blending
+    ///
+    /// # Path Types
+    ///
+    /// - `Spiral`: Outward spiral from center (playful, dynamic)
+    /// - `RadialSweep`: Clock-hand sweep (scanning, loading feel)
+    PathReveal {
+        /// The path pattern defining the reveal animation.
+        path: RevealPathType,
+
+        /// Enable soft edge blending along the path.
+        soft_edge: bool,
+    },
+
+    /// Radial reveal expanding from a configurable origin.
+    ///
+    /// A circle expands outward from a specified origin point.
+    /// More flexible than Iris since the origin can be any point.
+    ///
+    /// # Parameters
+    ///
+    /// - `origin`: Center point for the radial expansion
+    /// - `soft_edge`: Enable gradient blending
+    ///
+    /// # Origin Options
+    ///
+    /// - `Center`: Screen center (default)
+    /// - `TopLeft`, `TopRight`, `BottomLeft`, `BottomRight`: Corners
+    /// - `Custom { x, y }`: Arbitrary normalized coordinates (0.0-1.0)
+    Radial {
+        /// Origin point for the radial expansion.
+        origin: RadialOrigin,
+
+        /// Enable soft edge blending at the radial boundary.
+        #[serde(default)]
+        soft_edge: bool,
+    },
+
+    /// Cellular/organic pattern reveal.
+    ///
+    /// Creates organic, natural-looking transition patterns using
+    /// cellular algorithms. Great for creative, artistic transitions.
+    ///
+    /// # Parameters
+    ///
+    /// - `pattern`: The cellular pattern type
+    /// - `seed`: Random seed for reproducibility
+    /// - `cell_count`: Number of cells (affects granularity)
+    ///
+    /// # Pattern Types
+    ///
+    /// - `Voronoi`: Organic, natural cell boundaries
+    /// - `Hexagonal`: Regular hexagonal grid (tech/futuristic)
+    /// - `Organic`: Flowing, amoeba-like shapes
+    Cellular {
+        /// The cellular pattern algorithm.
+        pattern: CellularPattern,
+
+        /// Random seed for reproducible patterns.
+        seed: u64,
+
+        /// Number of cells in the pattern.
+        ///
+        /// Higher values = smaller cells, finer granularity.
+        /// Default: 16
+        #[serde(default = "default_cell_count")]
+        cell_count: u16,
+    },
+}
+
+fn default_cell_count() -> u16 {
+    16
+}
+
+/// Resolved wipe configuration with direction and invert flag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ResolvedWipe {
+    /// The wipe direction
+    pub direction: WipeDirection,
+    /// Whether to invert mask values (true for hide, false for reveal)
+    pub invert: bool,
+}
+
+impl MaskSpec {
+    /// For Wipe masks, resolve the reveal/hide/direction fields to a canonical form.
+    ///
+    /// Returns `Some(ResolvedWipe)` for Wipe masks, `None` for other mask types.
+    ///
+    /// # Resolution Rules
+    ///
+    /// - `reveal` field → direction with `invert: false`
+    /// - `hide` field → direction with `invert: true`
+    /// - `direction` field → treated as reveal (backwards compatibility)
+    /// - If multiple fields set, priority: `hide` > `reveal` > `direction`
+    /// - If no fields set, defaults to `LeftToRight` reveal
+    pub fn resolve_wipe(&self) -> Option<ResolvedWipe> {
+        match self {
+            MaskSpec::Wipe {
+                reveal,
+                hide,
+                direction,
+                ..
+            } => {
+                // Priority: hide > reveal > direction > default
+                if let Some(dir) = hide {
+                    Some(ResolvedWipe {
+                        direction: *dir,
+                        invert: true,
+                    })
+                } else if let Some(dir) = reveal {
+                    Some(ResolvedWipe {
+                        direction: *dir,
+                        invert: false,
+                    })
+                } else if let Some(dir) = direction {
+                    Some(ResolvedWipe {
+                        direction: *dir,
+                        invert: false,
+                    })
+                } else {
+                    // Default: reveal left to right
+                    Some(ResolvedWipe {
+                        direction: WipeDirection::default(),
+                        invert: false,
+                    })
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Check if this mask should invert its values (i.e., is a "hide" mask).
+    ///
+    /// Returns `true` for Wipe masks with `hide` set, `false` otherwise.
+    pub fn should_invert(&self) -> bool {
+        self.resolve_wipe().map(|r| r.invert).unwrap_or(false)
+    }
+
+    /// Returns the mask type name as a string.
+    pub fn name(&self) -> &'static str {
+        match self {
+            MaskSpec::None => "None",
+            MaskSpec::Wipe { .. } => "Wipe",
+            MaskSpec::Dissolve { .. } => "Dissolve",
+            MaskSpec::Checkers { .. } => "Checkers",
+            MaskSpec::Blinds { .. } => "Blinds",
+            MaskSpec::Iris { .. } => "Iris",
+            MaskSpec::Diamond { .. } => "Diamond",
+            MaskSpec::Materialize { .. } => "Materialize",
+            MaskSpec::NoiseDither { .. } => "NoiseDither",
+            MaskSpec::PathReveal { .. } => "PathReveal",
+            MaskSpec::Radial { .. } => "Radial",
+            MaskSpec::Cellular { .. } => "Cellular",
+        }
+    }
+
+    /// Returns a brief human-readable description of what this mask does.
+    pub fn terse_description(&self) -> &'static str {
+        match self {
+            MaskSpec::None => "No mask applied — content is fully visible",
+            MaskSpec::Wipe { .. } => "Linear wipe reveal/hide from one edge to another",
+            MaskSpec::Dissolve { .. } => "Random pixel dissolve effect",
+            MaskSpec::Checkers { .. } => "Checkerboard pattern reveal",
+            MaskSpec::Blinds { .. } => "Venetian blinds effect",
+            MaskSpec::Iris { .. } => "Iris/spotlight reveal from center",
+            MaskSpec::Diamond { .. } => "Diamond-shaped expand from center",
+            MaskSpec::Materialize { .. } => {
+                "Organic materialization reveal with origin bias and noise"
+            }
+            MaskSpec::NoiseDither { .. } => "Dithered noise pattern reveal",
+            MaskSpec::PathReveal { .. } => "Path-based reveal (spiral, radial sweep)",
+            MaskSpec::Radial { .. } => "Radial reveal expanding from configurable origin",
+            MaskSpec::Cellular { .. } => "Cellular/organic pattern reveal",
+        }
+    }
+
+    /// Returns key parameters of this mask for documentation purposes.
+    pub fn key_parameters(&self) -> Vec<(&'static str, String)> {
+        match self {
+            MaskSpec::None => vec![],
+            MaskSpec::Wipe {
+                reveal,
+                hide,
+                soft_edge,
+                ..
+            } => {
+                let mut params = vec![];
+                if let Some(dir) = reveal {
+                    params.push(("reveal", format!("{:?}", dir)));
+                }
+                if let Some(dir) = hide {
+                    params.push(("hide", format!("{:?}", dir)));
+                }
+                params.push(("soft_edge", format!("{}", soft_edge)));
+                params
+            }
+            MaskSpec::Dissolve { seed, chunk_size } => vec![
+                ("seed", format!("{}", seed)),
+                ("chunk_size", format!("{}", chunk_size)),
+            ],
+            MaskSpec::Checkers { cell_size } => {
+                vec![("cell_size", format!("{}", cell_size))]
+            }
+            MaskSpec::Blinds { orientation, count } => vec![
+                ("orientation", format!("{:?}", orientation)),
+                ("count", format!("{}", count)),
+            ],
+            MaskSpec::Iris { shape, soft_edge } => vec![
+                ("shape", format!("{:?}", shape)),
+                ("soft_edge", format!("{}", soft_edge)),
+            ],
+            MaskSpec::Diamond { soft_edge } => {
+                vec![("soft_edge", format!("{}", soft_edge))]
+            }
+            MaskSpec::Materialize {
+                origin,
+                seed,
+                chunk_size,
+                noise,
+                soft_edge,
+            } => vec![
+                ("origin", format!("{:?}", origin)),
+                ("seed", format!("{}", seed)),
+                ("chunk_size", format!("{}", chunk_size)),
+                ("noise", format!("{}", noise)),
+                ("soft_edge", format!("{}", soft_edge)),
+            ],
+            MaskSpec::NoiseDither {
+                seed,
+                matrix,
+                chunk_size,
+            } => vec![
+                ("seed", format!("{}", seed)),
+                ("matrix", format!("{:?}", matrix)),
+                ("chunk_size", format!("{}", chunk_size)),
+            ],
+            MaskSpec::PathReveal { path, soft_edge } => vec![
+                ("path", format!("{:?}", path)),
+                ("soft_edge", format!("{}", soft_edge)),
+            ],
+            MaskSpec::Radial { origin, soft_edge } => vec![
+                ("origin", format!("{:?}", origin)),
+                ("soft_edge", format!("{}", soft_edge)),
+            ],
+            MaskSpec::Cellular {
+                pattern,
+                seed,
+                cell_count,
+            } => vec![
+                ("pattern", format!("{:?}", pattern)),
+                ("seed", format!("{}", seed)),
+                ("cell_count", format!("{}", cell_count)),
+            ],
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::masks::cls_path_reveal::{RevealPathType, SpiralDirection};
+
+    #[test]
+    fn mask_spec_path_reveal_serde_roundtrip() {
+        let spec = MaskSpec::PathReveal {
+            path: RevealPathType::Spiral {
+                rotations: 1.75,
+                direction: SpiralDirection::CounterClockwise,
+            },
+            soft_edge: true,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn mask_spec_radial_serde_roundtrip() {
+        let spec = MaskSpec::Radial {
+            origin: RadialOrigin::Custom { x: 0.25, y: 0.75 },
+            soft_edge: true,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn mask_spec_cellular_serde_roundtrip() {
+        let spec = MaskSpec::Cellular {
+            pattern: CellularPattern::Organic,
+            seed: 17,
+            cell_count: 12,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn resolve_wipe_prefers_hide_and_marks_inverted() {
+        let spec = MaskSpec::Wipe {
+            reveal: Some(WipeDirection::LeftToRight),
+            hide: Some(WipeDirection::BottomToTop),
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: true,
+        };
+
+        let resolved = spec.resolve_wipe().expect("wipe resolves");
+
+        assert_eq!(
+            resolved,
+            ResolvedWipe {
+                direction: WipeDirection::BottomToTop,
+                invert: true,
+            }
+        );
+        assert!(spec.should_invert());
+    }
+
+    #[test]
+    fn resolve_wipe_uses_reveal_then_direction_then_default() {
+        let reveal = MaskSpec::Wipe {
+            reveal: Some(WipeDirection::RightToLeft),
+            hide: None,
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: false,
+        };
+        assert_eq!(
+            reveal.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::RightToLeft,
+                invert: false,
+            })
+        );
+
+        let direction = MaskSpec::Wipe {
+            reveal: None,
+            hide: None,
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: false,
+        };
+        assert_eq!(
+            direction.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::TopToBottom,
+                invert: false,
+            })
+        );
+
+        let defaulted = MaskSpec::Wipe {
+            reveal: None,
+            hide: None,
+            direction: None,
+            soft_edge: false,
+        };
+        assert_eq!(
+            defaulted.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::LeftToRight,
+                invert: false,
+            })
+        );
+    }
+
+    #[test]
+    fn mask_spec_none_deserializes_from_v3_payload_shape() {
+        let parsed: MaskSpec = serde_json::from_value(serde_json::json!({ "type": "none" }))
+            .expect("none variant should deserialize from V3 payload shape");
+
+        assert_eq!(parsed, MaskSpec::None);
+    }
+}
+
+// <FILE>tui-vfx-compositor-next/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
+// <VERS>END OF VERSION: 2.5.0</VERS>

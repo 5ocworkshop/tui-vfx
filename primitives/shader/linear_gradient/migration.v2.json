@@ -1,0 +1,16 @@
+{
+  "schema": "tui-vfx.primitive-migration.v1",
+  "primitiveId": "shader.linearGradient",
+  "status": "skeleton",
+  "notes": [
+    "Migration is intentionally skeletal until compositor-next runtime parity and workbench scaffolding are in place.",
+    "Do not mutate existing v3.1/debug_recipes from this file; use it only as a future mapping input."
+  ],
+  "fieldMappings": [
+    { "legacy": "start_color", "canonical": "startColor", "classification": "mechanical-rename" },
+    { "legacy": "end_color", "canonical": "endColor", "classification": "mechanical-rename" },
+    { "legacy": "angle_deg", "canonical": "angleDeg", "classification": "mechanical-rename" },
+    { "legacy": "apply_to", "canonical": "applyTo", "classification": "mechanical-rename" }
+  ],
+  "ownerDecisions": []
+}

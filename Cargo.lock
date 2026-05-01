@@ -2377,6 +2377,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-compositor-next"
+version = "0.11.0"
+dependencies = [
+ "lazy_static",
+ "mixed-signals",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "tui-vfx-compositor",
+ "tui-vfx-content",
+ "tui-vfx-core",
+ "tui-vfx-debug",
+ "tui-vfx-geometry",
+ "tui-vfx-shadow",
+ "tui-vfx-style",
+ "tui-vfx-types",
+]
+
+[[package]]
 name = "tui-vfx-content"
 version = "0.11.0"
 dependencies = [

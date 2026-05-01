@@ -16,17 +16,18 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
   packet from the active work-packet queue/index so the active backlog matches
   real remaining work.
 
-## Shared must-read order for subagents
-1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
-2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
-3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when lower math/signal substrate is in scope
-4. the active shared briefing in `/usr/projects/gt-design/.omx/context/`
-5. `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
-6. `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
-7. `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
-8. `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
-9. `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
-10. the packet-specific file in this directory
+## Shared grounding before packets
+Every newly launched subagent first completes:
+
+- `/usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md`
+
+The grounding pass is where agents read project goals, philosophy, coding
+standards, OFPF tooling, and vocabulary guidance. Once a subagent has completed
+that pass, reported `READY FOR WORK PACKET`, and had the report accepted, later
+packets in the same subagent session treat shared grounding as satisfied. Work
+packets should not repeat that global read list or ask the same agent to rerun
+it. Packets add only task-specific briefing/design/evidence docs and exact
+scope.
 
 
 ## Packet quality reminder
@@ -36,7 +37,9 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - Do not over-specify to the point that the packet is doing the work itself.
 
 ## Shared execution expectations
-- Start with `ofpf-orientation` on the repos in scope.
+- Do not start implementation until the grounding pass is complete and accepted.
+- If accepted grounding already exists for the same subagent session, confirm it
+  and continue with packet-specific docs; do not repeat global grounding.
 - Prefer OFPF tools before broad grep/sed sweeps.
 - Keep `task-scope paths` separate from `write scope`.
 - Prefer exact path strings and shell-ready verification commands whenever the
@@ -44,9 +47,9 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - Respect repo boundaries:
   - `mixed-signals` = reusable signal/math substrate
   - `tui-vfx` = effect/render semantics
-  - `tui-vfx-recipes` = recipe authoring truth, tooling, validator, preview, compiled seams, generated V3 docs
+  - `tui-vfx-recipes` = recipe authoring truth, tooling, validator, preview, compiled seams, generated v3.1 schema/docs surfaces
 - Use BLOCKER_MODE unless the packet explicitly says FAMILY_MODE.
-- Do not widen the assignment to the whole V3 migration.
+- Do not widen the assignment to the whole v3.1 migration.
 - If you touch a hot path, call out performance risks against the 16.7 ms / 60 FPS budget.
 - Use full paths in reports.
 

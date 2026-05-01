@@ -1,0 +1,51 @@
+# <FILE>crates/tui-vfx-compositor-next/Cargo.toml</FILE> - <DESC>Manifest for copied compositor-next baseline library</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Compositor-next Phase 2 — copied baseline crate with old-compositor parity dev-dependency.</WCTX>
+# <CLOG>0.1.0: INIT add copied compositor-next crate metadata and old-vs-next parity test support.</CLOG>
+
+[package]
+name = "tui-vfx-compositor-next"
+description = "Copied schema-boundary compositor-next baseline for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+# L0 foundation types (Color, Style, Cell, Rect, Modifiers, Grid)
+tui-vfx-types.workspace = true
+# Small vector for inline allocation (no heap for ≤N effects)
+smallvec.workspace = true
+# Serialization
+serde.workspace = true
+serde_json = "1.0"
+# Introspection protocol
+tui-vfx-core.workspace = true
+# Style primitives for shaders
+tui-vfx-style.workspace = true
+# Geometry primitives (WipeDirection enum + shared wipe geometry helpers)
+tui-vfx-geometry.workspace = true
+# Shadow rendering
+tui-vfx-shadow.workspace = true
+# Signal generators for wave-based samplers
+mixed-signals.workspace = true
+# Debug logging
+tui-vfx-debug.workspace = true
+lazy_static = "1.4"
+
+[dev-dependencies]
+# Original compositor — used only by baseline parity tests for the copy-first compositor-next gate.
+tui-vfx-compositor.workspace = true
+# Content primitives — used only by end-to-end integration tests that drive
+# the Typewriter + Cursor primitive through the full pipeline.
+tui-vfx-content.workspace = true
+# Signal context (for Typewriter::transform_with_cursor) — already a workspace
+# dep of tui-vfx-content, but we construct SignalContext directly in the test.
+mixed-signals.workspace = true
+
+# <FILE>crates/tui-vfx-compositor-next/Cargo.toml</FILE> - <DESC>Manifest for copied compositor-next baseline library</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

@@ -1,0 +1,141 @@
+{
+  "schema": "tui-vfx.primitive-input-manifest.v1",
+  "descriptorId": "shader.linearGradient",
+  "descriptorVersion": "0.1.0",
+  "family": "shader",
+  "primitiveName": "linearGradient",
+  "inputs": [
+    {
+      "name": "startColor",
+      "displayName": "Start Color",
+      "valueKind": "color",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "color",
+        "value": {
+          "r": 255,
+          "g": 100,
+          "b": 50,
+          "a": 255
+        }
+      },
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient-start"
+    },
+    {
+      "name": "endColor",
+      "displayName": "End Color",
+      "valueKind": "color",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "color",
+        "value": {
+          "r": 50,
+          "g": 100,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient-end"
+    },
+    {
+      "name": "colorSpace",
+      "displayName": "Color Space",
+      "valueKind": "enum",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "enum",
+        "value": "rgb"
+      },
+      "range": null,
+      "allowedValues": [
+        "rgb",
+        "hct"
+      ],
+      "unit": null,
+      "semantic": null
+    },
+    {
+      "name": "angleDeg",
+      "displayName": "Angle Degrees",
+      "valueKind": "number",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "number",
+        "value": 45
+      },
+      "range": {
+        "min": 0,
+        "max": 360
+      },
+      "allowedValues": [],
+      "unit": "degrees",
+      "semantic": null
+    },
+    {
+      "name": "intensity",
+      "displayName": "Intensity",
+      "valueKind": "number",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "number",
+        "value": 1
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "opacity"
+    },
+    {
+      "name": "gradient",
+      "displayName": "Gradient",
+      "valueKind": "gradient",
+      "bindable": true,
+      "optional": true,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": null,
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient"
+    },
+    {
+      "name": "applyTo",
+      "displayName": "Apply To",
+      "valueKind": "enum",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "enum",
+        "value": "foreground"
+      },
+      "range": null,
+      "allowedValues": [
+        "foreground",
+        "background",
+        "both"
+      ],
+      "unit": null,
+      "semantic": "channel-target"
+    }
+  ]
+}

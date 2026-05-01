@@ -1,0 +1,53 @@
+# <FILE>primitives/shader/linear_gradient/tests/field_coverage.toml</FILE> - <DESC>Field coverage manifest for shader.linearGradient compositor-next vertical-slice foundation</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Compositor-next Phase 5/6 foundation: list descriptor fields before generated accessors exist.</WCTX>
+# <CLOG>0.1.0: INIT — enumerate linearGradient descriptor inputs and first planned handling status.</CLOG>
+
+primitive_id = "shader.linearGradient"
+descriptor = "../descriptor.v31.json"
+status = "foundation"
+
+[[fields]]
+name = "startColor"
+kind = "color"
+classification = "candidate-common-contract"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "endColor"
+kind = "color"
+classification = "candidate-common-contract"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "colorSpace"
+kind = "enum"
+classification = "primitive-local-enum"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "angleDeg"
+kind = "number"
+classification = "primitive-local-angle"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "intensity"
+kind = "number"
+classification = "owner-decision-needed-before-global-helper"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "gradient"
+kind = "gradient"
+classification = "candidate-common-contract"
+handling = "pending-generated-accessor"
+
+[[fields]]
+name = "applyTo"
+kind = "enum"
+classification = "family-specific-channel-target"
+handling = "pending-generated-accessor"
+
+# <FILE>primitives/shader/linear_gradient/tests/field_coverage.toml</FILE>
+# <VERS>END OF VERSION: 0.1.0</VERS>

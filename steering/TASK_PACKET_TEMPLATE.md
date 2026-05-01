@@ -51,30 +51,30 @@ Do not widen into:
 - unrelated orchestration policy or experiment-protocol redesign
 - runtime/library code unless this packet explicitly owns it
 
-## Must-read docs in order
-1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
-2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
-3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when relevant
-4. the active shared briefing file in `/usr/projects/gt-design/.omx/context/` (use the exact file path named by the packet)
-5. `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
-6. `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
-7. `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
-8. `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
-9. `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
-10. `/usr/projects/tui-vfx/steering/work-packets/COMMON_EXECUTION_RULES.md`
-11. `[packet-specific extra doc if needed]`
+## Packet-specific extra docs
+This packet assumes the agent has already completed
+`/usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md`, reported
+`READY FOR WORK PACKET`, and had that grounding accepted by the leader. That
+satisfies the shared grounding requirement for follow-on packets in the same
+subagent session. Do not ask the agent to repeat the global grounding pass or
+re-read global grounding docs here. List only active briefing files and
+packet-specific architecture, schema, design, or evidence docs needed for this
+packet:
+
+1. `[active shared briefing file if this packet uses one]`
+2. `[packet-specific extra doc if needed]`
 
 ## Repo-boundary guardrails
 - `mixed-signals` owns reusable signal/math substrate only.
 - `tui-vfx` owns renderer/effect semantics.
-- `tui-vfx-recipes` owns recipe truth, tooling, validator/probe/preview, compiled seams, and generated V3 docs.
+- `tui-vfx-recipes` owns recipe truth, tooling, validator/probe/preview, compiled seams, and generated v3.1 schema/docs surfaces.
 - Do not read or revise `ORCHESTRATION.md`; it is leader-only orchestration context and will confuse bounded worker lanes.
 - Do not revise experiment protocols unless this packet explicitly owns that surface.
 - [any lane-specific boundary note]
 
 ## Pipeline-touch definition of done
 If this packet touches a shader, filter, mask, sampler, style, content effect,
-motion route, shadow, scope, binding, or adjacent V3 pipeline file:
+motion route, shadow, scope, binding, or adjacent v3.1 pipeline file:
 - move primitive reusable math/signal substrate to `mixed-signals` when it is
   renderer-agnostic and useful to 3+ real callers
 - keep renderer/effect semantics in `tui-vfx` / `tui-vfx-recipes`
@@ -82,9 +82,10 @@ motion route, shadow, scope, binding, or adjacent V3 pipeline file:
   cadence, normalized phase/loop progress for phase)
 - update rustdocs for public/schema-bearing items and generated-doc inputs when
   schema/API surfaces change
-- align comments/docs/rustdocs/fixtures with canonical V3 vocabulary
+- align comments/docs/rustdocs/fixtures with canonical v3.1 vocabulary
 - update primitive-first debug/reference recipes when visual semantics, timing,
   names, or parameters change
+- preserve V2 fallback and oracle paths until owner-approved removal
 - prefer adding validator/probe/test coverage for any drift class discovered
 - keep `<CLOG>` entries to the latest one- or two-line summary and update
   relevant `INDEX.md` files when docs move or become canonical
@@ -105,14 +106,20 @@ the packet to identify the existing source of truth or report the missing seam
 as a handoff.
 
 ## First steps / grounding instructions
-1. Run `ofpf-orientation` on each repo in scope.
-2. Read the must-read docs in order before broader file reads.
-3. Restate briefly:
+1. Confirm that prior shared grounding was accepted: the agent completed
+   `/usr/projects/tui-vfx/steering/SUBAGENT-GROUNDING.md` and reported
+   `READY FOR WORK PACKET`. If that is already true in this subagent session,
+   do not repeat it.
+2. If prior accepted grounding cannot be confirmed, stop and report that the
+   leader must run or refresh shared grounding before packet work continues.
+3. Read the packet-specific extra docs before broader file reads or edits.
+4. Restate briefly:
+   - that shared grounding is already complete, or that it is blocked/missing
    - what belongs in which repo
    - what counts as done
    - what the biggest scope risk is
-4. Do the narrowest repo inspection needed before editing.
-5. **Cross-repo audit (Intention 41).** If the packet touches any public
+5. Do the narrowest repo inspection needed before editing.
+6. **Cross-repo audit (Intention 41).** If the packet touches any public
    surface that downstream consumers might construct, import, or reference
    — struct fields, public types, exported constants, public function
    signatures — run the appropriate `rg` / `ofpf-search` / `ofpf-content`

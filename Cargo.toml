@@ -1,17 +1,7 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.13.0</VERS>
-# <WCTX>New kernel Phase K1 — add contract-native visual player UI crate.</WCTX>
-# <CLOG>0.13.0: MINOR add tui-vfx-player-ui workspace member/dependency for Phase K1 visual shell over K0.
-# 0.12.0: MINOR add tui-vfx-player and tui-vfx-player-cli workspace members/dependencies for Phase K0 sampled frame reports.
-# 0.11.0: MINOR add tui-vfx-contract-cli workspace member/dependency for Phase J0 canonical recipe validation.
-# 0.10.0: MINOR add tui-vfx-contract workspace member/dependency for Phase E0 physical contract split.
-# 0.9.0: MINOR bump workspace.package.version 0.10.0 → 0.11.0 and every internal-crate version floor 0.10.0 → 0.11.0 for Sub-plan B Phase B.1 — additive TraceEmitter + TraceFrameContext public API in tui-vfx-debug and bridge refactor in tui-vfx-compositor so seq_in_frame authority is centralized for shared emit sites.
-# 0.8.0: MINOR bump workspace.package.version 0.9.0 → 0.10.0 and every internal-crate version floor 0.9.0 → 0.10.0 for Sub-plan A Phase A.5 — SUB-PLAN-BOUNDARY: no new public API in A.5 itself (documentation-consistency pass + end-to-end integration test only); the bump marks the release boundary at which Sub-plan A (A.1 primitives + A.2 pipeline + A.3 shadow + A.4 inspection foundation) is fully landed and verified by cross-phase integration test `crates/tui-vfx/tests/test_foundation_end_to_end.rs`. Conservative bump chosen over 1.0.0-alpha.1 because additional pre-1.0 iteration is expected during Sub-plans B and C. See handoff at `gt-design/docs/superpowers/handoffs/2026-04-20-sub-plan-A-handoff.md`.
-# 0.7.0: MINOR bump workspace.package.version 0.8.0 → 0.9.0 and every internal-crate version floor 0.8.0 → 0.9.0 for Sub-plan A Phase A.4 — ADDITIVE: tui-vfx-debug gains public `inspection` module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport); tui-vfx-compositor gains `traits::cls_inspection_sink_bridge::InspectionSinkBridge`. CompositorInspector stays in tui-vfx-compositor. criterion dev-dep added to tui-vfx-debug for two new benches.
-# 0.6.0: MINOR bump workspace.package.version 0.7.0 → 0.8.0 and every internal-crate version floor 0.7.0 → 0.8.0 for Sub-plan A Phase A.3 — ADDITIVE: ShaderContext gains `roles: Arc<RoleMap>` (struct-literal callers must include the field; ::new callers unchanged). ShadowConfig gains `source_region: Option<RoleTag>` (ShadowConfig is no longer Copy — RoleTag::Custom carries Arc<str>). New `render_shadow_into_scene` entrypoint writes RoleTag::Shadow to destination role map. New `fnc_extract_shadow_envelope` pure function + CellMask primitive. Shadow stage in tui-vfx-compositor honours config.source_region via the new envelope function.
-# 0.5.0: MINOR bump workspace.package.version 0.6.0 → 0.7.0 and every internal-crate version floor 0.6.0 → 0.7.0 for Sub-plan A Phase A.2 — BREAKING: render_pipeline / render_pipeline_with_area / render_pipeline_with_spec / render_pipeline_with_spec_area now require `source_roles: &RoleMap` and `destination: &mut SemanticScene`. StyleRegion legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) removed from the Rust enum; custom Deserialize parses them into canonical Role(RoleTag) form for back-compat with existing JSON recipe fixtures. Semver-meaningful breaking change documented in CHANGELOG.
-# 0.4.0: MINOR bump workspace.package.version 0.5.0 → 0.6.0 and every internal-crate version floor 0.5.0 → 0.6.0 for Sub-plan A Phase A.1 — additive foundation primitives in tui-vfx-types.
-# 0.3.0: bump workspace.package.version 0.4.0 → 0.5.0 for the Phase-0 outstanding shader bindings closeout.</CLOG>
+# <VERS>VERSION: 0.14.0</VERS>
+# <WCTX>Compositor-next Phase 2 — add copied compositor-next crate as a workspace member/dependency.</WCTX>
+# <CLOG>0.14.0: MINOR add tui-vfx-compositor-next workspace member/dependency for copy-first compositor-next baseline.</CLOG>
 
 [workspace]
 resolver = "3"
@@ -29,6 +19,7 @@ members = [
     "crates/tui-vfx-core-macros",
     "crates/tui-vfx-geometry",
     "crates/tui-vfx-compositor",
+    "crates/tui-vfx-compositor-next",
     "crates/tui-vfx-style",
     "crates/tui-vfx-content",
     "crates/tui-vfx-shadow",
@@ -59,6 +50,7 @@ tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.11.0" }
 tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.11.0" }
 tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.11.0" }
 tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.11.0" }
+tui-vfx-compositor-next = { path = "crates/tui-vfx-compositor-next", version = "0.11.0" }
 tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.11.0" }
 tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.11.0" }
 tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.11.0" }

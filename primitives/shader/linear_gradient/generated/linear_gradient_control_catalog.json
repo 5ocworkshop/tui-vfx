@@ -1,0 +1,159 @@
+{
+  "schema": "tui-vfx.primitive-control-catalog.v1",
+  "descriptorId": "shader.linearGradient",
+  "controls": [
+    {
+      "id": "shader.linearGradient.startColor",
+      "label": "Start Color",
+      "inputName": "startColor",
+      "valueKind": "color",
+      "controlKind": "color-picker",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "color",
+        "value": {
+          "r": 255,
+          "g": 100,
+          "b": 50,
+          "a": 255
+        }
+      },
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient-start",
+      "documentation": null
+    },
+    {
+      "id": "shader.linearGradient.endColor",
+      "label": "End Color",
+      "inputName": "endColor",
+      "valueKind": "color",
+      "controlKind": "color-picker",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "color",
+        "value": {
+          "r": 50,
+          "g": 100,
+          "b": 255,
+          "a": 255
+        }
+      },
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient-end",
+      "documentation": null
+    },
+    {
+      "id": "shader.linearGradient.colorSpace",
+      "label": "Color Space",
+      "inputName": "colorSpace",
+      "valueKind": "enum",
+      "controlKind": "select",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "enum",
+        "value": "rgb"
+      },
+      "range": null,
+      "allowedValues": [
+        "rgb",
+        "hct"
+      ],
+      "unit": null,
+      "semantic": null,
+      "documentation": null
+    },
+    {
+      "id": "shader.linearGradient.angleDeg",
+      "label": "Angle Degrees",
+      "inputName": "angleDeg",
+      "valueKind": "number",
+      "controlKind": "slider",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "number",
+        "value": 45
+      },
+      "range": {
+        "min": 0,
+        "max": 360
+      },
+      "allowedValues": [],
+      "unit": "degrees",
+      "semantic": null,
+      "documentation": null
+    },
+    {
+      "id": "shader.linearGradient.intensity",
+      "label": "Intensity",
+      "inputName": "intensity",
+      "valueKind": "number",
+      "controlKind": "slider",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "number",
+        "value": 1
+      },
+      "range": {
+        "min": 0,
+        "max": 1
+      },
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "opacity",
+      "documentation": null
+    },
+    {
+      "id": "shader.linearGradient.gradient",
+      "label": "Gradient",
+      "inputName": "gradient",
+      "valueKind": "gradient",
+      "controlKind": "gradient-editor",
+      "bindable": true,
+      "optional": true,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": null,
+      "range": null,
+      "allowedValues": [],
+      "unit": null,
+      "semantic": "gradient",
+      "documentation": "Canonical gradient stops and interpolation space."
+    },
+    {
+      "id": "shader.linearGradient.applyTo",
+      "label": "Apply To",
+      "inputName": "applyTo",
+      "valueKind": "enum",
+      "controlKind": "select",
+      "bindable": true,
+      "optional": false,
+      "runtimeMutability": "phaseStart",
+      "defaultValue": {
+        "kind": "enum",
+        "value": "foreground"
+      },
+      "range": null,
+      "allowedValues": [
+        "foreground",
+        "background",
+        "both"
+      ],
+      "unit": null,
+      "semantic": "channel-target",
+      "documentation": "Cell channel target for the gradient."
+    }
+  ]
+}

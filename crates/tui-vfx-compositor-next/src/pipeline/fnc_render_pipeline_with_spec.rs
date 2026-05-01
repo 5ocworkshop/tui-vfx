@@ -1,0 +1,82 @@
+// <FILE>tui-vfx-compositor-next/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
+// <DESC>Render pipeline wrapper for CompositionSpec</DESC>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.2 — role-aware signature: accept `&RoleMap` and `&mut SemanticScene` matching the role-aware contract of render_pipeline</WCTX>
+// <CLOG>0.5.0: build ShaderWithRegion entries through grouped-V3-aware runtime constructors so spec-driven rendering consumes the same spatial family seam as newer callers.
+// 0.4.0: MAJOR — new signature carries `source_roles: &RoleMap` after `source`, and destination becomes `&mut SemanticScene` (was `&mut dyn Grid`). Callers without role information reach for `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`.</CLOG>
+
+use crate::pipeline::cls_composition_options::{CompositionOptions, ShaderWithRegion};
+use crate::pipeline::cls_composition_playback_timing::CompositionPlaybackTiming;
+use crate::pipeline::cls_composition_spec::CompositionSpec;
+use crate::pipeline::orc_render_pipeline::render_pipeline;
+use crate::traits::pipeline_inspector::CompositorInspector;
+use smallvec::SmallVec;
+use std::borrow::Cow;
+use tui_vfx_style::models::SpatialShaderType;
+use tui_vfx_style::traits::StyleShader;
+use tui_vfx_types::{Grid, RoleMap, SemanticScene};
+
+/// Render pipeline wrapper that accepts a serializable CompositionSpec.
+#[allow(clippy::too_many_arguments)]
+pub fn render_pipeline_with_spec(
+    source: &dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
+    width: usize,
+    height: usize,
+    offset_x: usize,
+    offset_y: usize,
+    spec: &CompositionSpec,
+    inspector: Option<&mut dyn CompositorInspector>,
+) {
+    let mut shader_storage: SmallVec<[SpatialShaderType; 2]> = SmallVec::new();
+    let mut shader_layers: SmallVec<[ShaderWithRegion; 2]> = SmallVec::new();
+
+    for layer in &spec.shader_layers {
+        shader_storage.push(layer.shader.clone());
+    }
+
+    for (index, layer) in spec.shader_layers.iter().enumerate() {
+        let shader_ref: &dyn StyleShader = &shader_storage[index];
+        let family = layer.v3_shader_family();
+        shader_layers.push(
+            ShaderWithRegion::try_from_v3_shader_family(&family, shader_ref, layer.region.clone())
+                .expect("spec shader layers should lower through the grouped V3 runtime seam"),
+        );
+    }
+
+    let options = CompositionOptions {
+        sampler_spec: spec.sampler_spec.clone(),
+        samplers: Cow::Owned(spec.effective_samplers()),
+        masks: Cow::Borrowed(spec.masks.as_slice()),
+        mask_combine_mode: spec.mask_combine_mode,
+        filters: Cow::Borrowed(spec.filters.as_slice()),
+        shader_layers,
+        shadow: spec.shadow.clone(),
+        shadow_element_rect: None,
+        preserve_unfilled: spec.preserve_unfilled,
+        runtime_params: spec.runtime_params.clone().into(),
+        ..Default::default()
+    }
+    .with_playback_timing(CompositionPlaybackTiming::new(
+        spec.t,
+        spec.loop_t,
+        spec.phase,
+    ));
+
+    render_pipeline(
+        source,
+        source_roles,
+        destination,
+        width,
+        height,
+        offset_x,
+        offset_y,
+        options,
+        inspector,
+    );
+}
+
+// <FILE>tui-vfx-compositor-next/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
+// <DESC>Render pipeline wrapper for CompositionSpec</DESC>
+// <VERS>END OF VERSION: 0.5.0</VERS>

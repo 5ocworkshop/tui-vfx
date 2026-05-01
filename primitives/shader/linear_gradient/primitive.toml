@@ -1,0 +1,38 @@
+# <FILE>primitives/shader/linear_gradient/primitive.toml</FILE> - <DESC>Primitive Workbench metadata for compositor-next linear gradient shader slice</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Compositor-next Phase 5/6 foundation: first existing shader primitive tree chosen after highlighter descriptor audit blockers.</WCTX>
+# <CLOG>0.1.0: INIT — record descriptor-backed primitive metadata and generated/hand-owned path boundaries.</CLOG>
+
+id = "shader.linearGradient"
+family = "shader"
+canonical_name = "linearGradient"
+descriptor = "descriptor.v31.json"
+migration = "migration.v2.json"
+runtime_status = "copied-compositor-parity-only"
+first_slice_reason = "Chosen as the first vertical-slice foundation because shader.highlighter has descriptor kind owner-decision blockers for textContrast and rowMask."
+indexed_field_reserved = true
+
+[ownership]
+generated = [
+  "generated/linear_gradient_input_manifest.json",
+  "generated/linear_gradient_inputs.rs",
+  "generated/linear_gradient_accessors.rs",
+  "generated/linear_gradient_validation_manifest.json",
+  "generated/linear_gradient_control_catalog.json",
+]
+hand_owned = [
+  "runtime/linear_gradient_shader_adapter.rs",
+  "docs/linear_gradient.md",
+]
+fixtures = [
+  "fixtures/minimal.v31.json",
+]
+tests = [
+  "tests/field_coverage.toml",
+]
+
+[validation]
+structural = "pending-workbench"
+field_coverage = "tests/field_coverage.toml"
+old_vs_next_parity = "crates/tui-vfx-compositor-next/tests/test_old_compositor_parity.rs"
+unsupported_diagnostics = "pending-workbench"

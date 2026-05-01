@@ -1,0 +1,368 @@
+// <FILE>tui-vfx-compositor-next/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
+// <VERS>VERSION: 3.3.0</VERS>
+// <WCTX>Shadow corner transparency handling</WCTX>
+// <CLOG>3.3.0: add ordered sampler chains while preserving the legacy single-sampler option.</CLOG>
+
+use super::cls_composition_playback_timing::CompositionPlaybackTiming;
+use crate::types::MaskCombineMode;
+use crate::types::cls_filter_spec::FilterSpec;
+use crate::types::cls_mask_spec::MaskSpec;
+use crate::types::cls_sampler_spec::SamplerSpec;
+use crate::types::cls_shadow_spec::ShadowSpec;
+use mixed_signals::traits::Phase;
+use smallvec::SmallVec;
+use std::borrow::Cow;
+use std::sync::Arc;
+use tui_vfx_style::models::{
+    StyleRegion, TryLowerV3SpatialShaderError, VfxSpatialShaderFamily,
+    try_lower_v3_spatial_shader_family,
+};
+use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
+use tui_vfx_types::Rect;
+
+/// A shader paired with its region constraint.
+/// Each shader can target a different region (e.g., BorderOnly, TextOnly, Rows).
+pub struct ShaderWithRegion<'a> {
+    pub shader: &'a dyn StyleShader,
+    pub region: StyleRegion,
+    /// Optional grouped V3 family identity when this layer came through a
+    /// lowering-aware construction seam.
+    pub v3_family: Option<VfxSpatialShaderFamily>,
+    /// Optional stable shader label captured by a higher-level construction seam
+    /// (for example `ShaderLayerSpec` while the legacy flat enum is still in use).
+    pub shader_label: Option<String>,
+}
+
+impl<'a> ShaderWithRegion<'a> {
+    /// Build a shader-layer entry directly from a grouped V3 spatial family by
+    /// lowering it into the current executable legacy shader surface.
+    pub fn try_from_v3_shader_family(
+        family: &VfxSpatialShaderFamily,
+        shader: &'a dyn StyleShader,
+        region: StyleRegion,
+    ) -> Result<Self, TryLowerV3SpatialShaderError> {
+        let legacy = try_lower_v3_spatial_shader_family(family)?;
+        Ok(Self {
+            shader,
+            region,
+            v3_family: Some(family.clone()),
+            shader_label: Some(legacy.name().to_string()),
+        })
+    }
+
+    /// Build the shader label used by inspector/debug surfaces.
+    pub fn inspector_shader_label(&self, shader_index: usize) -> String {
+        match &self.v3_family {
+            Some(family) => format!(
+                "{}:{}#{}",
+                family.family_label(),
+                self.shader_label.as_deref().unwrap_or(self.shader.name()),
+                shader_index + 1
+            ),
+            None => format!(
+                "{}#{}",
+                self.shader_label.as_deref().unwrap_or(self.shader.name()),
+                shader_index + 1
+            ),
+        }
+    }
+}
+
+impl<'a> CompositionOptions<'a> {
+    /// Apply one shared playback timing bundle to these composition options.
+    pub fn apply_playback_timing(&mut self, timing: CompositionPlaybackTiming) {
+        self.t = timing.t;
+        self.loop_t = timing.loop_t;
+        self.phase = timing.phase;
+    }
+
+    /// Convenience builder for attaching shared playback timing.
+    pub fn with_playback_timing(mut self, timing: CompositionPlaybackTiming) -> Self {
+        self.apply_playback_timing(timing);
+        self
+    }
+}
+
+/// Composition options with full spec support.
+///
+/// This version supports multiple masks, filters, shaders, and shadows per stage.
+/// SmallVec is used for inline allocation to avoid heap allocation for common cases.
+///
+/// ## Shadow Support
+///
+/// When `shadow` is set, the compositor renders a shadow that:
+/// - Extends beyond the element dimensions by the shadow offset
+/// - Receives the same mask treatment as the element (wipes, dissolves, etc.)
+/// - Is rendered before the element so it appears behind it
+///
+/// **Important:** The total rendered area is larger than the source dimensions:
+/// - Total width = element width + |shadow.offset_x|
+/// - Total height = element height + |shadow.offset_y|
+///
+/// For example, a 30x12 element with shadow offset (2, 1) renders to a 32x13 area.
+pub struct CompositionOptions<'a> {
+    /// Legacy single-sampler specification.
+    ///
+    /// Kept for existing callers. New code that needs deterministic sampler
+    /// composition should use [`CompositionOptions::samplers`]. If `samplers`
+    /// is non-empty, it is the authoritative ordered chain.
+    pub sampler_spec: Option<SamplerSpec>,
+
+    /// Ordered sampler chain applied before masks, shaders, and filters.
+    ///
+    /// Each sampler consumes the coordinates produced by the previous sampler.
+    /// If any sampler rejects a cell, the cell is skipped. When empty,
+    /// `sampler_spec` remains the effective single sampler for compatibility.
+    pub samplers: Cow<'a, [SamplerSpec]>,
+
+    /// Mask specifications - combined via mask_combine_mode.
+    pub masks: Cow<'a, [MaskSpec]>,
+
+    /// How to combine multiple masks (default: All/AND).
+    pub mask_combine_mode: MaskCombineMode,
+
+    /// Filter specifications - applied in order (left to right).
+    pub filters: Cow<'a, [FilterSpec]>,
+
+    /// Style shaders with per-shader region targeting.
+    /// Each shader can target different regions (BorderOnly, TextOnly, Rows, etc.).
+    /// SmallVec<[ShaderWithRegion; 2]> avoids heap allocation for ≤2 shaders.
+    pub shader_layers: SmallVec<[ShaderWithRegion<'a>; 2]>,
+
+    /// Shadow specification for compositor-integrated shadow rendering.
+    ///
+    /// When set, the compositor will:
+    /// 1. Extend the render area to include the shadow
+    /// 2. Apply masks to both shadow and element regions
+    /// 3. Render shadow first, then element on top
+    ///
+    /// The shadow wipes/dissolves/fades in sync with the element.
+    pub shadow: Option<ShadowSpec>,
+
+    /// Optional sub-rectangle inside the source grid that should own the shadow.
+    ///
+    /// When unset, the shadow applies to the full source area. When set,
+    /// the shadow is generated only around this sub-rectangle while masks,
+    /// filters, and shaders still evaluate across the full source grid.
+    pub shadow_element_rect: Option<Rect>,
+
+    /// Whether to preserve destination content where the compositor didn't render.
+    ///
+    /// When `true` (default), unfilled cells in the shadow's extended area (such as
+    /// the upper-right and lower-left corners for a bottom-right shadow) will NOT
+    /// overwrite the destination, allowing underlying content to show through.
+    ///
+    /// When `false`, unfilled cells will be written as transparent, which may
+    /// result in visual artifacts depending on how the adapter handles transparency.
+    ///
+    /// This is primarily relevant for shadow rendering where the shadow geometry
+    /// doesn't fill the entire extended buffer area.
+    pub preserve_unfilled: bool,
+
+    /// Animation progress (0.0 to 1.0) - phase-based time
+    pub t: f64,
+
+    /// Cyclical loop time (0.0-1.0, repeating) for continuous effects
+    pub loop_t: Option<f64>,
+
+    /// Current animation phase (Entering/Dwelling/Exiting/Finished)
+    pub phase: Option<Phase>,
+
+    /// Render-time runtime parameter map exposed to spatial shaders.
+    pub runtime_params: Arc<ShaderRuntimeParams>,
+}
+
+impl Default for CompositionOptions<'_> {
+    fn default() -> Self {
+        Self {
+            sampler_spec: None,
+            samplers: Cow::Borrowed(&[]),
+            masks: Cow::Borrowed(&[]),
+            mask_combine_mode: MaskCombineMode::All,
+            filters: Cow::Borrowed(&[]),
+            shader_layers: SmallVec::new(),
+            shadow: None,
+            shadow_element_rect: None,
+            preserve_unfilled: true,
+            t: 0.0,
+            loop_t: None,
+            phase: None,
+            runtime_params: Arc::default(),
+        }
+    }
+}
+
+impl<'a> CompositionOptions<'a> {
+    /// Return the effective sampler chain for this render call.
+    pub fn effective_samplers(&self) -> Cow<'_, [SamplerSpec]> {
+        if !self.samplers.is_empty() {
+            return Cow::Borrowed(self.samplers.as_ref());
+        }
+        match &self.sampler_spec {
+            Some(sampler) => Cow::Owned(vec![sampler.clone()]),
+            None => Cow::Borrowed(&[]),
+        }
+    }
+
+    /// True when the effective sampler chain contains at least one active
+    /// sampler.
+    pub fn has_active_sampler(&self) -> bool {
+        self.effective_samplers()
+            .iter()
+            .any(|sampler| !matches!(sampler, SamplerSpec::None))
+    }
+
+    /// Set the ordered sampler chain.
+    pub fn with_samplers(mut self, samplers: impl Into<Cow<'a, [SamplerSpec]>>) -> Self {
+        self.samplers = samplers.into();
+        if self.sampler_spec.is_none() {
+            self.sampler_spec = self.samplers.first().cloned();
+        }
+        self
+    }
+
+    /// Add a sampler to the ordered sampler chain.
+    pub fn with_sampler(mut self, sampler: SamplerSpec) -> Self {
+        if self.sampler_spec.is_none() {
+            self.sampler_spec = Some(sampler.clone());
+        }
+        match &mut self.samplers {
+            Cow::Borrowed([]) => {
+                self.samplers = Cow::Owned(vec![sampler]);
+            }
+            Cow::Borrowed(existing) => {
+                let mut owned = existing.to_vec();
+                owned.push(sampler);
+                self.samplers = Cow::Owned(owned);
+            }
+            Cow::Owned(existing) => {
+                existing.push(sampler);
+            }
+        }
+        self
+    }
+
+    /// Add a single mask (convenience method).
+    pub fn with_mask(mut self, mask: MaskSpec) -> Self {
+        match &mut self.masks {
+            Cow::Borrowed([]) => {
+                self.masks = Cow::Owned(vec![mask]);
+            }
+            Cow::Borrowed(existing) => {
+                let mut owned = existing.to_vec();
+                owned.push(mask);
+                self.masks = Cow::Owned(owned);
+            }
+            Cow::Owned(existing) => {
+                existing.push(mask);
+            }
+        }
+        self
+    }
+
+    /// Add multiple masks.
+    pub fn with_masks(mut self, masks: impl Into<Cow<'a, [MaskSpec]>>) -> Self {
+        self.masks = masks.into();
+        self
+    }
+
+    /// Set the mask combine mode.
+    pub fn with_mask_combine_mode(mut self, mode: MaskCombineMode) -> Self {
+        self.mask_combine_mode = mode;
+        self
+    }
+
+    /// Add a single filter (convenience method).
+    pub fn with_filter(mut self, filter: FilterSpec) -> Self {
+        match &mut self.filters {
+            Cow::Borrowed([]) => {
+                self.filters = Cow::Owned(vec![filter]);
+            }
+            Cow::Borrowed(existing) => {
+                let mut owned = existing.to_vec();
+                owned.push(filter);
+                self.filters = Cow::Owned(owned);
+            }
+            Cow::Owned(existing) => {
+                existing.push(filter);
+            }
+        }
+        self
+    }
+
+    /// Add multiple filters.
+    pub fn with_filters(mut self, filters: impl Into<Cow<'a, [FilterSpec]>>) -> Self {
+        self.filters = filters.into();
+        self
+    }
+
+    /// Add a grouped V3 spatial family plus its executable shader reference.
+    pub fn try_with_v3_shader_family(
+        mut self,
+        family: &VfxSpatialShaderFamily,
+        shader: &'a dyn StyleShader,
+        region: StyleRegion,
+    ) -> Result<Self, TryLowerV3SpatialShaderError> {
+        self.shader_layers
+            .push(ShaderWithRegion::try_from_v3_shader_family(
+                family, shader, region,
+            )?);
+        Ok(self)
+    }
+
+    /// Add a shader with its region constraint.
+    pub fn with_shader_layer(mut self, shader: &'a dyn StyleShader, region: StyleRegion) -> Self {
+        self.shader_layers.push(ShaderWithRegion {
+            shader,
+            region,
+            v3_family: None,
+            shader_label: None,
+        });
+        self
+    }
+
+    /// Set the shadow specification.
+    ///
+    /// When set, the compositor will render a shadow that extends beyond the
+    /// element dimensions and receives the same mask treatment as the element.
+    ///
+    /// **Note:** This increases the rendered area by the shadow offset.
+    /// A 30x12 element with offset (2, 1) renders to a 32x13 area.
+    pub fn with_shadow(mut self, shadow: impl Into<ShadowSpec>) -> Self {
+        self.shadow = Some(shadow.into());
+        self
+    }
+
+    /// Restrict shadow generation to one sub-rectangle of the source grid.
+    pub fn with_shadow_element_rect(mut self, shadow_element_rect: Rect) -> Self {
+        self.shadow_element_rect = Some(shadow_element_rect);
+        self
+    }
+
+    /// Set render-time runtime parameters exposed to spatial shaders.
+    pub fn with_runtime_params(mut self, runtime_params: Arc<ShaderRuntimeParams>) -> Self {
+        self.runtime_params = runtime_params;
+        self
+    }
+
+    /// Returns the grouped V3 family form for shader layers that were built
+    /// through a lowering-aware seam.
+    pub fn v3_shader_families(&self) -> Vec<VfxSpatialShaderFamily> {
+        self.shader_layers
+            .iter()
+            .filter_map(|layer| layer.v3_family.clone())
+            .collect()
+    }
+
+    /// Control whether unfilled cells preserve destination content.
+    ///
+    /// Default is `true`, which allows underlying content to show through in
+    /// shadow corner regions that aren't covered by the shadow geometry.
+    pub fn with_preserve_unfilled(mut self, preserve: bool) -> Self {
+        self.preserve_unfilled = preserve;
+        self
+    }
+}
+
+// <FILE>tui-vfx-compositor-next/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
+// <VERS>END OF VERSION: 3.3.0</VERS>
