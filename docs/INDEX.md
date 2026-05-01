@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.43.0</VERS> -->
-<!-- <WCTX>V3.1 docs indexing: add first parallel migration lane results.</WCTX> -->
-<!-- <CLOG>1.43.0: add clocks and timing architecture note.
+<!-- <VERS>VERSION: 1.44.0</VERS> -->
+<!-- <WCTX>Compositor-next Phase 0: index current-state fence for vertical implementation.</WCTX> -->
+<!-- <CLOG>1.44.0: add compositor-next current-state fence.
+1.43.0: add clocks and timing architecture note.
 1.42.0: add compositor-next vertical implementation plan.
 1.41.0: add architecture hub and v3.1 schema-boundary/primitive-workbench north-star docs.
 1.40.0: add v3.1 player dense cell-capture SQLite guide.
@@ -138,6 +139,7 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 - [arch/INDEX.md](arch/INDEX.md) — Architecture hub for foundational v3.1 schema-boundary and primitive-workbench north-star docs.
 - [arch/compositor-next-vertical-implementation-plan.md](arch/compositor-next-vertical-implementation-plan.md) — Detailed plan for copying the hardened compositor into compositor-next, then migrating primitive-by-primitive through vertical schema/runtime/validation slices.
+- [arch/compositor-next-current-state-fence.md](arch/compositor-next-current-state-fence.md) — Phase 0 current-state fence separating pre-existing dirty/exploratory work from compositor-next-owned vertical implementation.
 - [arch/CLOCKS_AND_TIMING.md](arch/CLOCKS_AND_TIMING.md) — Architecture note separating current and proposed clocks/cadences: lifecycle clocks, phase timing, element timing, sample time, presentation FPS, semantic update cadence, and primitive motion parameters.
 - [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, data models, responsibilities, co-located primitive source trees, and validation discipline.
 - [arch/primitive-workbench-schema-driven-workflow.md](arch/primitive-workbench-schema-driven-workflow.md) — Draft Primitive Workbench workflow for schema-driven primitive scaffolding, generated assets, migration mappings, commonality extraction, and validation gates.
@@ -213,4 +215,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.43.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.44.0</VERS> -->
