@@ -1,11 +1,62 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Compositor-next execution handoff: paused parallel slice work is preserved while integrated v3.1 slices are corrected into OFPF-sized modules.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — record OFPF structural correction checkpoint and preserved paused slice worktrees.
+<!-- <VERS>VERSION: 0.10.2</VERS> -->
+<!-- <WCTX>Compositor-next execution handoff: pure v3.1 slices use exact write scopes in the existing repo; preserved worktrees are recovery artifacts, not a future copy pattern.</WCTX> -->
+<!-- <CLOG>0.10.2: PATCH — add missing content/style README anchors to cover all v3.1 effect families.
+0.10.1: PATCH — record README anchor directories for future shader/filter/mask/sampler slices.
+0.10.0: MINOR — record compost crate pivot: build a minimal v3.1-native skeleton first, then rename wrapper later if no consumers.
+0.9.0: MINOR — remove v31 from the intended directory forecast; compositor-next is v3.1-native, while old compositor is read-only reference.
+0.8.2: PATCH — add the concrete OFPF forecast tree that every primitive packet must include before coding.
+0.8.1: PATCH — add explicit broader-task anchor so resumed sessions keep the primitive-by-primitive v3.1 migration goal in view.
+0.8.0: MINOR — clarify subagent packets must not create per-slice repo/crate/worktree copies; preserved worktrees are temporary recovery artifacts.
+0.7.0: MINOR — add hard work-packet directive: pure v3.1 end-to-end, no CompositionSpec/legacy lowering adapters, halt on adapter attempts.
+0.6.0: MINOR — record OFPF structural correction checkpoint and preserved paused slice worktrees.
 0.5.0: MINOR — sign off shader.borderSweep and record active parallel slice queue.
 0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.</CLOG> -->
 
 # Compositor-Next Agent Workflow Handoff
+
+**HARD DIRECTIVE — PURE v3.1 END TO END:** The goal of compositor-next is a pure v3.1 system from recipe load through primitive execution. Work packets must migrate the robust/proven primitive logic into the same runtime file tree while lightly updating implementations to consume canonical v3.1 schema fields directly. Any attempt to adapt v3.1 into `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge/shim DTOs, or transitional lowering layers is a failure. Halt immediately if a slice starts adding that kind of adapter. The same work is the opportunity to split large legacy files into OFPF-compliant, professionally named, size-guideline-respecting modules.
+
+
+## Broader Task Anchor — Never Lose Sight Of This
+
+The broader task is the **compositor-next vertical migration for tui-vfx v3.1**.
+The goal is to build `tui-vfx-compositor-next` as the clean future compositor
+path where a v3.1 recipe is loaded, validated, represented as canonical v3.1
+state, and then rendered by compositor-next primitives directly.
+
+```text
+v3.1 recipe
+  → recipe loader / validator
+  → canonical loaded v3.1 structure
+  → compositor-next primitive execution
+  → rendered output
+```
+
+This means **v3.1 all the way through**. We are migrating existing, proven
+compositor primitives/effects into `tui-vfx-compositor-next` one vertical slice
+at a time. Each slice starts from robust existing behavior, preserves good
+rendering logic, lightly reshapes it to consume canonical v3.1 schema fields
+directly, validates at recipe load, proves the path with v3.1 tests, keeps the
+file layout OFPF-compliant and comparable to `tui-vfx-compositor/src/`, signs
+off the primitive, then repeats.
+
+The work is not a bridge, shim, legacy lowering layer, second data model, broad
+recipe migration, horizontal infrastructure project, or per-primitive repo/crate
+copying exercise. The intended migration is:
+
+```text
+existing hardened primitive logic
+        │
+        ▼
+same conceptual primitive in compositor-next
+        │
+        ▼
+updated to read v3.1 schema fields directly
+        │
+        ▼
+validated with a real v3.1 recipe slice
+```
 
 ## Purpose
 
@@ -21,11 +72,41 @@ The target path is:
 canonical v3.1 RecipeDocument
   → LoadedV31Recipe::load(...)
   → load-time descriptor/catalog/direct-render validation
-  → render_v31_recipe(...)
-  → tui-vfx-compositor-next copied runtime behavior
+  → compositor-next primitive implementation reads v3.1 nodes/source directly
+  → robust copied primitive logic, renamed/reshaped to v3.1 schema fields
 ```
 
-No new bridge, shim, legacy-input, or alias-acceptance layer should be added.
+No new bridge, shim, legacy-input, alias-acceptance, `CompositionSpec` lowering, `ShaderLayerSpec` lowering, `SpatialShaderType` adapter, or other transition layer should be added. If a work packet starts adding one, stop and report the packet as failed.
+
+## Compost Crate Pivot
+
+The current recovery direction is to build `tui-vfx-compost` as a clean
+crate-level staging ground instead of continuing to repair the copied
+`compositor-next` tree in place. `tui-vfx-compositor` remains read-only
+reference material. `tui-vfx-compost` should contain only the minimum native
+v3.1 infrastructure required to compile and run migrated slices:
+
+```text
+loader/      accepts canonical v3.1 recipes once
+validation/  rejects unsupported direct-render inputs at load time
+source/      materializes canonical source inputs
+render/      owns frame/context/render orchestration
+shaders/     contains only signed migrated shader slices
+filters/     empty until first filter slice is migrated
+masks/       empty until first mask slice is migrated
+samplers/    empty until first sampler slice is migrated
+```
+
+The first compost slice is `shader.linearGradient`. It proves load validation,
+source materialization, direct render orchestration, and one migrated shader
+without a `src/v31` path, legacy DTO lowering, or crate copies. The primitive
+family directories now include README anchors for future agents:
+`src/shaders/`, `src/filters/`, `src/masks/`, `src/samplers/`, `src/content/`, `src/styles/`, and the matching
+`src/validation/{filters,masks,samplers,content,styles}/` directories. Those READMEs define
+what belongs in each directory and show example OFPF file names. Once the crate
+shape is accepted and there are no external consumers, the package/wrapper can
+be renamed to the final compositor-next name later; that rename should be a
+Cargo/package/API wiring change, not another architecture migration.
 
 ## Current Scoreboard
 
@@ -64,7 +145,7 @@ Human-facing progress banner:
 ║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
 ╠════════════════════════════════════════════════════╣
 ║ Signed:  5 / 120  █████░░░░░░░░░░░░░░░░░  4.2%   ║
-║ Active:  paused — do not merge slice worktrees    ║
+║ Active:  paused — no new worktrees/copies         ║
 ║ Queue:   fix OFPF structure, then resume slices    ║
 ╚════════════════════════════════════════════════════╝
 ```
@@ -219,7 +300,9 @@ style.spatial
 Parallel slice work is paused until the integrated compositor-next v3.1 code is
 back in OFPF-shaped files. Do **not** delete, prune, reset, overwrite, or merge
 these worktrees while performing the structural correction. They are preserved
-recovery material for later review.
+recovery material for later review. A leader-provided worktree is already enough
+isolation; agents must not create nested clones, nested worktrees, or copied
+compositor crates inside it.
 
 Preserved slice worktrees:
 
@@ -265,7 +348,7 @@ Lead agent
 Low-level coding agents
   - implement one vertical primitive slice at a time
   - use TDD red/green/refactor
-  - stay inside their assigned worktree and write scope
+  - stay inside the assigned workspace/files and exact write scope
   - do not commit
   - report changed files, unsupported decisions, tests, and risks
 ```
@@ -277,44 +360,155 @@ coherence, de-slop, and verification.
 
 ## OFPF Structure Rules for Direct v3.1 Code
 
-The direct v3.1 compositor-next path must follow the existing
-`tui-vfx-compositor/src/` style: small responsibility-named modules instead of
-large catch-all hubs. The former `src/v31/load.rs`, `src/v31/render.rs`, and
-monolithic `tests/test_v31_direct_recipe.rs` pattern was rejected.
+`tui-vfx-compositor` is **read-only reference material** for this migration. It
+is where workers inspect the hardened primitive logic and nearby file structure.
+Do not edit it during compositor-next migration slices.
 
-Current intended layout:
+`tui-vfx-compositor-next` is the v3.1-native compositor. Because the crate
+itself is the new v3.1 path, the intended final implementation tree must not put
+normal code under a `v31/` directory. A `v31/` directory makes v3.1 look like a
+mode, bridge, or temporary adapter; it will pollute future packet structure.
+Directory names should describe responsibilities, not the schema version.
+
+The compositor-next tree should stay proximate to `tui-vfx-compositor/src/`:
+copy/reference a primitive's proven logic from the same family directory, then
+lightly update it to read canonical v3.1 schema fields directly in
+`tui-vfx-compositor-next`. When a legacy file is too large or mixes
+responsibilities, this migration is the chance to split it into smaller
+OFPF-named modules with clear cohesion.
+
+The rejected pattern is any new layer that translates canonical v3.1 nodes into
+old compositor DTOs. Do not recreate a `v31/`, `rendering/`, `bridge/`,
+`adapter/`, or `lowering/` tree that lowers to `CompositionSpec`,
+`ShaderLayerSpec`, `SpatialShaderType`, or similarly legacy-shaped structures.
+
+Forecast OFPF file tree for every primitive packet:
 
 ```text
-crates/tui-vfx-compositor-next/src/v31/
-  cls_loaded_v31_recipe.rs
-  cls_v31_load_error.rs
-  validation/
-    col_direct_input.rs
-    fnc_validate_direct_source_inputs.rs
-    orc_validate_direct_render_contract.rs
-    shaders/fnc_validate_<primitive>_direct_inputs.rs
-  rendering/
-    cls_v31_frame.rs
-    cls_v31_render_error.rs
-    cls_v31_sample_context.rs
-    fnc_render_v31_recipe.rs
-    source/fnc_source_grid_from_inputs.rs
-    shaders/fnc_<primitive>_shader.rs
+# READ-ONLY REFERENCE — inspect only, never edit in compositor-next packets
+crates/tui-vfx-compositor/src/
+  context/
+  filters/cls_<filter_primitive>.rs
+  masks/cls_<mask_primitive>.rs
+  samplers/cls_<sampler_primitive>.rs
+  pipeline/
+  traits/
+  types/
+  utils/
 
-crates/tui-vfx-compositor-next/tests/v31_direct_recipe/
-  support.rs
-  test_load_contract.rs
-  test_shader_<primitive>.rs
+# WRITE TARGET — v3.1-native compositor, no src/v31 directory in final layout
+crates/tui-vfx-compositor-next/src/
+  context/
+    cls_compositor_ctx.rs                         # expected edit only if context contract changes
+    mod.rs                                        # expected edit only for module wiring
+
+  loader/                                         # recipe load boundary, likely future extractable SSOT
+    cls_loaded_recipe.rs                          # load-accepted canonical v3.1 wrapper
+    cls_load_error.rs                             # validation/load diagnostics
+    mod.rs                                        # narrow export only
+
+  validation/                                     # recipe-load validation; no runtime lowering
+    col_direct_input.rs                           # shared validation input helpers
+    fnc_validate_source_inputs.rs                 # source input validation
+    orc_validate_render_contract.rs               # dispatch only; no primitive logic hub
+    mod.rs                                        # narrow export/dispatch edit only
+    shaders/
+      fnc_validate_<shader_primitive>_inputs.rs   # one shader validation file per slice
+      mod.rs                                      # narrow export/dispatch edit only
+    filters/
+      fnc_validate_<filter_primitive>_inputs.rs   # create only when first filter slice lands
+      mod.rs
+    masks/
+      fnc_validate_<mask_primitive>_inputs.rs     # create only when first mask slice lands
+      mod.rs
+    samplers/
+      fnc_validate_<sampler_primitive>_inputs.rs  # create only when first sampler slice lands
+      mod.rs
+
+  source/                                         # source materialization from canonical v3.1 source fields
+    col_source_grid_from_text.rs                  # expected edit only for source field semantics
+    fnc_source_grid_from_inputs.rs                # expected edit only for source field semantics
+    mod.rs                                        # narrow export edit only
+
+  render/                                         # direct render orchestration; not a lowerer
+    cls_frame.rs                                  # direct-render frame output type
+    cls_render_error.rs                           # direct-render diagnostics
+    cls_sample_context.rs                         # explicit sample context
+    col_collect_graph_step_nodes.rs               # graph node collection helper
+    fnc_render_recipe.rs                          # thin orchestration only
+    mod.rs                                        # narrow export/dispatch edit only
+
+  shaders/                                        # shader.* primitive execution from canonical v3.1 fields
+    cls_shader_node.rs                            # typed direct shader node/value wrapper if needed
+    col_shader_input.rs                           # shared shader input helper if needed
+    fnc_<shader_primitive>_style.rs               # one shader primitive implementation per file
+    mod.rs                                        # narrow dispatch/export only
+
+  filters/                                        # filter.* runtime family, proximate to legacy compositor tree
+    cls_<filter_primitive>.rs                     # expected edit/new for filter slices
+    fnc_<filter_primitive>_<helper>.rs            # split-out helper when legacy file is oversized/mixed
+    test_cls_<filter_primitive>.rs                # expected new/edit for focused unit tests when useful
+    mod.rs                                        # narrow export/registration edit only
+
+  masks/                                          # mask.* runtime family, proximate to legacy compositor tree
+    cls_<mask_primitive>.rs                       # expected edit/new for mask slices
+    col_<mask_helper>.rs                          # expected new only for small shared mask helpers
+    fnc_<mask_primitive>_<helper>.rs              # split-out helper when needed
+    mod.rs                                        # narrow export/registration edit only
+
+  samplers/                                       # sampler.* runtime family, proximate to legacy compositor tree
+    cls_<sampler_primitive>.rs                    # expected edit/new for sampler slices
+    fnc_<sampler_primitive>_<helper>.rs           # split-out helper when needed
+    mod.rs                                        # narrow export/registration edit only
+
+  pipeline/                                       # compositor execution orchestration, not schema lowering
+    orc_render_pipeline.rs                        # expected edit only if direct primitive execution requires it
+    fnc_render_pipeline_*.rs                      # expected edit only for existing pipeline behavior
+    cls_composition_spec.rs                       # legacy-readonly/remove deliberately; do not use for v3.1 slices
+    cls_shader_layer_spec.rs                      # legacy-readonly/remove deliberately; do not use for v3.1 slices
+    mod.rs                                        # narrow export/registration edit only
+
+  traits/                                         # stable runtime traits
+    filter.rs                                     # expected edit only for real trait contract change
+    mask.rs                                       # expected edit only for real trait contract change
+    sampler.rs                                    # expected edit only for real trait contract change
+    mod.rs                                        # narrow export edit only
+
+  types/                                          # runtime value types, not bridge DTOs
+    cls_<primitive_or_value_type>.rs              # expected edit/new only when a runtime type is needed
+    cls_filter_spec.rs                            # should-not-use for new v3.1 path unless deliberately removed
+    cls_mask_spec.rs                              # should-not-use for new v3.1 path unless deliberately removed
+    cls_sampler_spec.rs                           # should-not-use for new v3.1 path unless deliberately removed
+    mod.rs                                        # narrow export edit only
+
+  utils/                                          # small pure helpers only
+    fnc_<specific_helper>.rs                      # expected new only if reused and under OFPF size guidance
+    mod.rs                                        # narrow export edit only
+
+crates/tui-vfx-compositor-next/tests/direct_recipe/
+  support.rs                                      # shared test helpers only
+  test_load_contract.rs                           # general loader/strictness contract
+  test_<family>_<primitive>.rs                    # one primitive contract/e2e test file per slice
+
+docs/arch/compositor-next-agent-workflow-handoff.md # expected edit for scoreboard/signoff only
 ```
+
+Packet authors must paste the relevant subset of this tree into every dispatched
+primitive packet and mark each path as read-only reference, expected edit,
+expected new file, generated, or should-not-touch. If a slice needs a path
+outside the forecast subset, the agent must stop and report the proposed
+deviation before broad edits. The leader must reject work that invents a new
+top-level layout, adds a versioned path such as `src/v31/`, adds a `rendering/`
+adapter tree, expands hub files with primitive logic, edits
+`tui-vfx-compositor`, or creates files not explained by the packet tree.
 
 OFPF guardrails for future slices:
 
-- Do not add new primitive logic to a shared hub file.
-- Add one rendering module and one validation module per migrated primitive when
-  the primitive needs code.
-- Keep `fnc_render_v31_recipe.rs` and
-  `orc_validate_direct_render_contract.rs` as dispatch/orchestration surfaces
-  only.
+- Do not add primitive logic to a shared hub file.
+- Do not add legacy DTO adapters or lowering modules.
+- Add one validation module and one direct v3.1 primitive implementation module
+  per migrated primitive when the primitive needs code.
+- Keep orchestration files as dispatch surfaces only.
 - Split any file approaching the project size guide rather than rationalizing a
   growing hub. The normal target is about 300 LOC; anything above 500 LOC
   requires an explicit cohesion justification before commit.
@@ -323,7 +517,7 @@ OFPF guardrails for future slices:
 
 ## Per-Slice Contract
 
-Every primitive slice must be vertical and complete before signoff:
+Every primitive slice must be vertical and complete before signoff. The worker report must list every created or edited file and identify whether it was edited-existing, new-authored, copied, moved, or generated:
 
 1. Inspect the v3.1 descriptor entry.
 2. Inspect existing copied compositor/style implementation.
@@ -379,24 +573,26 @@ tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 Use default/no-role `gpt-5.5` low agents for coding work.
 
 ```text
-Coding task: implement one vertical slice in isolated worktree <WORKTREE>.
-You are not alone in the repo; do not touch other worktrees and do not commit.
+Coding task: implement one vertical slice in the existing assigned repository/workspace.
+Use only the assigned leader-provided workspace/worktree. Do not create a new git worktree, clone, repo copy, nested checkout, or crate copy. You are not alone in the repo; touch only the exact write-scope files and do not commit.
 Primitive: <PRIMITIVE_ID>.
 
 Follow repo workflow:
 - TDD red/green/refactor.
 - v3.1 only.
 - No bridge/shim/legacy aliases.
-- Validation happens at LoadedV31Recipe::load.
-- Rendering passes the loaded v3.1 structure directly through
-  tui-vfx-compositor-next::v31.
+- No `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, or legacy-shaped lowering layer in the v3.1 path.
+- Validation happens at `LoadedV31Recipe::load`.
+- Primitive execution reads canonical v3.1 node/source fields directly.
 - Use OFPF tools to inspect descriptors and existing copied compositor/style
   implementation.
 
+Expected file tree / file-name breakdown must be included in every dispatched primitive packet. The packet should list likely validation, primitive-runtime, test, and docs files, marking each as expected edit/new/generated/should-not-touch. Deviations from that tree must be reported before broad edits.
+
 Suggested scope:
 - one validation module under `crates/tui-vfx-compositor-next/src/v31/validation/shaders/`
-- one rendering module under `crates/tui-vfx-compositor-next/src/v31/rendering/shaders/`
-- narrow dispatch wiring in the validation/rendering orchestrators
+- one direct v3.1 primitive module in the same compositor-next runtime tree used by the copied primitive family
+- narrow dispatch wiring only where unavoidable
 - one primitive test module under `crates/tui-vfx-compositor-next/tests/v31_direct_recipe/`
 - docs/signoff if needed
 
@@ -409,26 +605,26 @@ Keep the change minimal and vertical:
 - Validate every authored source/effect input remains literal.
 
 Run cargo fmt and targeted tests.
-Return changed files, unsupported decisions, test commands/results, and
-integration risks. Do not commit.
+Return changed files; every created or edited file with origin/action marked `edited-existing`, `new-authored`, `copied`, `moved`, or `generated`; unsupported decisions; test commands/results; and integration risks. Do not commit.
 ```
 
 ## Integration Procedure
 
 When a worker finishes:
 
-1. Inspect its worktree status and diff.
-2. Review only the slice-owned files first.
-3. Run targeted tests in that worktree.
-4. If acceptable, merge or cherry-pick into `master` after ensuring `master` is
+1. Inspect the assigned workspace status and diff.
+2. Review the touched-file list every time before reviewing code; unexpected copied/generated/new files or broad edits are blockers.
+3. Review only the slice-owned files first.
+4. Run targeted tests in that workspace.
+5. If acceptable, merge or cherry-pick into `master` after ensuring `master` is
    clean.
-5. Resolve conflicts manually as lead; do not let agents blindly merge each
+6. Resolve conflicts manually as lead; do not let agents blindly merge each
    other.
-6. Run ai-de-slop on the integrated changed files.
-7. Run formal architect and code review.
-8. Iterate on review blockers.
-9. Run full phase verification.
-10. Commit in the project’s current commit-message style:
+7. Run ai-de-slop on the integrated changed files.
+8. Run formal architect and code review.
+9. Iterate on review blockers.
+10. Run full phase verification.
+11. Commit in the project’s current commit-message style:
 
 ```text
 <subject>
@@ -515,7 +711,8 @@ record evidence and revisit it when the schema audit/schema-diet pass begins.
 
 Current queue is paused until the OFPF structural correction is committed on
 `master`. Do not dispatch more agents and do not merge preserved slice worktrees
-until that commit exists.
+until that commit exists. When dispatch resumes, the existing assigned worktree
+is the workspace; do not ask agents to create another copy inside it.
 
 First item to revisit after the correction:
 
@@ -568,7 +765,7 @@ committed primitive so work is not repeated.
    - `docs/arch/primitive-workbench-schema-driven-workflow.md`
    - this file
 3. Check `git status --short` in `/usr/projects/tui-vfx`.
-4. Check worktrees:
+4. Check preserved worktrees only for recovery/status; do not create new ones:
 
 ```bash
 git worktree list --porcelain
@@ -578,8 +775,8 @@ git worktree list --porcelain
 6. Confirm the OFPF structural correction commit exists before reviewing any
    paused slice worktree.
 7. Inspect preserved slice worktrees manually before relaunching agents; do not
-   delete or reset them as cleanup.
+   delete or reset them as cleanup, and do not create replacements by default.
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.10.2</VERS> -->

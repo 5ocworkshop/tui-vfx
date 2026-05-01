@@ -1,0 +1,29 @@
+# <FILE>crates/tui-vfx-compost/Cargo.toml</FILE> - <DESC>Manifest for v3.1-native compositor skeleton crate</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Compost is the clean crate-level staging ground for the future compositor-next rename; it consumes canonical v3.1 recipes directly.</WCTX>
+# <CLOG>0.1.0: INIT — add v3.1-native compositor skeleton manifest.</CLOG>
+
+[package]
+name = "tui-vfx-compost"
+description = "v3.1-native compositor skeleton for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+tui-vfx-contract.workspace = true
+tui-vfx-style.workspace = true
+tui-vfx-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+# <FILE>crates/tui-vfx-compost/Cargo.toml</FILE> - <DESC>Manifest for v3.1-native compositor skeleton crate</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

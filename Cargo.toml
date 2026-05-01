@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.15.0</VERS>
-# <WCTX>Direct v3.1 path — add player-next as a pure v3.1 facade over compositor-next v31.</WCTX>
-# <CLOG>0.15.0: MINOR add tui-vfx-player-next workspace member/dependency for pure v3.1 visual testing.
+# <VERS>VERSION: 0.16.0</VERS>
+# <WCTX>Direct v3.1 path — add compost as the clean crate-level staging ground before a later compositor-next rename.</WCTX>
+# <CLOG>0.16.0: MINOR add tui-vfx-compost workspace member/dependency for pure v3.1-native skeleton work.
+# 0.15.0: MINOR add tui-vfx-player-next workspace member/dependency for pure v3.1 visual testing.
 # 0.14.0: MINOR add tui-vfx-compositor-next workspace member/dependency for copy-first compositor-next baseline.</CLOG>
 
 [workspace]
@@ -21,6 +22,7 @@ members = [
     "crates/tui-vfx-core-macros",
     "crates/tui-vfx-geometry",
     "crates/tui-vfx-compositor",
+    "crates/tui-vfx-compost",
     "crates/tui-vfx-compositor-next",
     "crates/tui-vfx-style",
     "crates/tui-vfx-content",
@@ -53,6 +55,7 @@ tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.11.0" }
 tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.11.0" }
 tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.11.0" }
 tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.11.0" }
+tui-vfx-compost = { path = "crates/tui-vfx-compost", version = "0.11.0" }
 tui-vfx-compositor-next = { path = "crates/tui-vfx-compositor-next", version = "0.11.0" }
 tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.11.0" }
 tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.11.0" }
@@ -80,8 +83,6 @@ tokio = { version = "1.48", features = ["rt", "time"] }
 # Sister projects (co-designed; see docs/internal/plans/splash-library-and-vfx-integration.md)
 rocketsplash-rt = "0.2.2"
 
-# <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>END OF VERSION: 0.15.0</VERS>
 # Example/demo workloads need meaningful optimization in dev too; otherwise
 # local cargo run / cargo test significantly under-represents real runtime
 # performance and makes the stack look slower than it is.
@@ -90,3 +91,6 @@ opt-level = 2
 
 [profile.dev.package."*"]
 opt-level = 3
+
+# <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
+# <VERS>END OF VERSION: 0.16.0</VERS>

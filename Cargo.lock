@@ -2397,6 +2397,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-compost"
+version = "0.11.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tui-vfx-contract",
+ "tui-vfx-style",
+ "tui-vfx-types",
+]
+
+[[package]]
 name = "tui-vfx-content"
 version = "0.11.0"
 dependencies = [
