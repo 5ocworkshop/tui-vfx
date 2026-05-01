@@ -87,6 +87,7 @@ fn validate_direct_render_contract(recipe: &RecipeDocument) -> Result<(), V31Loa
             "shader.linearGradient" => validate_linear_gradient_direct_inputs(node_id, node)?,
             "shader.highlighter" => validate_highlighter_direct_inputs(node_id, node)?,
             "shader.glistenBand" => validate_glisten_band_direct_inputs(node_id, node)?,
+            "shader.focusField" => validate_focus_field_direct_inputs(node_id, node)?,
             _ => {}
         }
     }
@@ -272,6 +273,55 @@ fn validate_highlighter_direct_inputs(
         "applyTo",
         &["foreground", "background", "both"],
     )?;
+    Ok(())
+}
+
+fn validate_focus_field_direct_inputs(
+    node_id: &NodeId,
+    node: &NodeSpec,
+) -> Result<(), V31LoadError> {
+    require_declared_inputs_literal(node_id, node)?;
+
+    require_color_input(node_id, node, "color")?;
+    require_integer_valued_number_input(node_id, node, "centerX")?;
+    require_integer_valued_number_input(node_id, node, "centerY")?;
+    require_integer_valued_number_input(node_id, node, "radius")?;
+
+    if node.inputs.contains_key(&EffectInputId::new("intensity")) {
+        require_number_input(node_id, node, "intensity")?;
+    }
+    if node.inputs.contains_key(&EffectInputId::new("applyTo")) {
+        require_enum_value(
+            node_id,
+            node,
+            "applyTo",
+            &["foreground", "background", "both"],
+        )?;
+    }
+    if node.inputs.contains_key(&EffectInputId::new("shape")) {
+        require_enum_value(node_id, node, "shape", &["circle", "ellipse"])?;
+    }
+
+    for input in [
+        "radiusX",
+        "radiusY",
+        "feather",
+        "rectHeight",
+        "rectWidth",
+        "rectX",
+        "rectY",
+    ] {
+        if node.inputs.contains_key(&EffectInputId::new(input)) {
+            return Err(direct_input_error(
+                node_id,
+                node,
+                input,
+                &format!(
+                    "shader.focusField input `{input}` is not supported by direct v3.1 rendering."
+                ),
+            ));
+        }
+    }
     Ok(())
 }
 

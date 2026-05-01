@@ -544,6 +544,152 @@ fn rejects_descriptor_valid_highlighter_modes_without_direct_support() {
     }
 }
 
+fn focus_field_recipe_value() -> serde_json::Value {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["id"] = serde_json::Value::String("compositorNextDirectFocusField".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "text", "value": "FOCUS" }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 5 }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["height"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 1 }
+    });
+    recipe["scenes"][0]["width"] = serde_json::Value::from(5);
+    recipe["scenes"][0]["height"] = serde_json::Value::from(1);
+    recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("nodes object")
+        .remove("gradient");
+    recipe["graph"]["nodes"]["focusField"] = serde_json::json!({
+        "id": "focusField",
+        "effect": "shader.focusField",
+        "inputs": {
+            "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 255, "a": 255 } } },
+            "centerX": { "kind": "literal", "value": { "kind": "number", "value": 2.0 } },
+            "centerY": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
+            "radius": { "kind": "literal", "value": { "kind": "number", "value": 2.0 } },
+            "intensity": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+        },
+        "outputs": {},
+        "activePhases": [],
+        "scope": { "kind": "all" },
+        "cellWritePolicy": "writeCell",
+        "roleWritePolicy": { "kind": "preserveDestination" }
+    });
+    recipe["graph"]["order"] = serde_json::json!(["focusField"]);
+    recipe
+}
+
+#[test]
+fn load_validated_v31_focus_field_renders_directly_in_compositor_next() {
+    let catalog = primitive_catalog();
+    let loaded = LoadedV31Recipe::load(recipe_from_value(focus_field_recipe_value()), &catalog)
+        .expect("focus field recipe validates at load time");
+    let frame = render_v31_recipe(&loaded, &V31SampleContext::default())
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.recipe_id, "compositorNextDirectFocusField");
+    assert_eq!(
+        frame.applied_effect_kinds,
+        vec!["shader.focusField".to_string()]
+    );
+    assert_eq!(frame.grid.cell((2, 0)).unwrap().bg, Color::BLUE);
+    assert_eq!(frame.grid.cell((4, 0)).unwrap().bg, Color::BLACK);
+}
+
+#[test]
+fn rejects_descriptor_valid_focus_field_rect_shape_without_direct_support() {
+    let catalog = primitive_catalog();
+    let mut recipe = focus_field_recipe_value();
+    recipe["graph"]["nodes"]["focusField"]["inputs"]["shape"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "enum", "value": "rect" }
+    });
+    recipe["graph"]["nodes"]["focusField"]["inputs"]["rectWidth"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "number", "value": 2.0 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unsupported focusField rect semantics");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.focusField" && input == "shape"
+    ));
+}
+
+#[test]
+fn rejects_runtime_sourced_focus_field_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = focus_field_recipe_value();
+    recipe["graph"]["parameters"]["focusX"] = serde_json::json!({
+        "id": "focusX",
+        "displayName": "Focus X",
+        "description": null,
+        "value": {
+            "kind": "number",
+            "default": { "kind": "number", "value": 2.0 },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "bindable": true
+    });
+    recipe["graph"]["nodes"]["focusField"]["inputs"]["centerX"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "focusX",
+        "fallback": { "kind": "number", "value": 2.0 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects runtime-sourced focusField inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.focusField" && input == "centerX"
+    ));
+}
+
+#[test]
+fn rejects_fractional_focus_field_geometry_at_load_time() {
+    let catalog = primitive_catalog();
+    for input in ["centerX", "centerY", "radius"] {
+        let mut recipe = focus_field_recipe_value();
+        recipe["graph"]["nodes"]["focusField"]["inputs"][input] = serde_json::json!({
+            "kind": "literal",
+            "value": { "kind": "number", "value": 1.5 }
+        });
+
+        let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+            .expect_err("direct v3.1 load rejects fractional focus field geometry");
+
+        assert!(matches!(
+            err,
+            V31LoadError::UnsupportedDirectInput {
+                effect,
+                input: rejected_input,
+                ..
+            } if effect == "shader.focusField" && rejected_input == input
+        ));
+    }
+}
+
 #[test]
 fn load_validated_v31_linear_gradient_renders_directly_in_compositor_next() {
     let catalog = primitive_catalog();

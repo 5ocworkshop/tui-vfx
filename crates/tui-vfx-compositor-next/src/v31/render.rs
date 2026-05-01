@@ -11,10 +11,10 @@ use tui_vfx_contract::{
     Value, ValueSource,
 };
 use tui_vfx_style::models::{
-    ColorConfig, ColorSpace, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
-    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
-    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, SpatialShaderType, StyleRegion,
-    TextContrast,
+    ColorConfig, ColorSpace, FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, GlistenApplyTo,
+    GlistenBandShader, GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection,
+    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
+    LinearGradientShader, SpatialShaderType, StyleRegion, TextContrast,
 };
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
@@ -188,6 +188,14 @@ fn append_node_to_composition(
             applied_effect_kinds.push(node.effect.as_str().to_string());
             Ok(())
         }
+        "shader.focusField" => {
+            spec.shader_layers.push(ShaderLayerSpec {
+                shader: SpatialShaderType::FocusField(focus_field_shader(node)?),
+                region: StyleRegion::All,
+            });
+            applied_effect_kinds.push(node.effect.as_str().to_string());
+            Ok(())
+        }
         other => Err(V31RenderError::Unsupported(format!(
             "Direct v3.1 rendering does not support effect `{other}`."
         ))),
@@ -271,6 +279,21 @@ fn highlighter_shader(node: &NodeSpec) -> Result<HighlighterShader, V31RenderErr
         direction: highlighter_direction_input(node, "direction")?,
         direction_binding: None,
         row_mask: highlighter_row_mask_input(node, "rowMask")?,
+    })
+}
+
+fn focus_field_shader(node: &NodeSpec) -> Result<FocusFieldShader, V31RenderError> {
+    let radius = number_input(node, "radius").max(1.0) as u16;
+    Ok(FocusFieldShader {
+        color: ColorConfig::from(color_input(node, "color")?),
+        shape: focus_field_shape_input(node, "shape")?,
+        center_x: number_input(node, "centerX").max(0.0) as u16,
+        center_y: number_input(node, "centerY").max(0.0) as u16,
+        radius_x: radius,
+        radius_y: radius,
+        intensity: optional_number_input_or(node, "intensity", 1.0).clamp(0.0, 1.0) as f32,
+        apply_to: focus_field_apply_to_input(node, "applyTo")?,
+        ..FocusFieldShader::default()
     })
 }
 
@@ -419,6 +442,33 @@ fn glisten_direction_input(node: &NodeSpec, id: &str) -> Result<GlistenDirection
 
 fn optional_number_input(node: &NodeSpec, id: &str) -> Option<f64> {
     optional_literal_value(node, id).and_then(Value::as_range_number)
+}
+
+fn optional_number_input_or(node: &NodeSpec, id: &str, fallback: f64) -> f64 {
+    optional_number_input(node, id).unwrap_or(fallback)
+}
+
+fn focus_field_shape_input(node: &NodeSpec, id: &str) -> Result<FocusFieldShape, V31RenderError> {
+    match optional_literal_value(node, id).and_then(Value::as_enum_value) {
+        Some("circle") | Some("ellipse") | None => Ok(FocusFieldShape::Ellipse),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.focusField shape `{value}` is not supported by direct v3.1 rendering."
+        ))),
+    }
+}
+
+fn focus_field_apply_to_input(
+    node: &NodeSpec,
+    id: &str,
+) -> Result<FocusFieldApplyTo, V31RenderError> {
+    match optional_literal_value(node, id).and_then(Value::as_enum_value) {
+        Some("foreground") | None => Ok(FocusFieldApplyTo::Foreground),
+        Some("background") => Ok(FocusFieldApplyTo::Background),
+        Some("both") => Ok(FocusFieldApplyTo::Both),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.focusField applyTo `{value}` is not supported by direct v3.1 rendering."
+        ))),
+    }
 }
 
 fn highlighter_apply_to_input(

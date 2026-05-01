@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
 <!-- <WCTX>Compositor-next execution handoff: warmed low-level coding agents implement vertical slices while the lead reviews, verifies, documents, and commits.</WCTX> -->
-<!-- <CLOG>0.2.0: MINOR — advance scoreboard after shader.glistenBand integration and note focusField as the remaining active worktree.
+<!-- <CLOG>0.3.0: MINOR — advance scoreboard after shader.focusField integration and pause with no active slice per user instruction.
+0.2.0: MINOR — advance scoreboard after shader.glistenBand integration and note focusField as the remaining active worktree.
 0.1.0: INIT — document the repeatable two-agent vertical-slice workflow, scoreboard, active worktrees, review gates, and restart instructions.</CLOG> -->
 
 # Compositor-Next Agent Workflow Handoff
@@ -39,7 +40,7 @@ Current descriptor-effect count:
 Signed direct compositor-next v3.1 primitives:
 
 ```text
-3 / 120
+4 / 120
 ```
 
 Signed primitives:
@@ -47,11 +48,12 @@ Signed primitives:
 1. `shader.linearGradient`
 2. `shader.highlighter`
 3. `shader.glistenBand`
+4. `shader.focusField`
 
 Remaining:
 
 ```text
-117 / 120
+116 / 120
 ```
 
 Human-facing progress banner:
@@ -60,10 +62,155 @@ Human-facing progress banner:
 ╔════════════════════════════════════════════════════╗
 ║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
 ╠════════════════════════════════════════════════════╣
-║ Signed:  3 / 120  ███░░░░░░░░░░░░░░░░░░░  2.5%   ║
-║ Active:  1 slice in flight                        ║
-║ Queue:   focusField, borderSweep, revealWipe      ║
+║ Signed:  4 / 120  ████░░░░░░░░░░░░░░░░░░  3.3%   ║
+║ Active:  0 slices — paused at commit boundary     ║
+║ Queue:   borderSweep, revealWipe                  ║
 ╚════════════════════════════════════════════════════╝
+```
+
+## Primitive Completion Tracker
+
+Source of truth: `descriptors/v3.1/packs/primitive.json` effect descriptors. Update this list in the same commit that signs off a primitive.
+
+Completed direct compositor-next v3.1 primitives:
+
+```text
+shader.linearGradient
+shader.highlighter
+shader.glistenBand
+shader.focusField
+```
+
+Outstanding direct compositor-next v3.1 primitives:
+
+```text
+[content]
+content.cellMotion
+content.dissolve
+content.glitchShift
+content.marquee
+content.mirror
+content.morph
+content.numeric
+content.odometer
+content.redact
+content.scramble
+content.scrambleGlitchShift
+content.slideShift
+content.splitFlap
+content.typewriter
+content.wrapIndicator
+content.glyphCascade
+content.glyphParticles
+
+[filter]
+filter.bracketEmphasis
+filter.crt
+filter.dim
+filter.dotIndicator
+filter.edgeGrow
+filter.fadeToCanvas
+filter.greyscale
+filter.hoverBar
+filter.invert
+filter.kittScanner
+filter.matrixRain
+filter.patternFill
+filter.pillButton
+filter.subPixelBar
+filter.tint
+filter.underlineWipe
+filter.vignette
+filter.animatedGlyphRamp
+filter.brailleDust
+filter.charsetNoise
+filter.colorBridgedShade
+filter.glistenSweep
+filter.glyphStyle
+filter.interlaceCurtain
+filter.motionBlur
+filter.rigidShake
+filter.scalarFieldGlyph
+filter.shadeScanner
+filter.subCellShake
+filter.subcellLight
+
+[mask]
+mask.blinds
+mask.cellular
+mask.checkers
+mask.diamond
+mask.dissolve
+mask.iris
+mask.materialize
+mask.materializeCorner
+mask.noiseDither
+mask.none
+mask.pathReveal
+mask.radial
+mask.wipe
+mask.wipeCorner
+
+[sampler]
+sampler.crt
+sampler.crtJitter
+sampler.faultLine
+sampler.radialTwist
+sampler.ripple
+sampler.shredder
+sampler.sineWave
+sampler.bounce
+sampler.gravity
+sampler.pendulum
+sampler.spatialSignal
+
+[shader]
+shader.barberPole
+shader.borderSweep
+shader.diffusion
+shader.radar
+shader.revealWipe
+shader.wayfindingNode
+shader.affordanceWake
+shader.bevel
+shader.chromaticEdge
+shader.coloredOverlay
+shader.concealedLight
+shader.cursor
+shader.edgeSheen
+shader.focusedRowGradient
+shader.fractionalStripeOverlay
+shader.glitchLines
+shader.neonFlicker
+shader.orbit
+shader.pulseWave
+shader.radialSpiral
+shader.reflect
+shader.stochasticSparkle
+shader.subCellShake
+shader.terminalFire
+shader.terminalWater
+shader.tracePath
+shader.tracePropagation
+
+[style]
+style.baseStyleOverride
+style.colorFade
+style.fadeIn
+style.fadeOut
+style.inner
+style.italicWindow
+style.moduloColumns
+style.moduloRows
+style.neonFlicker
+style.nonEmpty
+style.outerBand
+style.pulse
+style.colorShift
+style.glitch
+style.rainbow
+style.rigidShakeStyle
+style.spatial
 ```
 
 ## Current In-Flight Work
@@ -74,8 +221,8 @@ Two isolated worktrees were created from commit
 
 | Agent | Primitive | Worktree | Branch |
 | --- | --- | --- | --- |
-| Zeno | `shader.focusField` | `/usr/projects/tui-vfx-slice-focus-field` | `slice/focus-field` |
-| Tesla | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` — integrated; keep warm for next assignment after commit |
+| Zeno | `shader.focusField` | `/usr/projects/tui-vfx-slice-focus-field` | `slice/focus-field` — integrated; keep warm for next assignment after pause |
+| Tesla | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` — integrated; keep warm for next assignment after pause |
 
 If these Codex subagents are still available, keep them warm and feed follow-up
 slices to the same agents after their current work is reviewed and integrated.
@@ -135,6 +282,15 @@ Documentation is part of the phase. A slice is not ready for review until code,
 tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 
 ## Direct v3.1 Rules Learned So Far
+
+- `shader.focusField` ellipse/circle support maps to compositor `FocusFieldShape::Ellipse`.
+  Rect mode and rect geometry remain unsupported in direct v3.1 load validation until
+  that semantic surface is migrated deliberately.
+- `shader.focusField` geometry fields that land in compositor `u16` fields
+  (`centerX`, `centerY`, `radius`) must be integer-valued numeric literals at load time;
+  direct v3.1 must not silently narrow fractional descriptor-valid numbers.
+- `shader.focusField.applyTo` defaults to the descriptor/lowerer foreground behavior when
+  absent; tests should set `background` explicitly when asserting background color changes.
 
 - `LoadedV31Recipe::load` is the single acceptance point for direct v3.1
   execution.
@@ -243,24 +399,55 @@ cargo clippy -p tui-vfx-player-next --all-targets -- -D warnings
 
 Run additional tests for any crate or tooling touched by the slice.
 
+## Loader / Player Boundary Deferral
+
+Discussion checkpoint, 2026-05-01:
+
+- Legacy/V2 upstream consumption in `../gt-design` currently goes through
+  `tui-vfx-recipes`; GTD resolves recipe JSON, validates compatibility through
+  `tui_vfx_recipes::recipe::from_value`, and wraps playback with its own
+  `gtd-ratatui::recipes::{RecipePlanner, RecipePlayer}`.
+- `tui-vfx-player-ui` is a development convenience shell, not an upstream
+  runtime API. Upstream should not depend on `player-ui`.
+- `tui-vfx-player` and `tui-vfx-player-next` are headless/dev playback surfaces.
+  The current v3.1 SSOT is still `LoadedV31Recipe::load` in
+  `tui-vfx-compositor-next::v31`, with `tui-vfx-player-next` delegating to it.
+- We are deliberately deferring any crate-boundary extraction for a v3.1
+  recipe-runtime/player-core crate so vertical primitive migration can continue.
+
+Deferred design question:
+
+```text
+Should v3.1 recipe loading/playback eventually live in:
+  A. tui-vfx-recipes, evolved into the recipe-runtime crate for V2 + v3.1, or
+  B. a new v3.1-native headless runtime/player-core crate that tui-vfx-recipes
+     and GT-Design can delegate to during transition?
+```
+
+Current rule while deferred: keep one implementation of v3.1 acceptance logic.
+Do not duplicate loader rules in player-next, player-ui, or any bridge layer.
+
 ## Active Queue
 
 Current active:
 
-1. `shader.focusField`
+```text
+none — paused at the focusField commit boundary by user request
+```
 
-Recommended next queue, unless current slices reveal a better order:
+Recommended next queue, when the user signals it is time to resume:
 
-2. `shader.borderSweep`
-3. `shader.revealWipe`
-5. Remaining shader primitives by complexity and migration demand
-6. Filters
-7. Masks
-8. Samplers
-9. Style effects
-10. Complex/composition primitives last
+1. `shader.borderSweep`
+2. `shader.revealWipe`
+3. Remaining shader primitives by complexity and migration demand
+4. Filters
+5. Masks
+6. Samplers
+7. Style effects
+8. Complex/composition primitives last
 
-Keep the scoreboard updated after each committed primitive.
+Keep the scoreboard and completed/outstanding primitive list updated after each
+committed primitive so work is not repeated.
 
 ## Recovery Checklist for a Fresh Lead Agent
 
