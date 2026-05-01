@@ -148,6 +148,78 @@ fn test_fnc_cli_capture_cells_writes_procedural_recipe_metadata() {
 }
 
 #[test]
+fn test_fnc_cli_lowers_neon_flicker_style_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_neon_flicker.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native neon flicker style compositor shader layer player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugStyleNeonFlicker");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["style.neonFlicker"])
+    );
+}
+
+#[test]
+fn test_fnc_cli_lowers_neon_flicker_modifier_style_to_compositor_shader_layer_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_neon_flicker_modifier.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native neon flicker modifier compositor shader layer player cli",
+    );
+
+    assert_eq!(report["recipeId"], "debugStyleNeonFlickerModifier");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["styledCells"][0]["modifiers"],
+        serde_json::json!(["italic"])
+    );
+}
+
+#[test]
 fn test_fnc_cli_lowers_focused_row_gradient_spatial_style_to_compositor_shader_layer_json() {
     let report = player_cli_json(
         vec![
@@ -4726,20 +4798,6 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
             "styles/style_modulo_vertical_every_fourth_column_offset.json",
             "debugStyleModuloVerticalEveryFourthColumnOffset",
             "style.moduloColumns",
-            "styleStages",
-            1,
-        ),
-        (
-            "styles/style_neon_flicker.json",
-            "debugStyleNeonFlicker",
-            "style.neonFlicker",
-            "styleStages",
-            1,
-        ),
-        (
-            "styles/style_neon_flicker_modifier.json",
-            "debugStyleNeonFlickerModifier",
-            "style.neonFlicker",
             "styleStages",
             1,
         ),

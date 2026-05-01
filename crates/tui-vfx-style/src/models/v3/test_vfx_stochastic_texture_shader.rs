@@ -7,7 +7,7 @@ use super::{
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxTextureSegmentMode,
     VfxTextureTarget,
 };
-use crate::models::{NoiseType, SpatialShaderType, StochasticSparkleShader};
+use crate::models::{ColorConfig, NoiseType, SpatialShaderType, StochasticSparkleShader};
 
 #[test]
 fn converts_neon_flicker_into_v3_stochastic_texture_surface() {
@@ -16,6 +16,8 @@ fn converts_neon_flicker_into_v3_stochastic_texture_surface() {
         seed: 7,
         segment: crate::models::SegmentMode::Column,
         dim_amount: 0.9,
+        base_color: None,
+        italic_window: false,
         speed: 1.4,
         flash_chance: 0.1,
         decay_rate: Some(2.0),
@@ -30,12 +32,51 @@ fn converts_neon_flicker_into_v3_stochastic_texture_surface() {
             seed: 7,
             segment: VfxTextureSegmentMode::Column,
             dim_amount: 0.9,
+            base_color: None,
+            italic_window: false,
             speed: 1.4,
             flash_chance: 0.1,
             decay_rate: Some(2.0),
             noise_type: NoiseType::Gaussian,
         }
     );
+}
+
+#[test]
+fn lowers_v3_neon_flicker_style_fields_back_to_legacy_shader() {
+    let grouped = VfxStochasticTextureShader {
+        behavior: VfxStochasticTextureBehavior::NeonFlicker {
+            stability: 0.8,
+            seed: 11,
+            segment: VfxTextureSegmentMode::Cell,
+            dim_amount: 0.4,
+            base_color: Some(ColorConfig::Rgb {
+                r: 80,
+                g: 255,
+                b: 220,
+            }),
+            italic_window: true,
+            speed: 1.5,
+            flash_chance: 0.2,
+            decay_rate: Some(1.2),
+            noise_type: NoiseType::Gaussian,
+        },
+    };
+
+    let lowered = SpatialShaderType::from(&grouped);
+    let SpatialShaderType::NeonFlicker(shader) = lowered else {
+        panic!("expected NeonFlicker shader");
+    };
+
+    assert_eq!(
+        shader.base_color,
+        Some(ColorConfig::Rgb {
+            r: 80,
+            g: 255,
+            b: 220
+        })
+    );
+    assert!(shader.italic_window);
 }
 
 #[test]

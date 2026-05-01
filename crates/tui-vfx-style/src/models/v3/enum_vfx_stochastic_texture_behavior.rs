@@ -8,7 +8,7 @@
 //! This family groups the noise-driven texture/flicker treatments currently
 //! exposed as `NeonFlicker` and `StochasticSparkle`.
 
-use crate::models::NoiseType;
+use crate::models::{ColorConfig, NoiseType};
 use serde::{Deserialize, Serialize};
 
 /// Segmenting policy for flicker-style stochastic textures.
@@ -59,6 +59,14 @@ pub enum VfxStochasticTextureBehavior {
         /// Dimming amount during flicker.
         #[config(default = 0.8)]
         dim_amount: f32,
+        /// Optional foreground color installed before flicker dimming.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[config(opaque)]
+        base_color: Option<ColorConfig>,
+        /// Whether the flicker shader also applies italic styling.
+        #[serde(default)]
+        #[config(default = false)]
+        italic_window: bool,
         /// Speed multiplier.
         #[config(default = 1.0)]
         speed: f32,

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
+// 0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -55,8 +56,8 @@ use tui_vfx_style::models::{
     FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
     GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
     HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
-    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast, WayfindingNode,
-    WayfindingNodeApplyTo, WayfindingNodeShader,
+    NeonFlickerShader, RadarShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion,
+    TextContrast, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -171,13 +172,6 @@ pub enum NativeStyleStage {
         remainder: usize,
         foreground: String,
         background: String,
-    },
-    /// Apply deterministic neon flicker styling.
-    NeonFlicker {
-        color: String,
-        stability: f64,
-        dim_amount: f64,
-        italic_window: bool,
     },
     /// Apply V2-compatible rainbow foreground cycling.
     Rainbow { rotation_speed: f64 },
@@ -565,7 +559,7 @@ fn lower_node_into_spec(
         "style.pulse" => lower_style_pulse(node, style_stages, request, warnings),
         "style.italicWindow" => lower_style_italic_window(node, style_stages, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
-        "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
+        "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
         "style.glitch" => lower_style_glitch(node, style_stages, request, warnings),
         "style.spatial" => lower_style_spatial(node, spec, style_stages, request, warnings),
@@ -1814,7 +1808,7 @@ fn lower_style_modulo_columns(
 
 fn lower_style_neon_flicker(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1826,18 +1820,37 @@ fn lower_style_neon_flicker(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
+    if let Some(reason) =
+        unsupported_non_literal_bool_input(node, "style.neonFlicker", "italicWindow")
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
 
-    style_stages.push(NativeStyleStage::NeonFlicker {
-        color: color_label_from_config(color_input(node, request, "color").unwrap_or(
-            ColorConfig::Rgb {
-                r: 255,
-                g: 50,
-                b: 150,
-            },
-        )),
-        stability: number_input(node, request, "stability", 0.7).clamp(0.0, 1.0),
-        dim_amount: number_input(node, request, "dimAmount", 0.5).clamp(0.0, 1.0),
-        italic_window: bool_input(node, request, "italicWindow", false),
+    // v3.1 `style.neonFlicker` intentionally exposes only the legacy four-knob
+    // style surface; segment/seed/speed/flash/decay remain on the grouped V3
+    // stochastic-texture shader surface rather than this recipe adapter.
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::NeonFlicker(NeonFlickerShader {
+            stability: resolved_number_input(node, request, "stability", 0.7).clamp(0.0, 1.0)
+                as f32,
+            seed: 42,
+            segment: SegmentMode::Row,
+            dim_amount: resolved_number_input(node, request, "dimAmount", 0.5).clamp(0.0, 1.0)
+                as f32,
+            base_color: Some(resolved_color_input(node, request, "color").unwrap_or(
+                ColorConfig::Rgb {
+                    r: 255,
+                    g: 50,
+                    b: 150,
+                },
+            )),
+            italic_window: bool_input(node, request, "italicWindow", false),
+            speed: 1.0,
+            flash_chance: 0.0,
+            decay_rate: None,
+            noise_type: Default::default(),
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3099,6 +3112,27 @@ fn unsupported_style_stage_reason(
         (StyleScopeRequirement::ModuloColumns, Some(ScopeSpec::ModuloColumns { .. })) => None,
         _ => Some(format!(
             "Effect `{effect_id}` uses a scope that is not yet supported by the compositor-native style stage without dropping authored semantics."
+        )),
+    }
+}
+
+fn unsupported_non_literal_bool_input(
+    node: &NodeSpec,
+    effect_id: &str,
+    input_key: &str,
+) -> Option<String> {
+    let source = node
+        .inputs
+        .get(&tui_vfx_contract::EffectInputId::new(input_key))?;
+    match source {
+        ValueSource::Literal {
+            value: Value::Boolean(_),
+        } => None,
+        ValueSource::Literal { .. } => Some(format!(
+            "Effect `{effect_id}` input `{input_key}` must be a boolean literal for compositor-native lowering."
+        )),
+        _ => Some(format!(
+            "Effect `{effect_id}` input `{input_key}` uses a non-literal source that this compositor-native lowering cannot resolve without silently falling back."
         )),
     }
 }

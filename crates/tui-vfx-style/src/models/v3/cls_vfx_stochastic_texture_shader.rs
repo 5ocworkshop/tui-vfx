@@ -44,6 +44,8 @@ impl From<&NeonFlickerShader> for VfxStochasticTextureShader {
                 seed: shader.seed,
                 segment: shader.segment.into(),
                 dim_amount: shader.dim_amount,
+                base_color: shader.base_color,
+                italic_window: shader.italic_window,
                 speed: shader.speed,
                 flash_chance: shader.flash_chance,
                 decay_rate: shader.decay_rate,

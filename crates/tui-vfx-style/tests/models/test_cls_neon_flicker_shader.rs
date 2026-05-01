@@ -30,6 +30,8 @@ fn test_cell_segment_id_pairing() {
         seed: 7,
         segment: SegmentMode::Cell,
         dim_amount: 0.8,
+        base_color: None,
+        italic_window: false,
         speed: 1.0,
         flash_chance: 0.0,
         decay_rate: None,

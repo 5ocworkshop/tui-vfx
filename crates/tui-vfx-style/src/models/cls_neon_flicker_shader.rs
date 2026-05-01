@@ -1,15 +1,16 @@
 // <FILE>tui-vfx-style/src/models/cls_neon_flicker_shader.rs</FILE> - <DESC>Spatial neon flicker with independent segments</DESC>
-// <VERS>VERSION: 1.6.0</VERS>
-// <WCTX>Adding screen coordinate context to shaders</WCTX>
-// <CLOG>Updated to use ShaderContext for screen-space effects</CLOG>
+// <VERS>VERSION: 1.7.0</VERS>
+// <WCTX>Compositor-owned v3.1 style.neonFlicker lowering needs the spatial shader to carry legacy style color and modifier knobs without backend emulation.</WCTX>
+// <CLOG>1.7.0: add optional base-color and italic-window styling so v3.1 neon style recipes can lower into compositor shader layers.
+// Updated to use ShaderContext for screen-space effects</CLOG>
 
-use crate::models::NoiseType;
+use crate::models::{ColorConfig, NoiseType};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::darken;
 use mixed_signals::envelopes::Impact;
 use mixed_signals::traits::Signal;
 use serde::{Deserialize, Serialize};
-use tui_vfx_types::{Color, Style};
+use tui_vfx_types::{Color, Modifiers, Style};
 
 fn default_speed() -> f32 {
     1.0
@@ -39,6 +40,17 @@ pub struct NeonFlickerShader {
     /// How much the flicker dims the color (0.0 - 1.0)
     #[config(default = 0.8)]
     pub dim_amount: f32,
+    /// Optional foreground color to install before flicker dimming.
+    ///
+    /// When absent, the shader preserves the incoming foreground color and only
+    /// applies the flicker treatment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[config(opaque)]
+    pub base_color: Option<ColorConfig>,
+    /// Whether the shader adds italic styling to the affected cells.
+    #[serde(default)]
+    #[config(default = false)]
+    pub italic_window: bool,
     /// Speed multiplier (lower = slower flicker)
     #[serde(default = "default_speed")]
     #[config(default = 1.0)]
@@ -82,6 +94,8 @@ impl Default for NeonFlickerShader {
             seed: 42,
             segment: SegmentMode::Row,
             dim_amount: 0.8,
+            base_color: None,
+            italic_window: false,
             speed: 1.0,
             flash_chance: 0.0,
             decay_rate: None,
@@ -149,9 +163,15 @@ impl StyleShader for NeonFlickerShader {
         let t = ctx.t as f32;
         let segment_id = self.segment_id(ctx.local_x, ctx.local_y);
         let (dim, is_flash) = self.flicker_state(segment_id, t);
+        let mut result = base;
+        if let Some(color) = self.base_color {
+            result.fg = Color::from(color);
+        }
+        if self.italic_window {
+            result.mods = result.mods.combine(Modifiers::italic());
+        }
 
         if dim > 0.0 {
-            let mut result = base;
             if is_flash {
                 // White flash - briefly go bright white
                 result.fg = Color::WHITE;
@@ -169,7 +189,7 @@ impl StyleShader for NeonFlickerShader {
             }
             result
         } else {
-            base
+            result
         }
     }
 }
@@ -192,6 +212,8 @@ mod tests {
             seed: 123,
             segment: SegmentMode::Row,
             dim_amount: 0.8,
+            base_color: None,
+            italic_window: false,
             speed: 1.0,
             flash_chance: 0.0,
             decay_rate: None,
@@ -222,6 +244,8 @@ mod tests {
             seed: 42,
             segment: SegmentMode::Cell,
             dim_amount: 0.8,
+            base_color: None,
+            italic_window: false,
             speed: 1.0,
             flash_chance: 0.0,
             decay_rate: None,
@@ -241,7 +265,26 @@ mod tests {
             "High stability should mean rare flickers"
         );
     }
+
+    #[test]
+    fn test_base_color_and_italic_window_are_applied_before_flicker() {
+        let shader = NeonFlickerShader {
+            stability: 1.0,
+            base_color: Some(ColorConfig::Rgb {
+                r: 255,
+                g: 50,
+                b: 150,
+            }),
+            italic_window: true,
+            ..NeonFlickerShader::default()
+        };
+        let ctx = ShaderContext::new(0, 0, 8, 4, 0, 0, 0.35, None, None);
+        let out = shader.style_at(&ctx, Style::default());
+
+        assert_eq!(out.fg, Color::rgb(255, 50, 150));
+        assert!(out.mods.italic);
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_neon_flicker_shader.rs</FILE> - <DESC>Spatial neon flicker with independent segments</DESC>
-// <VERS>END OF VERSION: 1.6.0</VERS>
+// <VERS>END OF VERSION: 1.7.0</VERS>

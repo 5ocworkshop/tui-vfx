@@ -273,18 +273,6 @@ fn scene_ir_with_native_content_stages(
                 foreground,
                 background,
             ),
-            NativeStyleStage::NeonFlicker {
-                color,
-                stability,
-                dim_amount,
-                italic_window,
-            } => apply_neon_flicker_style_stage(
-                &mut staged,
-                color,
-                *stability,
-                *dim_amount,
-                *italic_window,
-            ),
             NativeStyleStage::Rainbow { rotation_speed } => {
                 apply_rainbow_style_stage(&mut staged, *rotation_speed)
             }
@@ -751,37 +739,6 @@ fn apply_modulo_columns_style_stage(
     }
 }
 
-fn apply_neon_flicker_style_stage(
-    report: &mut PlayerRenderIrReport,
-    color: &str,
-    stability: f64,
-    dim_amount: f64,
-    italic_window: bool,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let clock = report.loop_t.unwrap_or(report.phase_t);
-    let flicker = (clock * 37.0).sin() * 0.5 + 0.5;
-    let active_strength = if flicker <= stability {
-        1.0
-    } else {
-        1.0 - dim_amount
-    };
-    let foreground = dimmed_rgba_label(color, active_strength);
-    for y in 0..height {
-        for x in 0..width {
-            set_report_cell_style(
-                report,
-                x,
-                y,
-                Some(foreground.as_str()),
-                None,
-                italic_window.then_some("italic"),
-            );
-        }
-    }
-}
-
 fn apply_rainbow_style_stage(report: &mut PlayerRenderIrReport, _rotation_speed: f64) {
     let width = report_width(report).max(1);
     let height = report_height(report);
@@ -1172,20 +1129,6 @@ fn pulse_lerp_channel(start: u8, end: u8, inv_t: f64, t: f64) -> u8 {
 
 fn rgba_label(r: u8, g: u8, b: u8, a: u8) -> String {
     format!("rgba({r},{g},{b},{a})")
-}
-
-fn dimmed_rgba_label(label: &str, strength: f64) -> String {
-    let Some((r, g, b, a)) = parse_rgba_label(label) else {
-        return label.to_string();
-    };
-    let strength = strength.clamp(0.0, 1.0);
-    format!(
-        "rgba({},{},{},{})",
-        (r as f64 * strength).round() as u8,
-        (g as f64 * strength).round() as u8,
-        (b as f64 * strength).round() as u8,
-        a
-    )
 }
 
 fn parse_rgba_label(label: &str) -> Option<(u8, u8, u8, u8)> {
