@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.37.0</VERS>
+// <VERS>VERSION: 0.38.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
 // 0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
@@ -50,7 +51,8 @@ use tui_vfx_style::models::{
     FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
     HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
     HighlighterShader, LinearGradientApplyTo, LinearGradientShader, RadarShader, RevealWipeShader,
-    SpatialShaderType, StyleRegion, TextContrast,
+    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
+    WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -208,16 +210,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible wayfinding node shader styling.
-    WayfindingNode {
-        current_index: usize,
-        nodes: usize,
-        previous_strength: f64,
-        future_strength: f64,
-        intensity: f64,
-        radius: usize,
-        active_color: String,
-    },
     /// Apply player-compatible barber-pole shader styling.
     BarberPole {
         stripe_color: String,
@@ -588,9 +580,7 @@ fn lower_node_into_spec(
         "shader.highlighter" => lower_highlighter_shader(node, spec, request, warnings),
         "shader.focusField" => lower_focus_field_shader(node, spec, request, warnings),
         "shader.glistenBand" => lower_glisten_band_shader(node, spec, request, warnings),
-        "shader.wayfindingNode" => {
-            lower_wayfinding_node_shader(node, style_stages, request, warnings)
-        }
+        "shader.wayfindingNode" => lower_wayfinding_node_shader(node, spec, request, warnings),
         "shader.barberPole" => lower_barber_pole_shader(node, style_stages, request, warnings),
         "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
         "shader.radar" => lower_radar_shader(node, spec, request, warnings),
@@ -2347,7 +2337,7 @@ fn lower_glisten_band_shader(
 
 fn lower_wayfinding_node_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2368,28 +2358,47 @@ fn lower_wayfinding_node_shader(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    style_stages.push(NativeStyleStage::WayfindingNode {
-        current_index: resolved_integer_input(node, request, "currentIndex", 0).max(0) as usize,
-        nodes: resolved_integer_input(node, request, "nodes", 1).max(1) as usize,
-        previous_strength: resolved_number_input(node, request, "previousStrength", 0.3)
-            .clamp(0.0, 1.0),
-        future_strength: resolved_number_input(node, request, "futureStrength", 0.4)
-            .clamp(0.0, 1.0),
-        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
-        radius: resolved_number_input(node, request, "radius", 1.0).max(0.0) as usize,
-        active_color: color_label_from_config(
-            resolved_color_input(node, request, "activeColor")
+
+    let node_count = resolved_integer_input(node, request, "nodes", 1).max(1) as usize;
+    let width = request.source_ir.width.max(1);
+    let cell_count = width.saturating_mul(request.source_ir.height.max(1));
+    let nodes = (0..node_count.min(cell_count.max(1)))
+        .map(|index| WayfindingNode {
+            x: (index % width).min(u16::MAX as usize) as u16,
+            y: (index / width).min(u16::MAX as usize) as u16,
+        })
+        .collect::<Vec<_>>();
+
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::WayfindingNode(WayfindingNodeShader {
+            color: resolved_color_input(node, request, "activeColor")
                 .or_else(|| resolved_color_input(node, request, "color"))
                 .unwrap_or(ColorConfig::Rgb {
                     r: 80,
                     g: 255,
                     b: 160,
                 }),
-        ),
+            nodes,
+            radius: resolved_u8_input(node, request, "radius", 1),
+            intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0)
+                as f32,
+            current_index: Some(
+                resolved_integer_input(node, request, "currentIndex", 0).clamp(0, u16::MAX as i64)
+                    as u16,
+            ),
+            current_index_binding: signal_source_id(node, "currentIndex")
+                .map(|id| id.as_str().to_string()),
+            previous_strength: resolved_number_input(node, request, "previousStrength", 0.3)
+                .clamp(0.0, 1.0) as f32,
+            future_strength: resolved_number_input(node, request, "futureStrength", 0.4)
+                .clamp(0.0, 1.0) as f32,
+            pulse_speed: 0.0,
+            apply_to: WayfindingNodeApplyTo::Both,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
-
 fn lower_barber_pole_shader(
     node: &NodeSpec,
     style_stages: &mut Vec<NativeStyleStage>,
@@ -3737,6 +3746,15 @@ fn resolved_u16_input(
     default: u16,
 ) -> u16 {
     resolved_integer_input(node, request, key, i64::from(default)).clamp(0, u16::MAX as i64) as u16
+}
+
+fn resolved_u8_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: u8,
+) -> u8 {
+    resolved_integer_input(node, request, key, i64::from(default)).clamp(0, u8::MAX as i64) as u8
 }
 
 fn glisten_band_width_input(

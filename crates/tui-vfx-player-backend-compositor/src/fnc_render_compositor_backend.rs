@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.34.0</VERS>
+// <VERS>VERSION: 0.35.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
+// <CLOG>0.35.0: MINOR — remove backend-owned wayfinding-node shader rendering after wayfindingNode moved to compositor ShaderLayerSpec.
+// 0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
 // 0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
 // 0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
 // 0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
@@ -329,26 +330,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
-            NativeStyleStage::WayfindingNode {
-                current_index,
-                nodes,
-                previous_strength,
-                future_strength,
-                intensity,
-                radius,
-                active_color,
-            } => apply_wayfinding_node_style_stage(
-                &mut staged,
-                WayfindingNodeStyleInputs {
-                    current_index: *current_index,
-                    nodes: *nodes,
-                    previous_strength: *previous_strength,
-                    future_strength: *future_strength,
-                    intensity: *intensity,
-                    radius: *radius,
-                    active_color,
-                },
-            ),
             NativeStyleStage::BarberPole {
                 stripe_color,
                 background_color,
@@ -1036,50 +1017,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     }
 }
 
-struct WayfindingNodeStyleInputs<'a> {
-    current_index: usize,
-    nodes: usize,
-    previous_strength: f64,
-    future_strength: f64,
-    intensity: f64,
-    radius: usize,
-    active_color: &'a str,
-}
-
-fn apply_wayfinding_node_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: WayfindingNodeStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let cell_count = width * height;
-    if cell_count == 0 {
-        return;
-    }
-    let active_index = inputs.current_index % cell_count.min(inputs.nodes).max(1);
-    for offset in 0..=inputs.radius {
-        for (index, strength) in [
-            (
-                active_index.saturating_sub(offset),
-                inputs.previous_strength,
-            ),
-            (
-                (active_index + offset).min(cell_count - 1),
-                inputs.future_strength,
-            ),
-        ] {
-            let x = index % width;
-            let y = index / width;
-            let color = lerp_rgba_label(
-                inputs.active_color,
-                WHITE_RGBA,
-                (1.0 - strength * inputs.intensity).clamp(0.0, 1.0) as f32,
-            );
-            set_report_shader_cell(report, x, y, "both", color.as_str(), "ShaderWayfindingNode");
-        }
-    }
-}
-
 struct BarberPoleStyleInputs<'a> {
     stripe_color: &'a str,
     background_color: &'a str,
@@ -1440,7 +1377,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
 
 const DEFAULT_FOREGROUND: &str = "defaultForeground";
 const TRANSPARENT_RGBA: &str = "transparent";
-const WHITE_RGBA: &str = "rgba(255,255,255,255)";
 const BLACK_RGBA: &str = "rgba(0,0,0,255)";
 
 fn lerp_rgba_label(from: &str, to: &str, t: f32) -> String {

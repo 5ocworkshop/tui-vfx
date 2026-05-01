@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.11.0</VERS> -->
+<!-- <VERS>VERSION: 1.12.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.11.0: mark shader.focusField as compositor shader-layer owned and record style-stage deletion.
+<!-- <CLOG>1.12.0: mark shader.wayfindingNode as compositor shader-layer owned and record style-stage deletion.
+1.11.0: mark shader.focusField as compositor shader-layer owned and record style-stage deletion.
 1.10.0: mark shader.glistenBand as compositor shader-layer owned and record style-stage deletion.
 1.9.0: mark shader.highlighter as compositor shader-layer owned and record style-stage deletion.
 1.8.0: mark shader.radar as compositor shader-layer owned and record style-stage deletion.
@@ -229,6 +230,7 @@ Shader migration status:
 | --- | --- | --- |
 | `shader.radar` | `ShaderLayerSpec { shader: SpatialShaderType::Radar(RadarShader), region: StyleRegion::All }` | Done for current recipe and structured `style.spatial` radar payloads: lowerer emits a compositor shader layer; backend `NativeStyleStage::Radar` and style helper were deleted. Non-foreground `applyTo` on `shader.radar` is rejected instead of emulated. |
 | `shader.focusField` | `ShaderLayerSpec { shader: SpatialShaderType::FocusField(FocusFieldShader), region: StyleRegion::All }` | Done for current recipe: lowerer emits a compositor shader layer with center/rect runtime binding ids preserved in the compositor shader, `circle` normalized to compositor ellipse semantics, legacy ratio `feather` mapped into compositor cell feather with a zero default, and the backend `NativeStyleStage::FocusField` style helper was deleted. Intensity now uses compositor-native blend semantics rather than the retired player adapter's white-lerp approximation. |
+| `shader.wayfindingNode` | `ShaderLayerSpec { shader: SpatialShaderType::WayfindingNode(WayfindingNodeShader), region: StyleRegion::All }` | Done for current fixture: lowerer emits a compositor shader layer with current-index binding preserved and synthesizes the existing integer `nodes` count into explicit linear source-cell coordinates. Placement follows the retired adapter's scan-order node model, while visual emphasis now follows compositor-native per-node distance semantics instead of the old backend trail approximation; backend `NativeStyleStage::WayfindingNode` and style helper were deleted. |
 | `shader.highlighter` | `ShaderLayerSpec { shader: SpatialShaderType::Highlighter(HighlighterShader), region: StyleRegion::All }` | Done for current recipe: lowerer emits a compositor shader layer; backend `NativeStyleStage::Highlighter` and style helper were deleted. Numeric player `textContrast` blend weights are rejected instead of being approximated as compositor `TextContrast` modes. |
 | `shader.glistenBand` | `ShaderLayerSpec { shader: SpatialShaderType::GlistenBand(GlistenBandShader), region: StyleRegion::All }` | Done for current recipe: lowerer emits a compositor shader layer; backend `NativeStyleStage::GlistenBand` and style helper were deleted. The current v3.1 binding recipe preserves integer `bandWidth`, `direction`, color, and `blendStrength` signal binding through compositor shader fields; numeric player-only `head`/`tail` band-position fields are rejected instead of emulated because compositor `head`/`tail` are colors, and fractional `bandWidth` values are rejected because the compositor field is an integer cell width. |
 
@@ -246,4 +248,4 @@ else:
 ```
 
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.12.0</VERS> -->
