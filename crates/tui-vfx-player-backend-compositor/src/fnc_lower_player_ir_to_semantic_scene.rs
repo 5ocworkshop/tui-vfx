@@ -70,16 +70,12 @@ pub fn lower_player_ir_to_semantic_scene(input: &PlayerRenderIrReport) -> Lowere
 }
 
 fn render_width(input: &PlayerRenderIrReport) -> usize {
-    input
-        .width
-        .max(
-            input
-                .rows
-                .iter()
-                .map(|row| row.chars().count())
-                .max()
-                .unwrap_or(0),
-        )
+    let content_width = input
+        .rows
+        .iter()
+        .map(|row| row.chars().count())
+        .max()
+        .unwrap_or(0)
         .max(
             input
                 .styled_cells
@@ -87,18 +83,28 @@ fn render_width(input: &PlayerRenderIrReport) -> usize {
                 .map(|cell| cell.x + 1)
                 .max()
                 .unwrap_or(0),
-        )
+        );
+    if content_width == 0 {
+        input.width
+    } else {
+        content_width
+    }
 }
 
 fn render_height(input: &PlayerRenderIrReport) -> usize {
-    input.height.max(input.rows.len()).max(
+    let content_height = input.rows.len().max(
         input
             .styled_cells
             .iter()
             .map(|cell| cell.y + 1)
             .max()
             .unwrap_or(0),
-    )
+    );
+    if content_height == 0 {
+        input.height
+    } else {
+        content_height
+    }
 }
 
 fn cell_from_player_cell(styled_cell: &PlayerRenderCell) -> Cell {

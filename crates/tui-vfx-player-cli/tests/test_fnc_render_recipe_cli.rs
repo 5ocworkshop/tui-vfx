@@ -2096,7 +2096,13 @@ fn test_fnc_cli_native_mask_primitives_match_v2_deprecated_letter_cell_oracle_js
             22,
             Some("rgba(50,20,50,255)"),
         ),
-        ("masks/mask_blinds.json", "enter", "0.5", 0, None),
+        (
+            "masks/mask_blinds.json",
+            "enter",
+            "0.5",
+            20,
+            Some("rgba(50,50,20,255)"),
+        ),
         (
             "masks/mask_blinds.json",
             "enter",
@@ -2156,6 +2162,95 @@ fn test_fnc_cli_native_mask_primitives_match_v2_deprecated_letter_cell_oracle_js
             ),
         }
     }
+}
+
+#[test]
+fn test_fnc_cli_native_wipe_exit_preserves_v2_deprecated_partial_hide_rows_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("exit"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native wipe exit V2 deprecated row oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    let rows = report["rows"].as_array().expect("rows array");
+    let rendered_rows = rows
+        .iter()
+        .map(|row| row.as_str().expect("row text"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rendered_rows,
+        vec![
+            "              ────────────────────╮",
+            "              pe Effect           │",
+            "              ────────────────────╯",
+        ]
+    );
+}
+
+#[test]
+fn test_fnc_cli_native_path_reveal_enter_preserves_v2_deprecated_spiral_rows_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_path_reveal.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native path reveal enter V2 deprecated row oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    let rendered_rows = report["rows"]
+        .as_array()
+        .expect("rows array")
+        .iter()
+        .map(|row| row.as_str().expect("row text"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        rendered_rows,
+        vec![
+            "         T: PathReveal Effect",
+            "",
+            "",
+            "",
+            "",
+            "         ──────────────────────",
+            "",
+        ]
+    );
 }
 
 #[test]

@@ -163,7 +163,7 @@ pub(crate) fn collect_handled_primitive_inputs(
         "mask.wipeCorner" => fields(["direction", "softEdge"]),
         "mask.pathReveal" => fields(["path", "softEdge"]),
         "mask.checkers" => fields(["cellSize"]),
-        "mask.cellular" => fields(["cellSize", "seed", "threshold"]),
+        "mask.cellular" => fields(["cellCount", "pattern", "seed"]),
         "mask.dissolve" => fields(["chunkSize", "seed"]),
         "mask.noiseDither" => fields(["chunkSize", "seed"]),
         "mask.blinds" => fields(["orientation", "count"]),
