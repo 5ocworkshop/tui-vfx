@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_source_spec.rs</FILE> - <DESC>Validate source specs against descriptors and assets</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>K2.13 schema decision burn-down: support optional source inputs and sampled-field external source validation.</WCTX>
-// <CLOG>0.3.0: MINOR — honor optional source inputs and classify sampledField as external.
+// <CLOG>0.4.0: MINOR — classify expression and time-derived value sources as dynamic source inputs.
+// 0.3.0: MINOR — honor optional source inputs and classify sampledField as external.
 // 0.2.0: MINOR — allow graph-local value sources when validating source specs inside graph context.</CLOG>
 
 use std::collections::BTreeMap;
@@ -19,12 +20,11 @@ pub(crate) fn validate_source_spec(
     signals: &BTreeMap<SignalId, SignalSpec>,
     graph_values: Option<&GraphValueKinds>,
 ) -> Result<(), DescriptorValidationError> {
-    let descriptor =
-        sources
-            .get(&spec.source)
-            .ok_or_else(|| DescriptorValidationError::UnknownSource {
-                id: spec.source.clone(),
-            })?;
+    let descriptor = sources.get(&spec.source_descriptor).ok_or_else(|| {
+        DescriptorValidationError::UnknownSource {
+            id: spec.source_descriptor.clone(),
+        }
+    })?;
     descriptor.validate_contract()?;
     validate_inputs(spec, descriptor, parameters, signals, graph_values)?;
     validate_assets(spec, descriptor, assets)?;
@@ -44,13 +44,13 @@ fn validate_inputs(
         }
         let input = descriptor.inputs.get(id).ok_or_else(|| {
             DescriptorValidationError::UnknownSourceInput {
-                source: spec.source.clone(),
+                source: spec.source_descriptor.clone(),
                 input: id.clone(),
             }
         })?;
         if !input.bindable && uses_external_source(source) {
             return Err(DescriptorValidationError::SourceInputNotBindable {
-                source: spec.source.clone(),
+                source: spec.source_descriptor.clone(),
                 input: id.clone(),
             });
         }
@@ -65,7 +65,7 @@ fn validate_inputs(
     for (id, input) in &descriptor.inputs {
         if !spec.inputs.contains_key(id) && input.value.default.is_none() && !input.optional {
             return Err(DescriptorValidationError::MissingRequiredSourceInput {
-                source: spec.source.clone(),
+                source: spec.source_descriptor.clone(),
                 input: id.clone(),
             });
         }
@@ -89,7 +89,7 @@ fn validate_assets(
         }
         let requirement = descriptor.assets.get(slot).ok_or_else(|| {
             DescriptorValidationError::UnknownSourceAssetSlot {
-                source: spec.source.clone(),
+                source: spec.source_descriptor.clone(),
                 asset: slot.clone(),
             }
         })?;
@@ -118,7 +118,7 @@ fn validate_assets(
     for (slot, requirement) in &descriptor.assets {
         if requirement.required && !spec.assets.contains_key(slot) {
             return Err(DescriptorValidationError::MissingRequiredAsset {
-                source: spec.source.clone(),
+                source: spec.source_descriptor.clone(),
                 asset: slot.clone(),
             });
         }
@@ -132,10 +132,13 @@ fn uses_external_source(source: &ValueSource) -> bool {
         ValueSource::Parameter { .. }
         | ValueSource::Signal { .. }
         | ValueSource::GraphValue { .. }
-        | ValueSource::SampledField { .. } => true,
+        | ValueSource::SampledField { .. }
+        | ValueSource::SignalExpression { .. }
+        | ValueSource::PhaseProgress { .. }
+        | ValueSource::Clock { .. } => true,
         ValueSource::Map { from, .. } => uses_external_source(from),
     }
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_source_spec.rs</FILE> - <DESC>Validate source specs against descriptors and assets</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

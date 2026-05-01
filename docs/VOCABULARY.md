@@ -1,7 +1,11 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.28.0</VERS> -->
-<!-- <WCTX>v3.1 scene vocabulary: reserve typed per-element scroll response for future camera/parallax backends.</WCTX> -->
-<!-- <CLOG>0.28.0: MINOR — define Scroll Factor as typed recipe scene element metadata reserved for future camera/parallax backends.
+<!-- <VERS>VERSION: 0.33.0</VERS> -->
+<!-- <WCTX>v3.1 transition vocabulary: align native transitions with interruption, reduced motion, variants, timing, and engine-neutral terminology.</WCTX> -->
+<!-- <CLOG>0.32.0: MINOR — add signal expression, shadow attachment, style color source, and progress-name guardrails.
+0.31.0: MINOR — add recipe-oracle transition track families and reduced-motion cycle guard vocabulary.
+0.30.0: MINOR — add transition interruption, reduced-motion, variant, and lifecycle-phase alignment vocabulary.
+0.29.0: MINOR — define native TransitionSpec, TransitionTrack, and transition preset intent vocabulary.
+0.28.0: MINOR — define Scroll Factor as typed recipe scene element metadata reserved for future camera/parallax backends.
 0.27.0: MINOR — distinguish authored-loopback indicator and parity tooling gates from smoke-render evidence.
 0.26.0: MINOR — define authored loopback and enriched scene/procedural player vocabulary.
 0.25.0: MINOR — add color-channel class evidence vocabulary for style primitive parity.
@@ -27,6 +31,12 @@
 This document defines the canonical human vocabulary for v3.1 contract and recipe-shape work.
 It complements the Rust-owned contract types and generated JSON Schemas under `schemas/v3.1/contract/`.
 Use it when proposing, reviewing, documenting, or migrating any public v3.1 concept.
+
+North-star engine vocabulary:
+: tui-vfx is a grid-native scene, transition, and compositing engine. It exposes surfaces, sources, scopes, subjects, transitions, tracks, effects, timing, value sources, capability fallback, and compositing policies. Consumer applications may attach higher-level semantics, but the engine executes only canonical grid animation and compositing structures.
+
+Out-of-scope engine semantics:
+: Application and design-system terms such as primary action, modal, route, focus move, productive/expressive tone, state layer, brand tone, Material component roles, and gt-design token names must stay in consumer layers or metadata. They must not become core tui-vfx schema discriminants.
 
 The core rule is:
 
@@ -873,6 +883,162 @@ JSON/schema surface, if any:
 Not the same as:
 : An effect-local schedule or a graph topology step.
 
+### Transition
+
+Definition:
+: A native v3.1 state/surface-change composition interval. A transition coordinates subjects, lifecycle phase participation, timing, scope, interruption policy, reduced-motion policy, generic variants, and executable tracks. It is not an effect-chain alias and must not require a runtime bridge or legacy-shaped execution DTO.
+
+Owns / owned by:
+: `RecipeDocument.transitions` owns named `TransitionSpec` values. `TransitionSpec.activePhases` records lifecycle phase participation. `TransitionSpec.interruption`, `TransitionSpec.reducedMotion`, and `TransitionSpec.variants` own policy for supersession, accessibility fallback, and generic conditional substitution. `TransitionSpec.tracks` owns executable canonical track objects such as `visibility.iris`, `visibility.blinds`, `opacity.fade`, `motion.slide`, `motion.path`, `relation.crossfade`, `content.typewriter`, `content.splitFlap`, and `style.glistenBand`.
+
+Rust contract type, if any:
+: `TransitionSpec`, `TransitionId`, `TransitionSubjects`, `TransitionTiming`, `TransitionIntent`, `TransitionPreset`, `TransitionInterruption`, `ReducedMotionPolicy`, `TransitionVariant`, and `TransitionTrack`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/transition.schema.json`; recipe roots expose named transitions through `schemas/v3.1/contract/recipe.schema.json`.
+
+Not the same as:
+: A single-surface effect descriptor, graph topology, lifecycle phase, trigger, design-system semantic, app route/state name, or generic effect chain. Effects remain direct primitives and escape hatches, but common state-change intent belongs in transition tracks.
+
+Canonicalization note:
+: Author shorthand such as `preset: iris` canonicalizes to `TransitionIntent::Preset { preset: Iris }` plus executable `TransitionTrack` values. The compositor executes tracks directly; `intent` is non-executable metadata for diagnostics, documentation, tooling, profiling labels, and corpus analysis.
+
+Lifecycle relationship:
+: Lifecycle owns recipe progression through `enter`, `dwell`, and `exit`. Transitions can participate in those phases through `activePhases`, but they do not replace lifecycle. Triggers advance lifecycle; transition tracks express visible behavior inside the selected interval.
+
+### Transition Track
+
+Definition:
+: One executable animated concern inside a transition envelope.
+
+Track families:
+: `visibility.*` controls coverage/reveal behavior, including wipe/iris/dissolve/stippled/braille/blinds; `opacity.*` controls one subject's opacity; `motion.*` controls one subject's placement over progress, including path motion with grid sampling; `relation.*` controls coordinated from/to surface relationships; `content.*` controls content-reveal transitions such as typewriter and split-flap; `style.*` controls transient style sweeps such as glisten bands.
+
+Field naming rule:
+: Shared names are allowed only when semantics match. Use `revealDirection` for wipe coverage, `travelDirection` for motion/relation movement, `focal` for aperture focus, `subject` for from/to/both/shared routing, `scope` for cell selection inside a subject, and reserve `progress` for normalized 0..1 transition progress. Avoid generic `type`, `direction`, `target`, `source`, `position`, `amount`, `speed`, `color`, `mode`, `applyTo`, and `affect` unless the local semantics are genuinely unique and documented.
+
+Not the same as:
+: A preset, a descriptor-local effect input map, a persistent dwell effect, a procedural source, or a legacy motion-path payload.
+
+### Transition Interruption
+
+Definition:
+: Required policy for what happens when a transition is superseded before completion.
+
+Rust contract type, if any:
+: `TransitionInterruption`.
+
+Examples:
+: `restart`, `reverseFromCurrent`, `continueToNewTarget`, `snapToEnd`, `snapToEndThenStartNext`, `snapToStart`, `preserveCurrentFrame`, and `cancel`.
+
+Not the same as:
+: A lifecycle trigger. Interruption handles replacement of an already-running interval; triggers request lifecycle actions.
+
+### Reduced-Motion Policy
+
+Definition:
+: Required transition accessibility fallback posture. Reduced-motion is treated as an engine-level host/runtime preference, not as a design-system component semantic.
+
+Rust contract type, if any:
+: `ReducedMotionPolicy`, `ReducedMotionKind`.
+
+Relationship to variants:
+: `reducedMotion` declares the standard accessibility policy. `variants[]` can point at a concrete replacement transition when a reduced-motion signal or capability condition should select an alternate transition. Replacement chains must terminate in a non-substitution policy such as `none`, `instant`, or `keepOpacityOnly`; cyclic reduced-motion replacement chains are invalid.
+
+### Signal Expression
+
+Definition:
+: A typed deterministic numeric expression used by preview loopbacks and authored value sources. Signal expressions cover simple procedural values such as ramps, sine waves, triangle waves, mixes, addition, multiplication, and clamps without preserving them as opaque structured payloads.
+
+Rust contract type, if any:
+: `SignalExpressionSpec`, `PreviewLoopbackSpec::Expression`, and `ValueSource::SignalExpression`.
+
+Not the same as:
+: A host-provided signal. Host signals are runtime inputs; signal expressions are authored deterministic value generators.
+
+### Phase Progress Value Source
+
+Definition:
+: A numeric value source that samples normalized lifecycle phase progress in 0..1 for persistent or phase-scoped effects that need time without pretending to be transitions.
+
+Rust contract type, if any:
+: `ValueSource::PhaseProgress`.
+
+Not the same as:
+: Transition-track `progress`. Transition progress is an interval-local override; phase progress samples lifecycle progression.
+
+### Clock Value Source
+
+Definition:
+: A numeric value source derived from recipe, phase, or loop sample time. It supports ongoing dwell effects such as scanners, pulse waves, vignettes, and procedural samplers.
+
+Rust contract type, if any:
+: `ValueSource::Clock`, `ClockValueSource`.
+
+Not the same as:
+: Presentation FPS or semantic update cadence.
+
+### Shadow Attachment
+
+Definition:
+: A typed scene-element surface attachment that describes shadow geometry, source region, offset, inset, falloff, color, composite mode, blend mode, optional glyph material, and optional paint outset. Shadows are static/support surface concerns unless explicitly animated by graph/effect work.
+
+Rust contract type, if any:
+: `SceneElementSurface`, `ShadowSpec`.
+
+Not the same as:
+: A transition, opacity fade, or legacy structured shadow payload. Shadows may require paint bounds larger than source bounds.
+
+### Style Color Source
+
+Definition:
+: A source of color for style interpolation tracks, such as explicit color, canvas, transparent, current, sampled source, or destination. This exists because a style/color fade is not the same as opacity blending.
+
+Rust contract type, if any:
+: `StyleColorSource`, `TransitionTrack::StyleColorFade`.
+
+Not the same as:
+: `opacity.fade`. Opacity blends a subject with what is underneath; style color fade mutates subject cell colors.
+
+### Progress Naming Guardrail
+
+Definition:
+: Canonical schemas should avoid unqualified `progress`. Transition tracks use `transitionProgress` for normalized 0..1 transition progress, lifecycle value sources use `phaseProgress`, and descriptor-specific effects should name the semantic progress they need.
+
+Examples:
+: Prefer `transitionProgress`, `phaseProgress`, `fillProgress`, `sweepProgress`, `scanProgress`, `revealProgress`, `activation`, `phase`, or `phaseOffset` over generic `progress`.
+
+Not the same as:
+: A ban on progress-driven effects. Progress bars, scanners, and fill indicators are valid; their fields need precise names.
+
+Not the same as:
+: A Material policy, app state name, profile, or runtime fallback to legacy input.
+
+### Transition Variant
+
+Definition:
+: A generic conditional transition replacement selected by an engine-neutral condition.
+
+Rust contract type, if any:
+: `TransitionVariant`, `TransitionVariantCondition`.
+
+Use cases:
+: reduced-motion request, grid/backend capability fallback, or host-selected transition variant.
+
+Not the same as:
+: Application policy. Conditions should name generic signals, parameters, or capabilities, not app concepts such as modal open, route change, or primary action.
+
+### Subject
+
+Definition:
+: Which surface/object a transition track affects or relates. Subject answers "what is animated?" while scope answers "which cells within that subject are affected?"
+
+Canonical examples:
+: `from`, `to`, `both`, `shared`, explicit scene refs, element refs, role refs, `empty`, and `canvas`.
+
+Not the same as:
+: `source` descriptor/instance identity, `targetColor`, `targetRole`, cell scope, or sampled field source.
+
 ### Trigger
 
 Definition:
@@ -979,7 +1145,7 @@ Not the same as:
 : A canonical recipe document. A runtime signal store. A player. A manifest. A legacy debug recipe.
 
 Legacy/source-authoring synonyms, if useful:
-: Loopback examples, progress demos, and debug recipes are evidence only. Their demo scaffolding should lower away or remain outside canonical contract data.
+: Loopback examples, progress demos, and debug recipes are evidence only. Their demo scaffolding should canonicalize into clean v3.1 data or remain outside canonical contract data.
 
 Example:
 
@@ -1268,22 +1434,22 @@ Example:
 ### Preset
 
 Definition:
-: A values-only authoring bundle that selects values for an existing structure.
+: A values-only authoring bundle that selects values for an existing structure. Transition presets are the narrow exception now represented as preserved `TransitionIntent` metadata after canonicalization into executable transition tracks.
 
 Owns / owned by:
-: Template/source-authoring work owns presets. The current contract has no preset Rust root.
+: Template/source-authoring work owns general presets. `TransitionPreset` owns the closed transition shorthand vocabulary that may be preserved in canonical transition intent.
 
 Rust contract type, if any:
-: None in the current contract.
+: `TransitionPreset` and `TransitionIntent` for transition-specific preset metadata. General value-bundle presets still have no contract root.
 
 JSON/schema surface, if any:
-: None in `schemas/v3.1/contract/` today. Canonical expanded recipes must not retain preset references.
+: `schemas/v3.1/contract/transition.schema.json` for transition intent; no general preset root exists in `schemas/v3.1/contract/`.
 
 Not the same as:
-: A template or mixin, which can add structure. A profile, which is context/product-mode value selection. A parameter, which is the public control that a preset may set.
+: A template or mixin, which can add structure. A profile, which is context/product-mode value selection. A parameter, which is the public control that a preset may set. A transition preset is not an execution layer.
 
 Legacy/source-authoring synonyms, if useful:
-: Style packs, theme presets, and demo values may lower to parameter values. They must not add canonical structure as presets.
+: Style packs, theme presets, and demo values may canonicalize to parameter values. They must not add canonical structure as general presets. Transition shorthand canonicalizes to `intent` plus executable tracks.
 
 Example:
 
@@ -1314,33 +1480,33 @@ Legacy/source-authoring synonyms, if useful:
 Example:
 
 ```text
-`lowMotion` may replace motion-strength parameters with reduced values during expansion.
+`lowMotion` in a consumer layer may map to canonical transition `reducedMotion`/`variants` or to reduced parameter values during authoring canonicalization.
 ```
 
 ### RecipeDocument
 
 Definition:
-: The strict canonical v3.1 recipe root produced after authoring/lowering and consumed by future compiler/runtime layers.
+: The strict canonical v3.1 recipe root produced after authoring canonicalization and consumed by future compiler/runtime layers.
 
 Owns / owned by:
-: `RecipeDocument` owns recipe identity, version, metadata, declared assets, source descriptors, source instances, one canonical graph, and one or more recipe scenes.
+: `RecipeDocument` owns recipe identity, version, metadata, named transitions, declared assets, source descriptors, source instances, one canonical graph, and one or more recipe scenes.
 
 Rust contract type, if any:
-: `RecipeDocument`, `RecipeId`, `RecipeMetadata`, `AssetSpec`, `SourceDescriptor`, `SourceInstanceId`, `SourceSpec`, `GraphSpec`, `RecipeScene`.
+: `RecipeDocument`, `RecipeId`, `RecipeMetadata`, `TransitionSpec`, `AssetSpec`, `SourceDescriptor`, `SourceInstanceId`, `SourceSpec`, `GraphSpec`, `RecipeScene`.
 
 JSON/schema surface, if any:
-: `schemas/v3.1/contract/recipe.schema.json`, plus nested recipe metadata, source, asset, graph, and recipe scene schemas.
+: `schemas/v3.1/contract/recipe.schema.json`, plus nested transition, recipe metadata, source, asset, graph, and recipe scene schemas.
 
 Not the same as:
 : Source-authoring syntax, a legacy debug recipe, a template, a preset, a studio manifest, or a runtime player profile.
 
 Legacy/source-authoring synonyms, if useful:
-: Old top-level recipe files are evidence that must lower into this canonical package. Their field names do not define the canonical root.
+: Old top-level recipe files are evidence that must canonicalize into this package. Their field names do not define the canonical root.
 
 Example:
 
 ```text
-A future source-authoring recipe lowers to one RecipeDocument containing concrete graph/source/scene ids and no template, preset, or legacy alias references.
+A future source-authoring recipe canonicalizes to one RecipeDocument containing concrete graph/source/scene ids, native transition tracks, and no template, profile, or legacy alias references. Transition preset intent may remain only as non-executable metadata next to executable tracks.
 ```
 
 ### RecipeScene
@@ -1748,7 +1914,7 @@ Do not introduce them into strict v3.1 contract schemas as aliases.
 | `config`, `settings`, `params` | Classify each field as a descriptor input, public `ParameterSpec`, `SignalSpec`, source input, or implementation-private detail. |
 | `config.pipeline.step` and other old path spellings | Evidence for graph topology or node lowering only; do not preserve the old path as a canonical term. |
 | `requires_bindings` | Use `ParameterSpec`, `SignalSpec`, `BindingSpec`, and `ValueSource` where applicable. |
-| preset/profile references in canonical data | Expand away before canonical validation/runtime. Presets and profiles are values-only authoring inputs. |
+| general preset/profile references in canonical data | Expand away before canonical validation/runtime. Transition preset intent is the narrow exception and is non-executable metadata beside canonical tracks. |
 | template/mixin/inheritance references in canonical data | Expand away before canonical validation/runtime. Runtime inheritance is forbidden. |
 | legacy role aliases | Use built-in `RoleTag` variants or explicit custom roles. Aliases belong in migration tools only. |
 | source-authoring visibility predicates | Deferred phase/trigger/visibility work; do not model as scope unless it truly selects cells. |
@@ -1769,7 +1935,7 @@ Do not introduce them into strict v3.1 contract schemas as aliases.
    `RoleTag` classifies cells. `ElementId`, `NodeId`, `SourceId`, `AssetId`, and `GraphValueId` identify objects or values.
 
 5. Keep authoring composition out of canonical data.
-   Template, mixin, preset, and profile references must expand to concrete canonical ids, values, scenes, nodes, scopes, and policies.
+   Template, mixin, general preset, and profile references must expand to concrete canonical ids, values, scenes, nodes, scopes, and policies. Transition preset shorthand canonicalizes to non-executable intent plus executable tracks.
 
 6. Keep proof names out of stable contract when they are proof-only.
    `SurfacePipeline`, `PipelineStage`, `PipelineSampler`, `DimEffect`, and `ExplicitRoleWriteEffect` are proof artifacts unless a later phase explicitly promotes a concept through the contract process.
@@ -1836,4 +2002,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.25.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.33.0</VERS> -->

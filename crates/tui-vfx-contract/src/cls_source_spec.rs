@@ -16,7 +16,7 @@ use crate::{
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SourceSpec {
     /// Source descriptor id used by this instance.
-    pub source: SourceId,
+    pub source_descriptor: SourceId,
     /// Declarative values supplied to descriptor-local source inputs.
     #[schemars(transform = add_source_input_key_pattern)]
     pub inputs: BTreeMap<SourceInputId, ValueSource>,

@@ -79,14 +79,14 @@ fn signal_map() -> BTreeMap<SignalId, SignalSpec> {
 #[test]
 fn binding_parameter_target_accepts_compatible_source() {
     let binding = BindingSpec {
-        target: BindingTarget::Parameter {
+        binding_target: BindingTarget::Parameter {
             id: ParameterId::new("opacity"),
         },
-        source: ValueSource::Signal {
+        value_source: ValueSource::Signal {
             id: SignalId::new("audioLevel"),
             fallback: None,
         },
-        mode: BindingMode::Replace,
+        binding_mode: BindingMode::Replace,
     };
 
     assert!(binding.validate(&parameter_map(), &signal_map()).is_ok());
@@ -95,14 +95,14 @@ fn binding_parameter_target_accepts_compatible_source() {
 #[test]
 fn binding_parameter_target_rejects_incompatible_source() {
     let binding = BindingSpec {
-        target: BindingTarget::Parameter {
+        binding_target: BindingTarget::Parameter {
             id: ParameterId::new("opacity"),
         },
-        source: ValueSource::Parameter {
+        value_source: ValueSource::Parameter {
             id: ParameterId::new("title"),
             fallback: None,
         },
-        mode: BindingMode::Replace,
+        binding_mode: BindingMode::Replace,
     };
 
     assert!(matches!(
@@ -128,13 +128,13 @@ fn binding_parameter_target_rejects_non_bindable_parameter() {
         },
     );
     let binding = BindingSpec {
-        target: BindingTarget::Parameter {
+        binding_target: BindingTarget::Parameter {
             id: ParameterId::new("locked"),
         },
-        source: ValueSource::Literal {
+        value_source: ValueSource::Literal {
             value: Value::Number(0.5),
         },
-        mode: BindingMode::Replace,
+        binding_mode: BindingMode::Replace,
     };
 
     assert!(matches!(
@@ -146,13 +146,13 @@ fn binding_parameter_target_rejects_non_bindable_parameter() {
 #[test]
 fn binding_unknown_parameter_target_rejected() {
     let binding = BindingSpec {
-        target: BindingTarget::Parameter {
+        binding_target: BindingTarget::Parameter {
             id: ParameterId::new("missing"),
         },
-        source: ValueSource::Literal {
+        value_source: ValueSource::Literal {
             value: Value::Number(0.5),
         },
-        mode: BindingMode::Replace,
+        binding_mode: BindingMode::Replace,
     };
 
     assert!(matches!(

@@ -23,7 +23,7 @@ fn ms(value: u64) -> DurationSpec {
 fn fixed_lifecycle() -> LifecycleSpec {
     LifecycleSpec {
         clock: ClockSpec {
-            mode: ClockMode::Monotonic,
+            clock_mode: ClockMode::Monotonic,
             period: None,
         },
         phases: vec![
@@ -69,7 +69,10 @@ fn integer_value_spec(default: i64) -> ValueSpec {
 
 fn trigger_for(source: ValueSource, predicate: ValuePredicate) -> TriggerSpec {
     TriggerSpec {
-        condition: TriggerCondition { source, predicate },
+        condition: TriggerCondition {
+            predicate_source: source,
+            predicate,
+        },
         latch: TriggerLatchPolicy::UntilPhaseReset,
         reset: TriggerResetBoundary::PhaseStart,
         action: TriggerAction::AdvancePhase,
@@ -250,6 +253,7 @@ fn recipe_document_can_include_lifecycle() {
             ),
             Some(ms(5_000)),
         )),
+        transitions: BTreeMap::new(),
         assets: BTreeMap::new(),
         descriptor_packs: vec![],
         source_descriptors: BTreeMap::new(),

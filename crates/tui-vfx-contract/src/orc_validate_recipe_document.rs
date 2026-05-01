@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_recipe_document.rs</FILE> - <DESC>Validate canonical recipe document contracts</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>New kernel Phase I0: validate recipe lifecycle against graph parameters and signals.</WCTX>
-// <CLOG>0.2.0: MINOR — validate optional recipe lifecycle sources and predicates.
+// <CLOG>0.3.0: MINOR — validate reduced-motion replacement policy shape and cycles.
+// 0.2.0: MINOR — validate optional recipe lifecycle sources and predicates.
 // 0.1.0: INIT — validate recipe assets, source instances, graph, scenes, and element pipelines.</CLOG>
 
 use std::collections::BTreeSet;
 
 use crate::{
     DescriptorValidationError, GraphStep, NodeId, RecipeDocument, RecipeElementPipeline,
-    RecipeScene, RecipeSceneElement,
+    RecipeScene, RecipeSceneElement, ReducedMotionKind, TransitionId,
 };
 
 pub(crate) fn validate_recipe_document(
@@ -26,6 +27,7 @@ pub(crate) fn validate_recipe_document(
     }
     validate_assets(recipe)?;
     validate_source_descriptors(recipe)?;
+    validate_transitions(recipe)?;
     validate_sources(recipe)?;
     validate_scenes(recipe)?;
     Ok(())
@@ -59,6 +61,95 @@ fn validate_source_descriptors(recipe: &RecipeDocument) -> Result<(), Descriptor
             });
         }
         descriptor.validate_contract()?;
+    }
+    Ok(())
+}
+
+fn validate_transitions(recipe: &RecipeDocument) -> Result<(), DescriptorValidationError> {
+    for (id, transition) in &recipe.transitions {
+        if !id.is_valid() {
+            return Err(DescriptorValidationError::InvalidTransitionId { id: id.clone() });
+        }
+        if &transition.id != id {
+            return Err(DescriptorValidationError::TransitionIdMismatch {
+                key: id.clone(),
+                transition: transition.id.clone(),
+            });
+        }
+        if transition.tracks.is_empty() {
+            return Err(DescriptorValidationError::EmptyTransitionTracks { id: id.clone() });
+        }
+        validate_reduced_motion_policy_shape(recipe, id)?;
+        for variant in &transition.variants {
+            if !recipe.transitions.contains_key(&variant.use_transition) {
+                return Err(DescriptorValidationError::UnknownTransitionVariant {
+                    transition: id.clone(),
+                    referenced: variant.use_transition.clone(),
+                });
+            }
+        }
+    }
+    validate_reduced_motion_cycles(recipe)?;
+    Ok(())
+}
+
+fn validate_reduced_motion_policy_shape(
+    recipe: &RecipeDocument,
+    id: &TransitionId,
+) -> Result<(), DescriptorValidationError> {
+    let transition = recipe
+        .transitions
+        .get(id)
+        .expect("caller iterates declared transition ids");
+    match (
+        transition.reduced_motion.policy,
+        &transition.reduced_motion.transition,
+    ) {
+        (ReducedMotionKind::Substitute, None) => {
+            Err(DescriptorValidationError::MissingReducedMotionTransition {
+                transition: id.clone(),
+            })
+        }
+        (ReducedMotionKind::Substitute, Some(referenced)) => {
+            if recipe.transitions.contains_key(referenced) {
+                Ok(())
+            } else {
+                Err(DescriptorValidationError::UnknownReducedMotionTransition {
+                    transition: id.clone(),
+                    referenced: referenced.clone(),
+                })
+            }
+        }
+        (_, Some(referenced)) => Err(
+            DescriptorValidationError::UnexpectedReducedMotionTransition {
+                transition: id.clone(),
+                referenced: referenced.clone(),
+            },
+        ),
+        (_, None) => Ok(()),
+    }
+}
+
+fn validate_reduced_motion_cycles(
+    recipe: &RecipeDocument,
+) -> Result<(), DescriptorValidationError> {
+    for id in recipe.transitions.keys() {
+        let mut seen = BTreeSet::new();
+        let mut current = id;
+        while let Some(transition) = recipe.transitions.get(current) {
+            if !seen.insert(current.clone()) {
+                return Err(DescriptorValidationError::ReducedMotionTransitionCycle {
+                    transition: id.clone(),
+                });
+            }
+            if transition.reduced_motion.policy != ReducedMotionKind::Substitute {
+                break;
+            }
+            let Some(next) = &transition.reduced_motion.transition else {
+                break;
+            };
+            current = next;
+        }
     }
     Ok(())
 }
@@ -106,11 +197,11 @@ fn validate_scene_element(
     scene: &RecipeScene,
     element: &RecipeSceneElement,
 ) -> Result<(), DescriptorValidationError> {
-    if !recipe.sources.contains_key(&element.source) {
+    if !recipe.sources.contains_key(&element.source_instance) {
         return Err(DescriptorValidationError::UnknownSceneElementSource {
             scene: scene.id.clone(),
             element: element.id.clone(),
-            source: element.source.clone(),
+            source: element.source_instance.clone(),
         });
     }
     if let Some(pipeline) = &element.pipeline {
@@ -185,4 +276,4 @@ fn validate_pipeline_node(
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_recipe_document.rs</FILE> - <DESC>Validate canonical recipe document contracts</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_trigger_condition.rs</FILE> - <DESC>Lifecycle trigger condition DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>K2.13 schema decision burn-down: recurse into sampled-field coordinates during trigger validation.</WCTX>
-// <CLOG>0.2.0: MINOR — reject nested graph values inside sampled-field trigger sources.
+// <CLOG>0.3.0: MINOR — allow typed expression and time-derived value sources in lifecycle trigger validation.
+// 0.2.0: MINOR — reject nested graph values inside sampled-field trigger sources.
 // 0.1.0: INIT — add ValueSource plus ValuePredicate trigger condition.</CLOG>
 
 use std::collections::BTreeMap;
@@ -15,8 +16,8 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TriggerCondition {
-    /// Source sampled to evaluate the trigger condition.
-    pub source: ValueSource,
+    /// Value source sampled to evaluate the trigger condition.
+    pub predicate_source: ValueSource,
     /// Typed predicate applied to the sampled source value.
     pub predicate: ValuePredicate,
 }
@@ -28,8 +29,8 @@ impl TriggerCondition {
         parameters: &BTreeMap<ParameterId, ParameterSpec>,
         signals: &BTreeMap<SignalId, SignalSpec>,
     ) -> Result<(), DescriptorValidationError> {
-        reject_graph_value_source(&self.source)?;
-        let kind = self.source.infer_kind(parameters, signals)?;
+        reject_graph_value_source(&self.predicate_source)?;
+        let kind = self.predicate_source.infer_kind(parameters, signals)?;
         self.predicate.validate_for_kind(kind)
     }
 }
@@ -46,9 +47,12 @@ fn reject_graph_value_source(source: &ValueSource) -> Result<(), DescriptorValid
         }
         ValueSource::Literal { .. }
         | ValueSource::Parameter { .. }
-        | ValueSource::Signal { .. } => Ok(()),
+        | ValueSource::Signal { .. }
+        | ValueSource::SignalExpression { .. }
+        | ValueSource::PhaseProgress { .. }
+        | ValueSource::Clock { .. } => Ok(()),
     }
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_trigger_condition.rs</FILE> - <DESC>Lifecycle trigger condition DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

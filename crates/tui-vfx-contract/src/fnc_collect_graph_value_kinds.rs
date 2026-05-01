@@ -23,7 +23,7 @@ pub(crate) fn collect_graph_value_kinds(
             }
         })?;
         for (graph_value_id, output) in &node.outputs {
-            let (kind, shape) = match &output.source {
+            let (kind, shape) = match &output.output_source {
                 NodeOutputSource::EffectOutput { id } => {
                     let output = effect.outputs.get(id).ok_or_else(|| {
                         DescriptorValidationError::UnknownEffectOutput {

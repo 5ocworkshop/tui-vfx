@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.10.1</VERS>
+// <VERS>VERSION: 0.11.0</VERS>
 // <WCTX>K2.13 schema decision burn-down: report invalid gradient and sampled-field payloads.</WCTX>
-// <CLOG>0.10.1: PATCH — add unknown sampled-field validation error.
+// <CLOG>0.11.0: MINOR — add reduced-motion replacement shape and cycle validation errors.
+// 0.10.1: PATCH — add unknown sampled-field validation error.
 // 0.10.0: MINOR — add gradient stop validation error.
 // 0.9.0: MINOR — add descriptor pack identity, collision, and reference errors.
 // 0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
@@ -17,7 +18,7 @@ use crate::{
     AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, DescriptorPackId, EffectId,
     EffectInputId, EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape,
     LifecyclePhase, NodeId, ParameterId, RecipeId, RoleWritePolicyKind, SceneId, ScopeKind,
-    SignalId, SourceId, SourceInputId, SourceInstanceId, ValueKind,
+    SignalId, SourceId, SourceInputId, SourceInstanceId, TransitionId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -108,6 +109,56 @@ pub enum DescriptorValidationError {
         /// Source descriptor id stored in the value.
         source: SourceId,
     },
+    /// Transition id is outside the accepted identifier shape.
+    InvalidTransitionId {
+        /// Invalid transition id.
+        id: TransitionId,
+    },
+    /// Recipe transition map key does not match the nested transition id.
+    TransitionIdMismatch {
+        /// Transition map key.
+        key: TransitionId,
+        /// Transition id stored in the value.
+        transition: TransitionId,
+    },
+    /// Transition has no executable canonical tracks.
+    EmptyTransitionTracks {
+        /// Transition id that had no tracks.
+        id: TransitionId,
+    },
+
+    /// Transition reduced-motion policy references an undeclared transition.
+    UnknownReducedMotionTransition {
+        /// Transition whose reduced-motion policy failed.
+        transition: TransitionId,
+        /// Missing replacement transition id.
+        referenced: TransitionId,
+    },
+    /// Reduced-motion substitution policy omits its required replacement transition.
+    MissingReducedMotionTransition {
+        /// Transition whose reduced-motion policy failed.
+        transition: TransitionId,
+    },
+    /// Non-substitution reduced-motion policy unexpectedly carries a replacement transition.
+    UnexpectedReducedMotionTransition {
+        /// Transition whose reduced-motion policy failed.
+        transition: TransitionId,
+        /// Unexpected replacement transition id.
+        referenced: TransitionId,
+    },
+    /// Reduced-motion substitution transitions form a cycle.
+    ReducedMotionTransitionCycle {
+        /// Transition where the cycle was detected.
+        transition: TransitionId,
+    },
+    /// Transition variant references an undeclared transition.
+    UnknownTransitionVariant {
+        /// Transition whose variant failed.
+        transition: TransitionId,
+        /// Missing replacement transition id.
+        referenced: TransitionId,
+    },
+
     /// Recipe scene element references an undeclared source instance.
     UnknownSceneElementSource {
         /// Scene that owns the element.
@@ -550,4 +601,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

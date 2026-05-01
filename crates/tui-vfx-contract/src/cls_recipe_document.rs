@@ -10,11 +10,12 @@ use std::collections::BTreeMap;
 use crate::{
     AssetId, AssetSpec, DescriptorCatalog, DescriptorPackRef, DescriptorValidationError, GraphSpec,
     LifecycleSpec, RecipeId, RecipeMetadata, RecipeScene, SourceDescriptor, SourceId,
-    SourceInstanceId, SourceSpec, fnc_validate_recipe_with_catalog::validate_recipe_with_catalog,
+    SourceInstanceId, SourceSpec, TransitionId, TransitionSpec,
+    fnc_validate_recipe_with_catalog::validate_recipe_with_catalog,
     orc_validate_recipe_document::validate_recipe_document,
 };
 
-/// Strict canonical v3.1 recipe document consumed after authoring/lowering.
+/// Strict canonical v3.1 recipe document consumed after authoring canonicalization.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RecipeDocument {
@@ -26,6 +27,10 @@ pub struct RecipeDocument {
     pub metadata: RecipeMetadata,
     /// Optional recipe-level lifecycle semantics for enter, dwell, and exit.
     pub lifecycle: Option<LifecycleSpec>,
+    /// Named native transitions available to scenes, elements, and future graph transition nodes.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[schemars(transform = add_transition_key_pattern)]
+    pub transitions: BTreeMap<TransitionId, TransitionSpec>,
     /// Assets declared once and referenced structurally by source instances.
     #[schemars(transform = add_asset_key_pattern)]
     pub assets: BTreeMap<AssetId, AssetSpec>,
@@ -57,6 +62,10 @@ impl RecipeDocument {
     ) -> Result<(), DescriptorValidationError> {
         validate_recipe_with_catalog(self, catalog)
     }
+}
+
+fn add_transition_key_pattern(schema: &mut schemars::Schema) {
+    add_key_pattern(schema, "Transition ids", "^[A-Za-z][A-Za-z0-9_-]*$");
 }
 
 fn add_asset_key_pattern(schema: &mut schemars::Schema) {

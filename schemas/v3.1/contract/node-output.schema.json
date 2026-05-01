@@ -4,14 +4,14 @@
   "description": "Declaration for one graph-local value published by a node.",
   "type": "object",
   "properties": {
-    "source": {
-      "description": "Where the value is read from after node input resolution/effect execution.",
+    "outputSource": {
+      "description": "Output source read after node input resolution/effect execution.",
       "$ref": "#/$defs/NodeOutputSource"
     }
   },
   "additionalProperties": false,
   "required": [
-    "source"
+    "outputSource"
   ],
   "$defs": {
     "EffectInputId": {

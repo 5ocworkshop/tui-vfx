@@ -763,8 +763,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "affect": {
-          "displayName": "Affect",
+        "cellSelector": {
+          "displayName": "Cell Selector",
           "description": null,
           "value": {
             "kind": "enum",
@@ -863,8 +863,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "dissolveOrder": {
+          "displayName": "Dissolve Order",
           "description": null,
           "value": {
             "kind": "enum",
@@ -963,8 +963,8 @@
         ]
       },
       "inputs": {
-        "amount": {
-          "displayName": "Amount",
+        "shiftCells": {
+          "displayName": "Shift Cells",
           "description": null,
           "value": {
             "kind": "integer",
@@ -1061,8 +1061,8 @@
         ]
       },
       "inputs": {
-        "speed": {
-          "displayName": "Speed",
+        "scrollRate": {
+          "displayName": "Scroll Rate",
           "description": null,
           "value": {
             "kind": "number",
@@ -1081,8 +1081,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "direction": {
-          "displayName": "Direction",
+        "travelDirection": {
+          "displayName": "Travel Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -1253,8 +1253,8 @@
         ]
       },
       "inputs": {
-        "target": {
-          "displayName": "Target",
+        "morphTarget": {
+          "displayName": "Morph Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -1461,8 +1461,8 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
+        "rollDirection": {
+          "displayName": "Roll Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -1630,7 +1630,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u2588"
+              "value": "█"
             },
             "range": null,
             "allowedValues": [],
@@ -1851,8 +1851,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "amount": {
-          "displayName": "Amount",
+        "shiftCells": {
+          "displayName": "Shift Cells",
           "description": null,
           "value": {
             "kind": "integer",
@@ -2230,8 +2230,8 @@
         ]
       },
       "inputs": {
-        "speed": {
-          "displayName": "Speed",
+        "glyphsPerSecond": {
+          "displayName": "Glyphs Per Second",
           "description": null,
           "value": {
             "kind": "number",
@@ -2278,7 +2278,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u258c"
+              "value": "▌"
             },
             "range": null,
             "allowedValues": [],
@@ -2508,8 +2508,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -2524,13 +2524,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "emphasisProgress": {
+          "displayName": "Emphasis Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -2573,8 +2573,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -2907,8 +2907,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Canonical replacement for old foreground/background channel-scoped filter payloads.",
           "value": {
             "kind": "enum",
@@ -2923,7 +2923,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -3049,8 +3049,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -3065,13 +3065,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "fillProgress": {
+          "displayName": "Fill Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -3114,7 +3114,7 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
+        "indicatorColor": {
           "displayName": "Indicator Color",
           "description": "Legacy foreground color used as the progress-blend target for the indicator glyph.",
           "value": {
@@ -3282,7 +3282,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u2022"
+              "value": "•"
             },
             "range": null,
             "allowedValues": [],
@@ -3350,8 +3350,8 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
+        "growDirection": {
+          "displayName": "Grow Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -3372,8 +3372,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "revealProgress": {
+          "displayName": "Reveal Progress",
           "description": null,
           "value": {
             "kind": "number",
@@ -3414,8 +3414,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -3430,7 +3430,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -3458,8 +3458,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -3761,8 +3761,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "amount": {
-          "displayName": "Amount",
+        "fadeRatio": {
+          "displayName": "Fade Ratio",
           "description": null,
           "value": {
             "kind": "number",
@@ -3802,8 +3802,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Foreground/background channels affected by the fade-to-canvas operation.",
           "value": {
             "kind": "enum",
@@ -3901,8 +3901,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -3917,7 +3917,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -4043,8 +4043,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -4059,13 +4059,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "fillProgress": {
+          "displayName": "Fill Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -4108,8 +4108,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -4366,8 +4366,8 @@
         ]
       },
       "inputs": {
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Canonical replacement for old foreground/background channel-scoped filter payloads.",
           "value": {
             "kind": "enum",
@@ -4382,7 +4382,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -4488,8 +4488,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "speed": {
-          "displayName": "Speed",
+        "scanRate": {
+          "displayName": "Scan Rate",
           "description": null,
           "value": {
             "kind": "number",
@@ -4528,8 +4528,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -4544,13 +4544,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "scanProgress": {
+          "displayName": "Scan Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -4593,8 +4593,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "scannerColor": {
+          "displayName": "Scanner Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -4913,8 +4913,8 @@
         ]
       },
       "inputs": {
-        "speed": {
-          "displayName": "Speed",
+        "fallRate": {
+          "displayName": "Fall Rate",
           "description": null,
           "value": {
             "kind": "number",
@@ -4953,8 +4953,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "affect": {
-          "displayName": "Affect",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -4969,7 +4969,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -5037,8 +5037,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "mode": {
-          "displayName": "Mode",
+        "rainMode": {
+          "displayName": "Rain Mode",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -5380,8 +5380,8 @@
         ]
       },
       "inputs": {
-        "progress": {
-          "displayName": "Progress",
+        "fillProgress": {
+          "displayName": "Fill Progress",
           "description": null,
           "value": {
             "kind": "number",
@@ -5653,8 +5653,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -5669,13 +5669,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "fillProgress": {
+          "displayName": "Fill Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -5718,8 +5718,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -5856,8 +5856,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "fillDirection": {
+          "displayName": "Fill Direction",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -5958,7 +5958,7 @@
         ]
       },
       "inputs": {
-        "color": {
+        "tintColor": {
           "displayName": "Tint Color",
           "description": null,
           "value": {
@@ -6000,8 +6000,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -6016,7 +6016,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -6100,8 +6100,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "revealProgress": {
+          "displayName": "Reveal Progress",
           "description": null,
           "value": {
             "kind": "number",
@@ -6140,8 +6140,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -6156,7 +6156,7 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -6184,8 +6184,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -6322,8 +6322,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "revealDirection": {
+          "displayName": "Reveal Direction",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -6526,8 +6526,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": null,
           "value": {
             "kind": "enum",
@@ -6542,13 +6542,13 @@
               "background"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "progress": {
-          "displayName": "Progress",
+        "vignetteProgress": {
+          "displayName": "Vignette Progress",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -6591,8 +6591,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "vignetteColor": {
+          "displayName": "Vignette Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -8087,8 +8087,8 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
+        "revealDirection": {
+          "displayName": "Reveal Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -8206,8 +8206,8 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
+        "cornerRevealDirection": {
+          "displayName": "Corner Reveal Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -8819,8 +8819,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "speed": {
-          "displayName": "Speed",
+        "cyclesPerSecond": {
+          "displayName": "Cycles Per Second",
           "description": null,
           "value": {
             "kind": "number",
@@ -9132,8 +9132,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "speed": {
-          "displayName": "Speed",
+        "cyclesPerSecond": {
+          "displayName": "Cycles Per Second",
           "description": null,
           "value": {
             "kind": "number",
@@ -9335,8 +9335,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "stripeRate": {
+          "displayName": "Stripe Rate",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -9356,8 +9356,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -9372,14 +9372,14 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Legacy color alias consumed as stripe color by bounded player evidence.",
           "value": {
             "kind": "color",
@@ -9459,7 +9459,7 @@
         ]
       },
       "inputs": {
-        "color": {
+        "sweepColor": {
           "displayName": "Sweep Color",
           "description": null,
           "value": {
@@ -9481,8 +9481,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "speed": {
-          "displayName": "Speed",
+        "loopsPerSecond": {
+          "displayName": "Loops Per Second",
           "description": null,
           "value": {
             "kind": "number",
@@ -9599,8 +9599,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "diffusionColor": {
+          "displayName": "Diffusion Color",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -9700,8 +9700,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -9716,14 +9716,14 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "source": {
-          "displayName": "Source",
+        "diffusionOrigin": {
+          "displayName": "Diffusion Origin",
           "description": "Legacy diffusion origin selector accepted for migration parity; center maps to the existing centerX/centerY defaults.",
           "value": {
             "kind": "enum",
@@ -9806,8 +9806,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "focusColor": {
+          "displayName": "Focus Color",
           "description": null,
           "value": {
             "kind": "color",
@@ -10066,8 +10066,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -10082,7 +10082,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -10148,8 +10148,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "bandColor": {
+          "displayName": "Band Color",
           "description": null,
           "value": {
             "kind": "color",
@@ -10190,8 +10190,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "direction": {
-          "displayName": "Direction",
+        "sweepDirection": {
+          "displayName": "Sweep Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -10274,8 +10274,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "sweepRate": {
+          "displayName": "Sweep Rate",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -10376,8 +10376,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "highlightColor": {
+          "displayName": "Highlight Color",
           "description": null,
           "value": {
             "kind": "color",
@@ -10460,8 +10460,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "mode": {
-          "displayName": "Mode",
+        "highlightMode": {
+          "displayName": "Highlight Mode",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -10500,8 +10500,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "sweepDirection": {
+          "displayName": "Sweep Direction",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -10544,8 +10544,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -10560,7 +10560,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -10743,8 +10743,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Cell channel target for the gradient.",
           "value": {
             "kind": "enum",
@@ -10824,8 +10824,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "sweepColor": {
+          "displayName": "Sweep Color",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -10847,8 +10847,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "sweepRate": {
+          "displayName": "Sweep Rate",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -10889,8 +10889,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -10905,7 +10905,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -10971,8 +10971,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "revealColor": {
+          "displayName": "Reveal Color",
           "description": null,
           "value": {
             "kind": "color",
@@ -10993,8 +10993,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "direction": {
-          "displayName": "Direction",
+        "revealDirection": {
+          "displayName": "Reveal Direction",
           "description": null,
           "value": {
             "kind": "enum",
@@ -11116,8 +11116,8 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "color": {
-          "displayName": "Color",
+        "nodeColor": {
+          "displayName": "Node Color",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -11425,7 +11425,7 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "target": {
+        "targetColor": {
           "displayName": "Target Color",
           "description": null,
           "value": {
@@ -11551,8 +11551,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -11567,7 +11567,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -11744,8 +11744,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -11760,7 +11760,7 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -12294,8 +12294,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "glowColor": {
+          "displayName": "Glow Color",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -12637,8 +12637,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "pulseColor": {
+          "displayName": "Pulse Color",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -12681,8 +12681,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
             "kind": "enum",
@@ -12697,14 +12697,14 @@
               "both"
             ],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "pulseColor": {
-          "displayName": "Pulse Color",
+        "accentColor": {
+          "displayName": "Accent Color",
           "description": "Legacy pulse color alias consumed by bounded player evidence.",
           "value": {
             "kind": "color",
@@ -12799,8 +12799,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "cascadeDirection": {
+          "displayName": "Cascade Direction",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -12814,8 +12814,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "mode": {
-          "displayName": "Mode",
+        "cascadeMode": {
+          "displayName": "Cascade Mode",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -12977,8 +12977,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "motion": {
-          "displayName": "Motion",
+        "motionPattern": {
+          "displayName": "Motion Pattern",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "structured",
@@ -13110,8 +13110,8 @@
         ]
       },
       "inputs": {
-        "affect": {
-          "displayName": "Affect",
+        "cellSelector": {
+          "displayName": "Cell Selector",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -13125,8 +13125,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -13134,7 +13134,7 @@
             "range": null,
             "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -13303,8 +13303,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "dustColor": {
+          "displayName": "Dust Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -13451,8 +13451,8 @@
         ]
       },
       "inputs": {
-        "affect": {
-          "displayName": "Affect",
+        "cellSelector": {
+          "displayName": "Cell Selector",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -13747,8 +13747,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "progress": {
-          "displayName": "Progress",
+        "sweepProgress": {
+          "displayName": "Sweep Progress",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -13762,8 +13762,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "sweepRate": {
+          "displayName": "Sweep Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -14011,8 +14011,8 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
+        "blurDirection": {
+          "displayName": "Blur Direction",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -14485,8 +14485,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "progress": {
-          "displayName": "Progress",
+        "scanProgress": {
+          "displayName": "Scan Progress",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -14944,8 +14944,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "bounceRate": {
+          "displayName": "Bounce Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -15165,8 +15165,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "swingRate": {
+          "displayName": "Swing Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -15326,8 +15326,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "wakeColor": {
+          "displayName": "Wake Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -15356,8 +15356,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "progress": {
-          "displayName": "Progress",
+        "wakeProgress": {
+          "displayName": "Wake Progress",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -15680,8 +15680,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "overlayColor": {
+          "displayName": "Overlay Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -15783,8 +15783,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "lightColor": {
+          "displayName": "Light Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -15828,8 +15828,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "source": {
-          "displayName": "Source",
+        "lightSource": {
+          "displayName": "Light Source",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -15931,8 +15931,8 @@
         ]
       },
       "inputs": {
-        "mode": {
-          "displayName": "Mode",
+        "cursorMode": {
+          "displayName": "Cursor Mode",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -16064,8 +16064,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "sheenColor": {
+          "displayName": "Sheen Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -16124,8 +16124,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "sheenRate": {
+          "displayName": "Sheen Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -16197,8 +16197,8 @@
         ]
       },
       "inputs": {
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -16206,7 +16206,7 @@
             "range": null,
             "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -16360,8 +16360,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "stripeColor": {
+          "displayName": "Stripe Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -16583,8 +16583,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "glitchRate": {
+          "displayName": "Glitch Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -16701,8 +16701,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "flickerRate": {
+          "displayName": "Flicker Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -16789,8 +16789,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "orbitColor": {
+          "displayName": "Orbit Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -16819,8 +16819,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "orbitRate": {
+          "displayName": "Orbit Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -16892,8 +16892,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "waveColor": {
+          "displayName": "Wave Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -16907,8 +16907,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "direction": {
-          "displayName": "Direction",
+        "waveDirection": {
+          "displayName": "Wave Direction",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -16937,8 +16937,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "waveRate": {
+          "displayName": "Wave Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -17055,8 +17055,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "color": {
-          "displayName": "Color",
+        "spiralColor": {
+          "displayName": "Spiral Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -17100,8 +17100,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "spinRate": {
+          "displayName": "Spin Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -17173,8 +17173,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "reflectionColor": {
+          "displayName": "Reflection Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -17188,8 +17188,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "reflectionRate": {
+          "displayName": "Reflection Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -17261,8 +17261,8 @@
         ]
       },
       "inputs": {
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -17270,7 +17270,7 @@
             "range": null,
             "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -17336,8 +17336,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "sparkleRate": {
+          "displayName": "Sparkle Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -17572,8 +17572,8 @@
         ]
       },
       "inputs": {
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -17581,7 +17581,7 @@
             "range": null,
             "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -17707,8 +17707,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "mode": {
-          "displayName": "Mode",
+        "renderMode": {
+          "displayName": "Render Mode",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -17900,8 +17900,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "applyTo": {
-          "displayName": "Apply To",
+        "channelTarget": {
+          "displayName": "Channel Target",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -17909,7 +17909,7 @@
             "range": null,
             "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
@@ -18080,8 +18080,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "mode": {
-          "displayName": "Mode",
+        "renderMode": {
+          "displayName": "Render Mode",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "string",
@@ -18155,8 +18155,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "waveRate": {
+          "displayName": "Wave Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -18258,8 +18258,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "traceColor": {
+          "displayName": "Trace Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -18333,8 +18333,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "traceRate": {
+          "displayName": "Trace Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",
@@ -18466,8 +18466,8 @@
         ]
       },
       "inputs": {
-        "color": {
-          "displayName": "Color",
+        "propagationColor": {
+          "displayName": "Propagation Color",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "color",
@@ -18541,8 +18541,8 @@
           "runtimeMutability": "phaseStart",
           "optional": true
         },
-        "speed": {
-          "displayName": "Speed",
+        "propagationRate": {
+          "displayName": "Propagation Rate",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
             "kind": "number",

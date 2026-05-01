@@ -186,7 +186,7 @@ pub fn output_from_input(mut node: NodeSpec, output: &str, input: &str) -> NodeS
     node.outputs = BTreeMap::from([(
         GraphValueId::new(output),
         NodeOutputSpec {
-            source: NodeOutputSource::Input {
+            output_source: NodeOutputSource::Input {
                 id: EffectInputId::new(input),
             },
         },
@@ -198,7 +198,7 @@ pub fn output_from_effect(mut node: NodeSpec, output: &str, effect_output: &str)
     node.outputs = BTreeMap::from([(
         GraphValueId::new(output),
         NodeOutputSpec {
-            source: NodeOutputSource::EffectOutput {
+            output_source: NodeOutputSource::EffectOutput {
                 id: EffectOutputId::new(effect_output),
             },
         },
@@ -208,11 +208,11 @@ pub fn output_from_effect(mut node: NodeSpec, output: &str, effect_output: &str)
 
 pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
     BindingSpec {
-        target: BindingTarget::Parameter {
+        binding_target: BindingTarget::Parameter {
             id: ParameterId::new(parameter_id),
         },
-        source,
-        mode: BindingMode::Replace,
+        value_source: source,
+        binding_mode: BindingMode::Replace,
     }
 }
 

@@ -54,6 +54,26 @@
     }
   ],
   "$defs": {
+    "ClockValueSource": {
+      "description": "Numeric clock source exposed to canonical `ValueSource::Clock`.",
+      "oneOf": [
+        {
+          "description": "Absolute recipe sample time in seconds.",
+          "type": "string",
+          "const": "recipeSeconds"
+        },
+        {
+          "description": "Current lifecycle phase sample time in seconds.",
+          "type": "string",
+          "const": "phaseSeconds"
+        },
+        {
+          "description": "Current loop-local sample time in seconds when a loop exists.",
+          "type": "string",
+          "const": "loopSeconds"
+        }
+      ]
+    },
     "Color": {
       "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
       "type": "object",
@@ -191,6 +211,26 @@
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
+    },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
     },
     "NumericRange": {
       "description": "Optional inclusive numeric bounds for a value spec.",
@@ -575,6 +615,242 @@
         }
       ]
     },
+    "SignalExpressionSpec": {
+      "description": "Deterministic numeric expression usable by preview loopbacks and authored value sources.",
+      "oneOf": [
+        {
+          "description": "Constant numeric expression.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "constant"
+            },
+            "value": {
+              "description": "Constant numeric value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Repeating ramp from `start` to `end`.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Value at normalized expression phase one.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "ramp"
+            },
+            "start": {
+              "description": "Value at normalized expression phase zero.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Sine oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sine"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Triangle oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "triangle"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Mix two numeric expressions with a 0..1 blend factor.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "mix"
+            },
+            "mix": {
+              "description": "Blend factor where 0 selects `a` and 1 selects `b`.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b",
+            "mix"
+          ]
+        },
+        {
+          "description": "Add two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "add"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Multiply two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "multiply"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Clamp a numeric expression into an inclusive range.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Expression input to clamp.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clamp"
+            },
+            "max": {
+              "description": "Inclusive maximum value.",
+              "type": "number",
+              "format": "double"
+            },
+            "min": {
+              "description": "Inclusive minimum value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "input",
+            "min",
+            "max"
+          ]
+        }
+      ]
+    },
     "SignalId": {
       "description": "Stable host/runtime signal identifier.",
       "type": "string",
@@ -639,14 +915,14 @@
           "description": "Typed predicate applied to the sampled source value.",
           "$ref": "#/$defs/ValuePredicate"
         },
-        "source": {
-          "description": "Source sampled to evaluate the trigger condition.",
+        "predicateSource": {
+          "description": "Value source sampled to evaluate the trigger condition.",
           "$ref": "#/$defs/ValueSource"
         }
       },
       "additionalProperties": false,
       "required": [
-        "source",
+        "predicateSource",
         "predicate"
       ]
     },
@@ -1318,6 +1594,74 @@
             "field",
             "x",
             "y"
+          ]
+        },
+        {
+          "description": "Source value comes from an authored deterministic signal expression.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Numeric signal expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "fallback": {
+              "description": "Optional fallback value when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "signalExpression"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        },
+        {
+          "description": "Source value is normalized lifecycle phase progress in 0..1.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "phaseProgress"
+            },
+            "phase": {
+              "description": "Lifecycle phase whose progress should be sampled.",
+              "$ref": "#/$defs/LifecyclePhase"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phase"
+          ]
+        },
+        {
+          "description": "Source value is derived from the active recipe/player clock.",
+          "type": "object",
+          "properties": {
+            "clock": {
+              "description": "Clock sample source to use.",
+              "$ref": "#/$defs/ClockValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clock"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "clock"
           ]
         }
       ]

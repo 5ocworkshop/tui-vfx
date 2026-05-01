@@ -21,7 +21,7 @@ pub enum SceneElementPlacementRule {
         /// Absolute target rectangle.
         rect: Rect,
         /// Optional placement-motion payload preserved from scene authoring.
-        motion: Option<StructuredValue>,
+        placement_motion: Option<StructuredValue>,
     },
     /// Place relative to a scene anchor or an already-declared sibling layer.
     Anchor {
@@ -37,7 +37,7 @@ pub enum SceneElementPlacementRule {
         #[serde(rename = "siblingLayer")]
         sibling_layer: Option<LayerId>,
         /// Optional placement-motion payload preserved from scene authoring.
-        motion: Option<StructuredValue>,
+        placement_motion: Option<StructuredValue>,
     },
 }
 

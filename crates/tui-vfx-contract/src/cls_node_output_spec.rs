@@ -9,8 +9,8 @@ use crate::NodeOutputSource;
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NodeOutputSpec {
-    /// Where the value is read from after node input resolution/effect execution.
-    pub source: NodeOutputSource,
+    /// Output source read after node input resolution/effect execution.
+    pub output_source: NodeOutputSource,
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_node_output_spec.rs</FILE> - <DESC>Node graph value output declaration DTO</DESC>

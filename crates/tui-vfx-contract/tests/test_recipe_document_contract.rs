@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>v3.1 pre-release scene vocabulary: keep recipe fixture builders current with scrollFactor.</WCTX>
-// <CLOG>0.2.0: MINOR — assert scrollFactor absent/present recipe scene element serde behavior.
+// <CLOG>0.3.0: MINOR — assert typed scene-element shadow attachment shape.
+// 0.2.0: MINOR — assert scrollFactor absent/present recipe scene element serde behavior.
 // 0.1.2: PATCH — initialize absent scrollFactor in recipe scene element test fixtures.
 // 0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
 // 0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element pipeline validation.</CLOG>
@@ -17,12 +18,13 @@ use tui_vfx_contract::{
     ElementPlacement, GraphId, GraphStep, GraphValueShape, NodeId, ParameterId, RecipeDocument,
     RecipeElementPipeline, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
     RoleWritePolicy, SceneAnchor, SceneElementOverflowPolicy, SceneElementPlacementRule,
-    SceneElementSurface, SceneElementVisibility, SceneId, ScrollFactor, SourceDescriptor, SourceId,
-    SourceInputId, SourceInputSpec, SourceInstanceId, SourceKind, SourceLifecycle,
-    SourceOutputSize, SourceOutputSpec, SourceRolePolicy, SourceSpec, StructuredValue, Value,
-    ValueKind, ValuePredicate, ValueSource,
+    SceneElementSurface, SceneElementVisibility, SceneId, ScopeSpec, ScrollFactor, ShadowBlendMode,
+    ShadowCompositeMode, ShadowEdge, ShadowFalloff, ShadowInset, ShadowOffset, ShadowSpec,
+    SourceDescriptor, SourceId, SourceInputId, SourceInputSpec, SourceInstanceId, SourceKind,
+    SourceLifecycle, SourceOutputSize, SourceOutputSpec, SourceRolePolicy, SourceSpec,
+    StructuredValue, Value, ValueKind, ValuePredicate, ValueSource,
 };
-use tui_vfx_types::RoleTag;
+use tui_vfx_types::{Color, RoleTag};
 
 fn text_descriptor() -> SourceDescriptor {
     SourceDescriptor {
@@ -100,7 +102,7 @@ fn flag_asset() -> AssetSpec {
 
 fn text_source() -> SourceSpec {
     SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::from([(
             SourceInputId::new("text"),
             ValueSource::Parameter {
@@ -118,7 +120,7 @@ fn scene_element() -> RecipeSceneElement {
         layer: None,
         z_index: 0,
         placement: ElementPlacement { x: 0, y: 0 },
-        source: SourceInstanceId::new("heroText"),
+        source_instance: SourceInstanceId::new("heroText"),
         pipeline: Some(RecipeElementPipeline {
             graph: GraphId::new("heroFade"),
             timing: None,
@@ -130,7 +132,7 @@ fn scene_element() -> RecipeSceneElement {
         visibility: None,
         surface: None,
         overflow: None,
-        motion: None,
+        placement_motion: None,
         scroll_factor: None,
         clip_policy: ClipPolicy::Clip,
         cell_write_policy: CellWritePolicy::WriteCell,
@@ -179,6 +181,7 @@ fn valid_recipe() -> RecipeDocument {
             tags: vec!["proof".to_string()],
         },
         lifecycle: None,
+        transitions: BTreeMap::new(),
         assets: BTreeMap::new(),
         descriptor_packs: vec![],
         source_descriptors: BTreeMap::from([(SourceId::new("source.text"), text_descriptor())]),
@@ -246,7 +249,7 @@ fn recipe_rejects_unknown_source_descriptor_ref() {
         .sources
         .get_mut(&SourceInstanceId::new("heroText"))
         .unwrap()
-        .source = SourceId::new("source.missing");
+        .source_descriptor = SourceId::new("source.missing");
 
     assert!(matches!(
         recipe.validate(),
@@ -420,7 +423,7 @@ fn recipe_rejects_unknown_asset_ref() {
     recipe.sources.insert(
         SourceInstanceId::new("heroText"),
         SourceSpec {
-            source: SourceId::new("source.flag"),
+            source_descriptor: SourceId::new("source.flag"),
             inputs: BTreeMap::new(),
             assets: BTreeMap::from([(
                 AssetId::new("flagArt"),
@@ -448,7 +451,7 @@ fn recipe_accepts_structural_asset_ref() {
     recipe.sources.insert(
         SourceInstanceId::new("heroText"),
         SourceSpec {
-            source: SourceId::new("source.flag"),
+            source_descriptor: SourceId::new("source.flag"),
             inputs: BTreeMap::new(),
             assets: BTreeMap::from([(
                 AssetId::new("flagArt"),
@@ -465,7 +468,7 @@ fn recipe_accepts_structural_asset_ref() {
 #[test]
 fn recipe_rejects_unknown_scene_source_instance() {
     let mut recipe = valid_recipe();
-    recipe.scenes[0].elements[0].source = SourceInstanceId::new("missingSource");
+    recipe.scenes[0].elements[0].source_instance = SourceInstanceId::new("missingSource");
 
     assert!(matches!(
         recipe.validate(),
@@ -559,10 +562,10 @@ fn recipe_accepts_v3_scene_extension_contracts() {
         offset_rows: 1,
         offset_columns: -2,
         sibling_layer: None,
-        motion: None,
+        placement_motion: None,
     });
     recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
-        source: ValueSource::Signal {
+        predicate_source: ValueSource::Signal {
             id: tui_vfx_contract::SignalId::new("showHero"),
             fallback: None,
         },
@@ -570,13 +573,28 @@ fn recipe_accepts_v3_scene_extension_contracts() {
     });
     recipe.scenes[0].elements[0].surface = Some(SceneElementSurface {
         base_style: Some(StructuredValue::Object(BTreeMap::new())),
-        shadow: Some(StructuredValue::Object(BTreeMap::new())),
+        shadow: Some(ShadowSpec {
+            source_region: Some(ScopeSpec::Role {
+                role: RoleTag::Border,
+            }),
+            edges: vec![ShadowEdge::Bottom],
+            offset: ShadowOffset { x: 0, y: 1 },
+            inset: Some(ShadowInset { start: 2, end: 2 }),
+            falloff: Some(ShadowFalloff { x: 2, y: 0 }),
+            shadow_color: Color::new(0, 0, 0, 170),
+            soft_edges: true,
+            composite_mode: ShadowCompositeMode::Under,
+            blend_mode: ShadowBlendMode::SourceOver,
+            glyph_material: None,
+            paint_outset: None,
+        }),
     });
     recipe.scenes[0].elements[0].overflow = Some(SceneElementOverflowPolicy::Wrap);
-    recipe.scenes[0].elements[0].motion = Some(StructuredValue::Object(BTreeMap::from([(
-        "enter".to_string(),
-        StructuredValue::Object(BTreeMap::new()),
-    )])));
+    recipe.scenes[0].elements[0].placement_motion =
+        Some(StructuredValue::Object(BTreeMap::from([(
+            "enter".to_string(),
+            StructuredValue::Object(BTreeMap::new()),
+        )])));
 
     assert!(recipe.validate().is_ok());
 }
@@ -585,7 +603,7 @@ fn recipe_accepts_v3_scene_extension_contracts() {
 fn recipe_rejects_unknown_signal_in_scene_visibility_predicate() {
     let mut recipe = valid_recipe();
     recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
-        source: ValueSource::Signal {
+        predicate_source: ValueSource::Signal {
             id: tui_vfx_contract::SignalId::new("missingVisibilitySignal"),
             fallback: None,
         },
@@ -603,7 +621,7 @@ fn recipe_rejects_unknown_signal_in_scene_visibility_predicate() {
 fn recipe_rejects_scene_visibility_predicate_kind_mismatch() {
     let mut recipe = valid_recipe();
     recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
-        source: ValueSource::Parameter {
+        predicate_source: ValueSource::Parameter {
             id: ParameterId::new("title"),
             fallback: None,
         },
@@ -618,4 +636,4 @@ fn recipe_rejects_scene_visibility_predicate_kind_mismatch() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

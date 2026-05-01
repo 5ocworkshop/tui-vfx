@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/CLOCKS_AND_TIMING.md</FILE> - <DESC>Architecture note for v3.1 clocks, timing, cadence, and sample-time boundaries</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>v3.1 compositor-next planning: separate schema lifecycle clocks, runtime playback cadence, semantic update cadence, and absolute sample time.</WCTX> -->
-<!-- <CLOG>0.1.0: INIT — capture current and proposed clock/cadence concepts, Madeira flag timing lesson, and schema-boundary recommendations.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.1</VERS> -->
+<!-- <WCTX>v3.1 transition planning: align lifecycle phases, transition intervals, runtime cadence, and absolute sample time.</WCTX> -->
+<!-- <CLOG>0.4.1: PATCH — update clock examples for post-rename field names and distinguish completed naming audit from pending workbench commonality review.</CLOG> -->
 
 # Clocks and Timing
 
@@ -9,7 +9,7 @@
 
 Draft architecture note.
 
-This document captures the timing vocabulary we should preserve while designing compositor-next, Primitive Workbench, schema-driven primitive contracts, player evidence, and recipe migration validation.
+This document captures the timing vocabulary we should preserve while designing tui-vfx-compost, Primitive Workbench, schema-driven primitive contracts, player evidence, and recipe migration validation.
 
 The core rule is: **do not use `fps` as a catch-all timing concept**. Frame presentation, semantic update cadence, lifecycle progression, loop/sample position, and absolute elapsed time are related but distinct contracts.
 
@@ -49,7 +49,7 @@ Conceptual use:
 ```json
 {
   "clock": {
-    "mode": "looping",
+    "clockMode": "looping",
     "period": { "kind": "milliseconds", "value": 60000 }
   }
 }
@@ -100,7 +100,59 @@ What it is not:
 - not a fixed-step simulation rate;
 - not a primitive-local throttle.
 
-### 3. Element-Local Pipeline Timing
+### 3. Transition Timing
+
+Current home:
+
+- `tui_vfx_contract::TransitionSpec`
+- `tui_vfx_contract::TransitionTiming`
+- `tui_vfx_contract::TransitionTrack`
+- `schemas/v3.1/contract/transition.schema.json`
+
+Purpose:
+
+A transition is a state/surface-change interval. Its `timing` defines the default duration, delay, easing, and stagger inherited by executable tracks unless a track declares its own timing override. Tracks may be visibility, opacity, motion, relation, content, or transient style concerns; persistent generated visuals remain sources or phase-scoped graph nodes.
+
+Relationship to lifecycle:
+
+- recipe lifecycle still owns high-level `enter`, `dwell`, and `exit` progression;
+- a transition can declare `activePhases` to say which lifecycle phases it participates in;
+- `enter` and `exit` commonly use transitions to introduce or remove subjects;
+- `dwell` can still contain transitions for state changes, loops, or externally triggered swaps, but dwell is not replaced by transition vocabulary; continuous visuals such as matrix rain or a waving procedural flag remain dwell graph/source behavior;
+- triggers advance lifecycle phases; transition tracks express visual behavior inside the selected interval.
+
+What it is not:
+
+- not presentation cadence;
+- not a replacement for lifecycle clock or phase timing;
+- not an adapter from canonical v3.1 to a legacy compositor DTO.
+
+Dwell-effect timing pressure:
+
+Persistent effects such as scanners, progress indicators, pulse waves, vignettes,
+and coordinate samplers should use graph/effect nodes plus value sources such as
+`SignalExpressionSpec`, `ValueSource::PhaseProgress`, or `ValueSource::Clock`.
+They should not be reclassified as transitions merely because they are animated.
+
+### 4. Transition Interruption, Reduced Motion, and Variants
+
+Current home:
+
+- `TransitionSpec.interruption`
+- `TransitionSpec.reducedMotion`
+- `TransitionSpec.variants`
+
+Purpose:
+
+Interruption and reduced-motion policy are part of the transition contract from the start. `interruption` declares what should happen when a transition is superseded before completion. `reducedMotion` declares the transition's accessibility fallback posture. Substitution policies must name a replacement transition, and replacement chains must terminate in a non-substitution policy to avoid recursive fallback loops. `variants` provide a generic engine-level conditional replacement mechanism for reduced-motion requests, capability fallback, or host-selected substitutions without adding app/design-system semantics to tui-vfx.
+
+What it is not:
+
+- not a `gt-design` semantic layer;
+- not a Material component policy;
+- not runtime fallback to legacy inputs.
+
+### 5. Element-Local Pipeline Timing
 
 Current home:
 
@@ -123,7 +175,7 @@ What it is not:
 - not display FPS;
 - not semantic update cadence.
 
-### 4. Player Sample Time
+### 6. Player Sample Time
 
 Current home:
 
@@ -158,7 +210,7 @@ What it is not:
 - not player FPS;
 - not necessarily wall-clock real time during tests. In deterministic validation, it is an explicit sampled timestamp.
 
-### 5. Runtime Presentation FPS
+### 7. Runtime Presentation FPS
 
 Current home:
 
@@ -181,7 +233,7 @@ What it is not:
 - not primitive update cadence;
 - not schema-owned visual behavior.
 
-### 6. Primitive Frequency / Speed Inputs
+### 8. Primitive Frequency / Speed Inputs
 
 Current home:
 
@@ -281,7 +333,7 @@ Used by:
 
 Potential update:
 
-- document inheritance and fallback rules more clearly as compositor-next starts consuming element-local timing.
+- document inheritance and fallback rules more clearly as tui-vfx-compost starts consuming element-local timing.
 
 ### D. Runtime Sample Time
 
@@ -302,7 +354,7 @@ Used by:
 - procedural source sampling;
 - preview loopback signal evaluation;
 - migration validation at named sample points;
-- compositor-next requests that need reproducible time input.
+- tui-vfx-compost requests that need reproducible time input.
 
 Policy:
 
@@ -361,8 +413,8 @@ Example concept:
 ```json
 {
   "updateClock": {
-    "mode": "fixedStep",
-    "rateHz": 12
+    "updateClockMode": "fixedStep",
+    "updateRateHz": 12
   }
 }
 ```
@@ -400,6 +452,7 @@ Policy:
 │ Recipe Schema                                               │
 │ - lifecycle clock                                           │
 │ - phase durations / dwell policy                            │
+│ - transition timing / interruption / variants               │
 │ - element-local timing envelope                             │
 │ - primitive/source motion parameters                        │
 │ - possible future semantic update cadence                   │
@@ -451,13 +504,14 @@ Prefer:
 
 Do not add a schema field just because the player has an FPS flag.
 
-Before adding timing schema, run the descriptor/schema hindsight audit and classify the need:
+Before adding timing schema, run a descriptor/workbench commonality review and classify the need. This is distinct from the completed ambiguous field-name audit:
 
 | Need | Preferred home |
 | --- | --- |
 | Live preview draw rate | Player/runtime option |
 | Human-authored target display budget | Optional metadata/profile hint, if accepted |
 | Lifecycle duration or loop period | Existing lifecycle clock/phase schema |
+| Transition interval, easing, or stagger | `TransitionSpec.timing` or per-track timing override |
 | Element enter/exit staggering | Existing element-local timing envelope |
 | Continuous procedural animation | Runtime sample context with `absoluteTimeMs` |
 | Fixed-step source/effect recomputation | Candidate `updateClock` / `updateRateHz` schema concept |
@@ -465,11 +519,11 @@ Before adding timing schema, run the descriptor/schema hindsight audit and class
 
 ## Immediate Plan Impact
 
-1. Add timing/cadence to the descriptor/schema hindsight audit.
+1. Add timing/cadence to the descriptor/workbench commonality review only when a concrete primitive/source needs it.
 2. Preserve Madeira flag recipes as regression fixtures for absolute elapsed time.
 3. Keep player/backend FPS runtime-owned unless we identify a recipe-authored presentation hint use case.
 4. If a primitive needs lower update frequency, design `updateClock` vertically with that primitive instead of adding a global schema field speculatively.
 5. Primitive Workbench should generate explicit timing/sample-context plumbing instead of letting each primitive invent its own clock assumptions.
 
 <!-- <FILE>docs/arch/CLOCKS_AND_TIMING.md</FILE> - <DESC>Architecture note for v3.1 clocks, timing, cadence, and sample-time boundaries</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.1</VERS> -->

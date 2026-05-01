@@ -145,7 +145,7 @@ fn validate_node(
                 id: output_id.clone(),
             });
         }
-        match &output.source {
+        match &output.output_source {
             NodeOutputSource::EffectOutput { id } => {
                 if !id.is_valid() {
                     return Err(DescriptorValidationError::InvalidEffectOutputId {

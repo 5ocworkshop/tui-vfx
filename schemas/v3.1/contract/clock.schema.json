@@ -4,7 +4,7 @@
   "description": "Recipe-level clock contract for lifecycle phase timing.",
   "type": "object",
   "properties": {
-    "mode": {
+    "clockMode": {
       "description": "Time sample-space mode.",
       "$ref": "#/$defs/ClockMode"
     },
@@ -22,7 +22,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "mode"
+    "clockMode"
   ],
   "$defs": {
     "ClockMode": {

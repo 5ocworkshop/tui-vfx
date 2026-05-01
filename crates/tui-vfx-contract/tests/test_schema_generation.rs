@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.12.0</VERS>
+// <VERS>VERSION: 0.14.0</VERS>
 // <WCTX>v3.1 pre-release scene vocabulary: include scroll factor schema root.</WCTX>
-// <CLOG>0.12.0: MINOR — add ScrollFactor schema fixture for scene-element scroll metadata.
+// <CLOG>0.14.0: MINOR — guard v3.1 schema and descriptor input names against ambiguous field vocabulary.
+// 0.13.0: MINOR — add signal expression, shadow, style color, and visibility geometry schema fixtures.
+// 0.12.0: MINOR — add ScrollFactor schema fixture for scene-element scroll metadata.
 // 0.11.0: MINOR — add descriptor pack, pack ref, and catalog schema fixtures.
 // 0.10.0: MINOR — add lifecycle/time/trigger schema fixtures.
 // 0.9.0: MINOR — add canonical recipe document schema fixtures.
@@ -18,14 +20,15 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DescriptorCatalog,
-    DescriptorPack, DescriptorPackId, DescriptorPackRef, DurationSpec, DwellPolicy,
-    EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId,
-    GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec, NodeOutputSpec,
-    NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata,
-    RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, ScrollFactor,
-    SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec,
-    Surface, SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
+    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, ClockValueSource,
+    DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef, DurationSpec,
+    DwellPolicy, EasingSpec, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
+    GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
+    NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline,
+    RecipeMetadata, RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec,
+    ScrollFactor, ShadowSpec, SignalExpressionSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
+    SourceInstanceId, SourceOutputSpec, SourceSpec, StyleColorSource, Surface, SurfaceDiagnostic,
+    TransitionSpec, TransitionVisibilityGeometry, TriggerSpec, Value, ValuePredicate, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -55,9 +58,18 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ),
         ("parameter.schema.json", canonical_schema::<ParameterSpec>()),
         ("signal.schema.json", canonical_schema::<SignalSpec>()),
+        (
+            "signal-expression.schema.json",
+            canonical_schema::<SignalExpressionSpec>(),
+        ),
         ("binding.schema.json", canonical_schema::<BindingSpec>()),
         ("duration.schema.json", canonical_schema::<DurationSpec>()),
+        ("easing.schema.json", canonical_schema::<EasingSpec>()),
         ("clock.schema.json", canonical_schema::<ClockSpec>()),
+        (
+            "clock-value-source.schema.json",
+            canonical_schema::<ClockValueSource>(),
+        ),
         (
             "dwell-policy.schema.json",
             canonical_schema::<DwellPolicy>(),
@@ -127,6 +139,19 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         (
             "scroll-factor.schema.json",
             canonical_schema::<ScrollFactor>(),
+        ),
+        ("shadow.schema.json", canonical_schema::<ShadowSpec>()),
+        (
+            "style-color-source.schema.json",
+            canonical_schema::<StyleColorSource>(),
+        ),
+        (
+            "transition-visibility-geometry.schema.json",
+            canonical_schema::<TransitionVisibilityGeometry>(),
+        ),
+        (
+            "transition.schema.json",
+            canonical_schema::<TransitionSpec>(),
         ),
         ("recipe.schema.json", canonical_schema::<RecipeDocument>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
@@ -218,6 +243,89 @@ fn assert_properties_are_described(schema: &serde_json::Value, path: &str) {
             }
         }
         _ => {}
+    }
+}
+
+fn assert_v31_schema_names_are_precise(schema: &serde_json::Value, path: &str) {
+    const AMBIGUOUS_PROPERTY_NAMES: &[&str] = &[
+        "affect",
+        "amount",
+        "applyTo",
+        "color",
+        "direction",
+        "mode",
+        "motion",
+        "progress",
+        "source",
+        "speed",
+        "target",
+        "type",
+    ];
+
+    match schema {
+        serde_json::Value::Object(map) => {
+            if let Some(serde_json::Value::Object(properties)) = map.get("properties") {
+                for name in properties.keys() {
+                    if AMBIGUOUS_PROPERTY_NAMES.contains(&name.as_str())
+                        && !is_allowed_precise_schema_property(path, name)
+                    {
+                        panic!(
+                            "ambiguous v3.1 schema property {path}/{name}; use a domain-specific field name"
+                        );
+                    }
+                }
+            }
+            for (key, value) in map {
+                assert_v31_schema_names_are_precise(value, &format!("{path}/{key}"));
+            }
+        }
+        serde_json::Value::Array(values) => {
+            for (index, value) in values.iter().enumerate() {
+                assert_v31_schema_names_are_precise(value, &format!("{path}/{index}"));
+            }
+        }
+        _ => {}
+    }
+}
+
+fn is_allowed_precise_schema_property(path: &str, name: &str) -> bool {
+    matches!(
+        (path, name),
+        (path, "color") if path.contains("GradientStop")
+    )
+}
+
+fn assert_descriptor_input_names_are_precise(descriptor_pack: &serde_json::Value) {
+    const AMBIGUOUS_INPUT_IDS: &[&str] = &[
+        "affect",
+        "amount",
+        "applyTo",
+        "color",
+        "direction",
+        "mode",
+        "motion",
+        "progress",
+        "source",
+        "speed",
+        "target",
+        "type",
+    ];
+
+    let effects = descriptor_pack
+        .get("effects")
+        .and_then(serde_json::Value::as_object)
+        .expect("descriptor pack has effects object");
+    for (effect_id, effect) in effects {
+        let Some(inputs) = effect.get("inputs").and_then(serde_json::Value::as_object) else {
+            continue;
+        };
+        for input_id in inputs.keys() {
+            if AMBIGUOUS_INPUT_IDS.contains(&input_id.as_str()) {
+                panic!(
+                    "ambiguous v3.1 descriptor input {effect_id}.{input_id}; use a domain-specific input id"
+                );
+            }
+        }
     }
 }
 
@@ -437,6 +545,8 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
             "Recipe-level lifecycle contract from enter through dwell and exit to finished"
         )
     );
+    assert!(all_schemas.contains("Native v3.1 state-change composition interval"));
+    assert!(all_schemas.contains("Executable canonical V3.1 transition track"));
     assert!(all_schemas.contains(
         "Canonical lifecycle trigger with explicit condition, latch, reset, and action semantics"
     ));
@@ -453,6 +563,23 @@ fn generated_contract_schema_objects_are_strict_and_described() {
         assert_object_shapes_are_strict(&value, file_name);
         assert_properties_are_described(&value, file_name);
     }
+}
+
+#[test]
+fn v31_schema_and_descriptor_field_names_are_domain_specific() {
+    for (file_name, schema) in schema_roots() {
+        let value: serde_json::Value = serde_json::from_str(&schema).expect("schema is JSON");
+        assert_v31_schema_names_are_precise(&value, file_name);
+    }
+
+    let descriptor_pack_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../descriptors/v3.1/packs/primitive.json");
+    let descriptor_pack: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(&descriptor_pack_path)
+            .unwrap_or_else(|error| panic!("descriptor pack can be read: {error}")),
+    )
+    .expect("descriptor pack is JSON");
+    assert_descriptor_input_names_are_precise(&descriptor_pack);
 }
 
 #[test]
@@ -480,4 +607,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.12.0</VERS>
+// <VERS>END OF VERSION: 0.14.0</VERS>

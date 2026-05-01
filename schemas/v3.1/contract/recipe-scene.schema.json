@@ -66,6 +66,26 @@
         }
       ]
     },
+    "ClockValueSource": {
+      "description": "Numeric clock source exposed to canonical `ValueSource::Clock`.",
+      "oneOf": [
+        {
+          "description": "Absolute recipe sample time in seconds.",
+          "type": "string",
+          "const": "recipeSeconds"
+        },
+        {
+          "description": "Current lifecycle phase sample time in seconds.",
+          "type": "string",
+          "const": "phaseSeconds"
+        },
+        {
+          "description": "Current loop-local sample time in seconds when a loop exists.",
+          "type": "string",
+          "const": "loopSeconds"
+        }
+      ]
+    },
     "Color": {
       "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
       "type": "object",
@@ -473,17 +493,6 @@
             }
           ]
         },
-        "motion": {
-          "description": "Optional structured element motion payload preserved from scene authoring.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StructuredValue"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "overflow": {
           "description": "Optional overflow policy beyond simple scene-bound clipping.",
           "anyOf": [
@@ -509,6 +518,17 @@
         "placement": {
           "description": "Placement of the source-produced surface in scene coordinates.",
           "$ref": "#/$defs/ElementPlacement"
+        },
+        "placementMotion": {
+          "description": "Optional structured placement-motion payload preserved from scene authoring.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructuredValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "placementRule": {
           "description": "Optional declarative placement rule preserving anchor, sibling-relative, and motion placement semantics.",
@@ -536,7 +556,7 @@
             }
           ]
         },
-        "source": {
+        "sourceInstance": {
           "description": "Source instance that produces this element-local semantic surface.",
           "$ref": "#/$defs/SourceInstanceId"
         },
@@ -573,7 +593,7 @@
         "id",
         "zIndex",
         "placement",
-        "source",
+        "sourceInstance",
         "clipPolicy",
         "cellWritePolicy",
         "roleWritePolicy"
@@ -832,7 +852,7 @@
               "type": "string",
               "const": "absolute"
             },
-            "motion": {
+            "placement_motion": {
               "description": "Optional placement-motion payload preserved from scene authoring.",
               "anyOf": [
                 {
@@ -866,17 +886,6 @@
               "type": "string",
               "const": "anchor"
             },
-            "motion": {
-              "description": "Optional placement-motion payload preserved from scene authoring.",
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/StructuredValue"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
             "offsetColumns": {
               "description": "Column offset applied after resolving the anchor.",
               "type": "integer",
@@ -886,6 +895,17 @@
               "description": "Row offset applied after resolving the anchor.",
               "type": "integer",
               "format": "int32"
+            },
+            "placement_motion": {
+              "description": "Optional placement-motion payload preserved from scene authoring.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StructuredValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "siblingLayer": {
               "description": "Optional sibling layer used as the anchor frame instead of the scene.",
@@ -910,7 +930,7 @@
       ]
     },
     "SceneElementSurface": {
-      "description": "Element-local surface styling envelope.\n\nThis is the canonical v3.1 home for authored layer base style and attached\nshadow details. The payloads are structured because the stable style and\nshadow vocabularies are still owned by their descriptor/runtime adapters.",
+      "description": "Element-local surface styling envelope.\n\nThis is the canonical v3.1 home for authored layer base style and attached\nshadow details.",
       "type": "object",
       "properties": {
         "baseStyle": {
@@ -928,7 +948,7 @@
           "description": "Optional attached shadow payload owned by this element surface.",
           "anyOf": [
             {
-              "$ref": "#/$defs/StructuredValue"
+              "$ref": "#/$defs/ShadowSpec"
             },
             {
               "type": "null"
@@ -989,15 +1009,15 @@
               "description": "Predicate that decides whether the element is visible.",
               "$ref": "#/$defs/ValuePredicate"
             },
-            "source": {
-              "description": "Source value used by the visibility predicate.",
+            "predicate_source": {
+              "description": "Value source used by the visibility predicate.",
               "$ref": "#/$defs/ValueSource"
             }
           },
           "additionalProperties": false,
           "required": [
             "kind",
-            "source",
+            "predicate_source",
             "predicate"
           ]
         }
@@ -1262,6 +1282,489 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "ShadowBlendMode": {
+      "description": "Shadow blend operation.",
+      "type": "string",
+      "enum": [
+        "sourceOver",
+        "multiply"
+      ]
+    },
+    "ShadowCompositeMode": {
+      "description": "Relative compositing layer for a shadow.",
+      "type": "string",
+      "enum": [
+        "under",
+        "over"
+      ]
+    },
+    "ShadowEdge": {
+      "description": "Shadow edge selector.",
+      "type": "string",
+      "enum": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    "ShadowFalloff": {
+      "description": "Shadow falloff in cells.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Horizontal falloff in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Vertical falloff in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "ShadowGlyphMaterial": {
+      "description": "Glyph material used by shadow support cells.",
+      "type": "string",
+      "enum": [
+        "solid",
+        "preserveDestination"
+      ]
+    },
+    "ShadowInset": {
+      "description": "Shadow inset along an edge.",
+      "type": "object",
+      "properties": {
+        "end": {
+          "description": "Inset from the end of the selected edge.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "start": {
+          "description": "Inset from the start of the selected edge.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "ShadowOffset": {
+      "description": "Shadow offset in cells.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Horizontal shadow offset in cells.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        },
+        "y": {
+          "description": "Vertical shadow offset in cells.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "ShadowOutset": {
+      "description": "Optional paint expansion needed for support surfaces such as shadows.",
+      "type": "object",
+      "properties": {
+        "bottom": {
+          "description": "Paint expansion below the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "left": {
+          "description": "Paint expansion to the left of the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "right": {
+          "description": "Paint expansion to the right of the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "top": {
+          "description": "Paint expansion above the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ]
+    },
+    "ShadowSpec": {
+      "description": "Typed surface-attached shadow specification for scene elements.",
+      "type": "object",
+      "properties": {
+        "blendMode": {
+          "description": "Blend operation used when compositing the shadow.",
+          "$ref": "#/$defs/ShadowBlendMode"
+        },
+        "compositeMode": {
+          "description": "Where the shadow composites relative to the element.",
+          "$ref": "#/$defs/ShadowCompositeMode"
+        },
+        "edges": {
+          "description": "Edges that contribute to the shadow.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShadowEdge"
+          }
+        },
+        "falloff": {
+          "description": "Optional shadow falloff in cells.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShadowFalloff"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "glyphMaterial": {
+          "description": "Optional glyph material policy.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShadowGlyphMaterial"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inset": {
+          "description": "Optional inset along the selected edge.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShadowInset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offset": {
+          "description": "Shadow offset in cells.",
+          "$ref": "#/$defs/ShadowOffset"
+        },
+        "paintOutset": {
+          "description": "Optional paint expansion needed beyond the source element bounds.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShadowOutset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadowColor": {
+          "description": "Shadow color.",
+          "$ref": "#/$defs/Color"
+        },
+        "softEdges": {
+          "description": "Whether the shadow edge should be softened.",
+          "type": "boolean"
+        },
+        "sourceRegion": {
+          "description": "Optional source cells that cast the shadow.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScopeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "edges",
+        "offset",
+        "shadowColor",
+        "softEdges",
+        "compositeMode",
+        "blendMode"
+      ]
+    },
+    "SignalExpressionSpec": {
+      "description": "Deterministic numeric expression usable by preview loopbacks and authored value sources.",
+      "oneOf": [
+        {
+          "description": "Constant numeric expression.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "constant"
+            },
+            "value": {
+              "description": "Constant numeric value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Repeating ramp from `start` to `end`.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Value at normalized expression phase one.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "ramp"
+            },
+            "start": {
+              "description": "Value at normalized expression phase zero.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Sine oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sine"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Triangle oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "triangle"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Mix two numeric expressions with a 0..1 blend factor.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "mix"
+            },
+            "mix": {
+              "description": "Blend factor where 0 selects `a` and 1 selects `b`.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b",
+            "mix"
+          ]
+        },
+        {
+          "description": "Add two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "add"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Multiply two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "multiply"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Clamp a numeric expression into an inclusive range.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Expression input to clamp.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clamp"
+            },
+            "max": {
+              "description": "Inclusive maximum value.",
+              "type": "number",
+              "format": "double"
+            },
+            "min": {
+              "description": "Inclusive minimum value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "input",
+            "min",
+            "max"
+          ]
+        }
       ]
     },
     "SignalId": {
@@ -1914,6 +2417,74 @@
             "field",
             "x",
             "y"
+          ]
+        },
+        {
+          "description": "Source value comes from an authored deterministic signal expression.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Numeric signal expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "fallback": {
+              "description": "Optional fallback value when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "signalExpression"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        },
+        {
+          "description": "Source value is normalized lifecycle phase progress in 0..1.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "phaseProgress"
+            },
+            "phase": {
+              "description": "Lifecycle phase whose progress should be sampled.",
+              "$ref": "#/$defs/LifecyclePhase"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phase"
+          ]
+        },
+        {
+          "description": "Source value is derived from the active recipe/player clock.",
+          "type": "object",
+          "properties": {
+            "clock": {
+              "description": "Clock sample source to use.",
+              "$ref": "#/$defs/ClockValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clock"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "clock"
           ]
         }
       ]

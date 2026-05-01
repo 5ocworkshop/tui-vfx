@@ -14,12 +14,12 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BindingSpec {
-    /// Target that receives the source value.
-    pub target: BindingTarget,
-    /// Source that provides the target value.
-    pub source: ValueSource,
+    /// Binding target that receives the value.
+    pub binding_target: BindingTarget,
+    /// Value source that provides the binding value.
+    pub value_source: ValueSource,
     /// Declarative binding application mode.
-    pub mode: BindingMode,
+    pub binding_mode: BindingMode,
 }
 
 impl BindingSpec {
@@ -29,7 +29,7 @@ impl BindingSpec {
         parameters: &BTreeMap<ParameterId, ParameterSpec>,
         signals: &BTreeMap<SignalId, SignalSpec>,
     ) -> Result<(), DescriptorValidationError> {
-        match &self.target {
+        match &self.binding_target {
             BindingTarget::Parameter { id } => {
                 let spec = parameters.get(id).ok_or_else(|| {
                     DescriptorValidationError::UnknownBindingParameterTarget { id: id.clone() }
@@ -38,7 +38,7 @@ impl BindingSpec {
                 if !spec.bindable {
                     return Err(DescriptorValidationError::ParameterNotBindable { id: id.clone() });
                 }
-                self.source
+                self.value_source
                     .validate_kind(spec.value.kind, parameters, signals)
             }
         }

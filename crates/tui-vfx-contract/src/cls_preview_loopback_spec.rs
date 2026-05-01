@@ -1,11 +1,13 @@
 // <FILE>crates/tui-vfx-contract/src/cls_preview_loopback_spec.rs</FILE> - <DESC>Preview loopback signal provider DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>v3.1 recipe migration parity: preserve authored loopback/demo signal providers separately from host trigger semantics.</WCTX>
-// <CLOG>0.2.0: MINOR — add authored numeric static and signal loopback forms.
+// <CLOG>0.3.0: MINOR — add typed signal expression loopback form.
+// 0.2.0: MINOR — add authored numeric static and signal loopback forms.
 // 0.1.0: INIT — add literal, numeric-ramp, and structured signal-expression preview loopback contracts.</CLOG>
 
 use crate::{
-    DescriptorValidationError, DurationSpec, StructuredValue, Value, ValueKind, ValueSpec,
+    DescriptorValidationError, DurationSpec, SignalExpressionSpec, StructuredValue, Value,
+    ValueKind, ValueSpec,
 };
 
 /// Preview/demo value provider for a host signal.
@@ -38,8 +40,8 @@ pub enum PreviewLoopbackSpec {
     ///
     /// This maps authored forms such as
     /// `loopback: { "signal": { "type": "ramp", ... } }`. The expression is
-    /// preserved losslessly as descriptor-owned structured data while player
-    /// adapters execute recognized deterministic signal shapes.
+    /// preserved losslessly as descriptor-owned structured data while preview
+    /// tooling executes recognized deterministic signal shapes.
     NumericSignal {
         /// Curated signal expression payload.
         expression: StructuredValue,
@@ -60,11 +62,18 @@ pub enum PreviewLoopbackSpec {
         /// Whether preview playback should repeat after the authored duration.
         repeat: bool,
     },
+    /// Typed deterministic numeric signal expression.
+    Expression {
+        /// Canonical numeric expression.
+        expression: SignalExpressionSpec,
+        /// Optional typed fallback when the expression cannot be sampled.
+        fallback: Option<Value>,
+    },
     /// Legacy structured signal expression preserved from an authoring facade.
     ///
     /// This is the lossless escape hatch for curated authored signal expressions
     /// whose runtime sampler has not yet been promoted into this clean-room
-    /// contract crate. Player adapters may execute recognized shapes; otherwise
+    /// contract crate. Preview tooling may execute recognized shapes; otherwise
     /// they fall back to the optional typed value.
     SignalExpression {
         /// Descriptor-owned signal expression payload.
@@ -108,6 +117,17 @@ impl PreviewLoopbackSpec {
                 }
                 Ok(())
             }
+            Self::Expression {
+                expression,
+                fallback,
+            } => {
+                validate_numeric_signal_kind(value.kind)?;
+                expression.validate()?;
+                if let Some(fallback) = fallback {
+                    value.validate_value(fallback)?;
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -135,4 +155,4 @@ fn validate_finite_number(value: f64) -> Result<(), DescriptorValidationError> {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_preview_loopback_spec.rs</FILE> - <DESC>PreviewLoopbackSpec</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

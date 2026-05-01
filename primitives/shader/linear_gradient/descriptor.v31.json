@@ -166,8 +166,8 @@
       "runtimeMutability": "phaseStart",
       "optional": true
     },
-    "applyTo": {
-      "displayName": "Apply To",
+    "channelTarget": {
+      "displayName": "Channel Target",
       "description": "Cell channel target for the gradient.",
       "value": {
         "kind": "enum",

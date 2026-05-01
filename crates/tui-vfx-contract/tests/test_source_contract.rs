@@ -190,7 +190,7 @@ fn source_descriptor_declares_required_asset_slot() {
 #[test]
 fn source_spec_rejects_unknown_source_id() {
     let spec = SourceSpec {
-        source: SourceId::new("source.missing"),
+        source_descriptor: SourceId::new("source.missing"),
         inputs: BTreeMap::new(),
         assets: BTreeMap::new(),
     };
@@ -210,7 +210,7 @@ fn source_spec_rejects_unknown_source_id() {
 #[test]
 fn source_spec_rejects_unknown_input() {
     let spec = SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::from([(
             SourceInputId::new("unknown"),
             ValueSource::Literal {
@@ -236,7 +236,7 @@ fn source_spec_rejects_unknown_input() {
 #[test]
 fn source_spec_rejects_missing_required_input() {
     let spec = SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::new(),
         assets: BTreeMap::new(),
     };
@@ -263,7 +263,7 @@ fn source_spec_accepts_omitted_optional_input() {
         .unwrap()
         .optional = true;
     let spec = SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::new(),
         assets: BTreeMap::new(),
     };
@@ -289,7 +289,7 @@ fn source_spec_rejects_external_source_for_non_bindable_input() {
         .unwrap()
         .bindable = false;
     let spec = SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::from([(
             SourceInputId::new("text"),
             ValueSource::Parameter {
@@ -319,7 +319,7 @@ fn source_spec_rejects_external_source_for_non_bindable_input() {
 #[test]
 fn source_spec_rejects_input_kind_mismatch() {
     let spec = SourceSpec {
-        source: SourceId::new("source.text"),
+        source_descriptor: SourceId::new("source.text"),
         inputs: BTreeMap::from([(
             SourceInputId::new("text"),
             ValueSource::Literal {
@@ -347,7 +347,7 @@ fn source_spec_rejects_input_kind_mismatch() {
 #[test]
 fn source_spec_accepts_parameter_value_source_for_bindable_input() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Parameter {
@@ -387,7 +387,7 @@ fn source_spec_accepts_parameter_value_source_for_bindable_input() {
 #[test]
 fn source_spec_rejects_graph_value_source_outside_graph_context_if_not_allowed() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::GraphValue {
@@ -434,7 +434,7 @@ fn asset_requirement_schema_is_strict_and_described() {
 #[test]
 fn source_spec_rejects_unknown_asset_slot() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -471,7 +471,7 @@ fn source_spec_rejects_unknown_asset_slot() {
 #[test]
 fn asset_ref_rejects_wrong_asset_kind() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -508,7 +508,7 @@ fn asset_ref_rejects_wrong_asset_kind() {
 #[test]
 fn source_spec_rejects_missing_required_asset() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -537,7 +537,7 @@ fn source_spec_rejects_missing_required_asset() {
 #[test]
 fn asset_ref_rejects_unknown_asset_id() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -570,7 +570,7 @@ fn asset_ref_rejects_unknown_asset_id() {
 #[test]
 fn asset_ref_rejects_wrong_asset_format() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -607,7 +607,7 @@ fn asset_ref_rejects_wrong_asset_format() {
 #[test]
 fn procedural_source_can_reference_asset_slot() {
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Literal {
@@ -647,7 +647,7 @@ fn procedural_source_can_accept_runtime_parameter_input() {
     assert_eq!(values[&GraphValueId::new("waveOut")], ValueKind::Number);
 
     let spec = SourceSpec {
-        source: SourceId::new("source.brailleFlagField"),
+        source_descriptor: SourceId::new("source.brailleFlagField"),
         inputs: BTreeMap::from([(
             SourceInputId::new("wave.speed"),
             ValueSource::Signal {

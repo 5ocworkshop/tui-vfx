@@ -1,13 +1,15 @@
 // <FILE>crates/tui-vfx-contract/tests/test_signal_source_contract.rs</FILE> - <DESC>Declarative signal value source contract tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>New kernel Phase F2: lock signal source reference and fallback validation.</WCTX>
-// <CLOG>0.1.0: INIT — prove SignalSpec defaults, references, unknown-id errors, and fallback kind checks.</CLOG>
+// <CLOG>0.2.0: MINOR — prove typed signal expressions and time-derived value sources.
+// 0.1.0: INIT — prove SignalSpec defaults, references, unknown-id errors, and fallback kind checks.</CLOG>
 
 use std::collections::BTreeMap;
 
 use tui_vfx_contract::{
-    DescriptorValidationError, DurationSpec, NumericRange, ParameterId, ParameterSpec,
-    PreviewLoopbackSpec, SignalId, SignalSpec, Value, ValueKind, ValueSource, ValueSpec,
+    ClockValueSource, DescriptorValidationError, DurationSpec, LifecyclePhase, NumericRange,
+    ParameterId, ParameterSpec, PreviewLoopbackSpec, SignalExpressionSpec, SignalId, SignalSpec,
+    Value, ValueKind, ValueSource, ValueSpec,
 };
 
 fn ratio_value_spec(default: Value) -> ValueSpec {
@@ -172,5 +174,76 @@ fn numeric_preview_loopback_ramp_requires_numeric_signal_kind() {
     ));
 }
 
+#[test]
+fn signal_expression_loopback_is_typed_not_structured_escape_hatch() {
+    let mut spec = signal("demoFrequency", ratio_value_spec(Value::Number(1.0)));
+    spec.preview_loopback = Some(PreviewLoopbackSpec::Expression {
+        expression: SignalExpressionSpec::Mix {
+            a: Box::new(SignalExpressionSpec::Triangle {
+                frequency_hz: 0.6,
+                amplitude: 0.6,
+                offset: 1.0,
+                phase: 0.0,
+            }),
+            b: Box::new(SignalExpressionSpec::Sine {
+                frequency_hz: 0.3,
+                amplitude: 0.6,
+                offset: 1.0,
+                phase: 0.0,
+            }),
+            mix: 0.5,
+        },
+        fallback: Some(Value::Number(1.0)),
+    });
+
+    assert!(spec.validate().is_ok());
+    let json = serde_json::to_value(&spec).expect("signal serializes");
+    assert_eq!(json["previewLoopback"]["kind"], "expression");
+    assert_eq!(json["previewLoopback"]["expression"]["kind"], "mix");
+    assert_eq!(
+        json["previewLoopback"]["expression"]["a"]["kind"],
+        "triangle"
+    );
+}
+
+#[test]
+fn value_source_can_use_authored_signal_expression_phase_progress_and_clock() {
+    let expression = ValueSource::SignalExpression {
+        expression: SignalExpressionSpec::Sine {
+            frequency_hz: 0.5,
+            amplitude: 0.5,
+            offset: 0.5,
+            phase: 0.0,
+        },
+        fallback: Some(Value::Number(0.5)),
+    };
+    assert_eq!(
+        expression
+            .infer_kind(&Default::default(), &Default::default())
+            .unwrap(),
+        ValueKind::Number
+    );
+
+    let phase = ValueSource::PhaseProgress {
+        phase: LifecyclePhase::Dwell,
+    };
+    assert_eq!(
+        phase
+            .infer_kind(&Default::default(), &Default::default())
+            .unwrap(),
+        ValueKind::Number
+    );
+
+    let clock = ValueSource::Clock {
+        clock: ClockValueSource::RecipeSeconds,
+    };
+    assert_eq!(
+        clock
+            .infer_kind(&Default::default(), &Default::default())
+            .unwrap(),
+        ValueKind::Number
+    );
+}
+
 // <FILE>crates/tui-vfx-contract/tests/test_signal_source_contract.rs</FILE> - <DESC>Declarative signal value source contract tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

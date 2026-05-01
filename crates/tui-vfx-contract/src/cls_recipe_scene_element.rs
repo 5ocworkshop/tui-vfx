@@ -23,7 +23,7 @@ pub struct RecipeSceneElement {
     /// Placement of the source-produced surface in scene coordinates.
     pub placement: ElementPlacement,
     /// Source instance that produces this element-local semantic surface.
-    pub source: SourceInstanceId,
+    pub source_instance: SourceInstanceId,
     /// Optional source-local or element-local pipeline reference.
     pub pipeline: Option<RecipeElementPipeline>,
     /// Optional declarative placement rule preserving anchor, sibling-relative, and motion placement semantics.
@@ -38,9 +38,9 @@ pub struct RecipeSceneElement {
     /// Optional overflow policy beyond simple scene-bound clipping.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub overflow: Option<SceneElementOverflowPolicy>,
-    /// Optional structured element motion payload preserved from scene authoring.
+    /// Optional structured placement-motion payload preserved from scene authoring.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub motion: Option<StructuredValue>,
+    pub placement_motion: Option<StructuredValue>,
     /// Optional per-element scene scroll/camera response factor reserved for future backends.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scroll_factor: Option<ScrollFactor>,

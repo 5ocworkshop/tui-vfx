@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EasingSpec",
+  "description": "Canonical easing specification for transition timing.",
+  "oneOf": [
+    {
+      "description": "Closed named easing curve.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "named"
+        },
+        "value": {
+          "description": "Named easing value.",
+          "$ref": "#/$defs/NamedEasing"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    {
+      "description": "CSS-compatible cubic-bezier control points.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "cubicBezier"
+        },
+        "x1": {
+          "description": "First control point x coordinate.",
+          "type": "number",
+          "format": "double"
+        },
+        "x2": {
+          "description": "Second control point x coordinate.",
+          "type": "number",
+          "format": "double"
+        },
+        "y1": {
+          "description": "First control point y coordinate.",
+          "type": "number",
+          "format": "double"
+        },
+        "y2": {
+          "description": "Second control point y coordinate.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "x1",
+        "y1",
+        "x2",
+        "y2"
+      ]
+    },
+    {
+      "description": "Discrete stepped easing for intentionally quantized grid motion.",
+      "type": "object",
+      "properties": {
+        "count": {
+          "description": "Number of steps in the easing curve.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "type": "string",
+          "const": "steps"
+        },
+        "position": {
+          "description": "Step positioning, such as `start`, `end`, or `both`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "count",
+        "position"
+      ]
+    },
+    {
+      "description": "Spring timing described with response and damping ratio.",
+      "type": "object",
+      "properties": {
+        "dampingRatio": {
+          "description": "Damping ratio, where values near 1.0 approach critical damping.",
+          "type": "number",
+          "format": "double"
+        },
+        "kind": {
+          "type": "string",
+          "const": "spring"
+        },
+        "response": {
+          "description": "Approximate response time in seconds.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "response",
+        "dampingRatio"
+      ]
+    }
+  ],
+  "$defs": {
+    "NamedEasing": {
+      "description": "Closed named easing vocabulary for canonical transition timing.",
+      "oneOf": [
+        {
+          "description": "Constant progress rate.",
+          "type": "string",
+          "const": "linear"
+        },
+        {
+          "description": "Quadratic ease-in.",
+          "type": "string",
+          "const": "inQuad"
+        },
+        {
+          "description": "Quadratic ease-out.",
+          "type": "string",
+          "const": "outQuad"
+        },
+        {
+          "description": "Quadratic ease-in-out.",
+          "type": "string",
+          "const": "inOutQuad"
+        },
+        {
+          "description": "Cubic ease-in.",
+          "type": "string",
+          "const": "inCubic"
+        },
+        {
+          "description": "Cubic ease-out.",
+          "type": "string",
+          "const": "outCubic"
+        },
+        {
+          "description": "Cubic ease-in-out.",
+          "type": "string",
+          "const": "inOutCubic"
+        },
+        {
+          "description": "Sine ease-in.",
+          "type": "string",
+          "const": "inSine"
+        },
+        {
+          "description": "Sine ease-out.",
+          "type": "string",
+          "const": "outSine"
+        },
+        {
+          "description": "Sine ease-in-out.",
+          "type": "string",
+          "const": "inOutSine"
+        },
+        {
+          "description": "Backtracking ease-in.",
+          "type": "string",
+          "const": "inBack"
+        },
+        {
+          "description": "Backtracking ease-out.",
+          "type": "string",
+          "const": "outBack"
+        },
+        {
+          "description": "Backtracking ease-in-out.",
+          "type": "string",
+          "const": "inOutBack"
+        }
+      ]
+    }
+  }
+}

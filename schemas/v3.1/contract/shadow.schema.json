@@ -1,0 +1,1568 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShadowSpec",
+  "description": "Typed surface-attached shadow specification for scene elements.",
+  "type": "object",
+  "properties": {
+    "blendMode": {
+      "description": "Blend operation used when compositing the shadow.",
+      "$ref": "#/$defs/ShadowBlendMode"
+    },
+    "compositeMode": {
+      "description": "Where the shadow composites relative to the element.",
+      "$ref": "#/$defs/ShadowCompositeMode"
+    },
+    "edges": {
+      "description": "Edges that contribute to the shadow.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ShadowEdge"
+      }
+    },
+    "falloff": {
+      "description": "Optional shadow falloff in cells.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShadowFalloff"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "glyphMaterial": {
+      "description": "Optional glyph material policy.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShadowGlyphMaterial"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inset": {
+      "description": "Optional inset along the selected edge.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShadowInset"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "offset": {
+      "description": "Shadow offset in cells.",
+      "$ref": "#/$defs/ShadowOffset"
+    },
+    "paintOutset": {
+      "description": "Optional paint expansion needed beyond the source element bounds.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShadowOutset"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "shadowColor": {
+      "description": "Shadow color.",
+      "$ref": "#/$defs/Color"
+    },
+    "softEdges": {
+      "description": "Whether the shadow edge should be softened.",
+      "type": "boolean"
+    },
+    "sourceRegion": {
+      "description": "Optional source cells that cast the shadow.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ScopeSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "edges",
+    "offset",
+    "shadowColor",
+    "softEdges",
+    "compositeMode",
+    "blendMode"
+  ],
+  "$defs": {
+    "ClockValueSource": {
+      "description": "Numeric clock source exposed to canonical `ValueSource::Clock`.",
+      "oneOf": [
+        {
+          "description": "Absolute recipe sample time in seconds.",
+          "type": "string",
+          "const": "recipeSeconds"
+        },
+        {
+          "description": "Current lifecycle phase sample time in seconds.",
+          "type": "string",
+          "const": "phaseSeconds"
+        },
+        {
+          "description": "Current loop-local sample time in seconds when a loop exists.",
+          "type": "string",
+          "const": "loopSeconds"
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "GradientSpec": {
+      "description": "Canonical gradient value for descriptor inputs.",
+      "type": "object",
+      "properties": {
+        "space": {
+          "description": "Color interpolation space, such as `rgb` or `hct`.",
+          "type": "string"
+        },
+        "stops": {
+          "description": "Ordered or author-provided gradient stops.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GradientStop"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stops",
+        "space"
+      ]
+    },
+    "GradientStop": {
+      "description": "One color stop in a canonical gradient value.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "description": "Color sampled at this stop.",
+          "$ref": "#/$defs/Color"
+        },
+        "position": {
+          "description": "Normalized stop position in the inclusive 0..1 range.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "color"
+      ]
+    },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match one cell using value sources for each coordinate.\n\nThis preserves runtime-bound cell targeting from the source pathway while\nstill allowing static literal coordinates for deterministic validation.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cell"
+            },
+            "x": {
+              "description": "X coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match rows where `row % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloRows"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select rows.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match columns where `column % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloColumns"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select columns.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match cells containing non-empty glyph content.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match the outer perimeter band.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "outerBand"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells that are not on the outer perimeter.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inner"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "ShadowBlendMode": {
+      "description": "Shadow blend operation.",
+      "type": "string",
+      "enum": [
+        "sourceOver",
+        "multiply"
+      ]
+    },
+    "ShadowCompositeMode": {
+      "description": "Relative compositing layer for a shadow.",
+      "type": "string",
+      "enum": [
+        "under",
+        "over"
+      ]
+    },
+    "ShadowEdge": {
+      "description": "Shadow edge selector.",
+      "type": "string",
+      "enum": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
+    "ShadowFalloff": {
+      "description": "Shadow falloff in cells.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Horizontal falloff in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Vertical falloff in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "ShadowGlyphMaterial": {
+      "description": "Glyph material used by shadow support cells.",
+      "type": "string",
+      "enum": [
+        "solid",
+        "preserveDestination"
+      ]
+    },
+    "ShadowInset": {
+      "description": "Shadow inset along an edge.",
+      "type": "object",
+      "properties": {
+        "end": {
+          "description": "Inset from the end of the selected edge.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "start": {
+          "description": "Inset from the start of the selected edge.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "ShadowOffset": {
+      "description": "Shadow offset in cells.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Horizontal shadow offset in cells.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        },
+        "y": {
+          "description": "Vertical shadow offset in cells.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "ShadowOutset": {
+      "description": "Optional paint expansion needed for support surfaces such as shadows.",
+      "type": "object",
+      "properties": {
+        "bottom": {
+          "description": "Paint expansion below the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "left": {
+          "description": "Paint expansion to the left of the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "right": {
+          "description": "Paint expansion to the right of the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "top": {
+          "description": "Paint expansion above the source bounds.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ]
+    },
+    "SignalExpressionSpec": {
+      "description": "Deterministic numeric expression usable by preview loopbacks and authored value sources.",
+      "oneOf": [
+        {
+          "description": "Constant numeric expression.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "constant"
+            },
+            "value": {
+              "description": "Constant numeric value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Repeating ramp from `start` to `end`.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Value at normalized expression phase one.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "ramp"
+            },
+            "start": {
+              "description": "Value at normalized expression phase zero.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Sine oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sine"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Triangle oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "triangle"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Mix two numeric expressions with a 0..1 blend factor.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "mix"
+            },
+            "mix": {
+              "description": "Blend factor where 0 selects `a` and 1 selects `b`.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b",
+            "mix"
+          ]
+        },
+        {
+          "description": "Add two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "add"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Multiply two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "multiply"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Clamp a numeric expression into an inclusive range.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Expression input to clamp.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clamp"
+            },
+            "max": {
+              "description": "Inclusive maximum value.",
+              "type": "number",
+              "format": "double"
+            },
+            "min": {
+              "description": "Inclusive minimum value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "input",
+            "min",
+            "max"
+          ]
+        }
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
+      ]
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Gradient stop payload.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "gradient"
+            },
+            "value": {
+              "description": "Gradient payload.",
+              "$ref": "#/$defs/GradientSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        },
+        {
+          "description": "Source value samples a deterministic per-cell spatial field.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback value when the sampled field is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "field": {
+              "description": "Canonical sampled field name, such as `surfaceAngleFrom`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sampledField"
+            },
+            "x": {
+              "description": "X coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "field",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "description": "Source value comes from an authored deterministic signal expression.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Numeric signal expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "fallback": {
+              "description": "Optional fallback value when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "signalExpression"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        },
+        {
+          "description": "Source value is normalized lifecycle phase progress in 0..1.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "phaseProgress"
+            },
+            "phase": {
+              "description": "Lifecycle phase whose progress should be sampled.",
+              "$ref": "#/$defs/LifecyclePhase"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phase"
+          ]
+        },
+        {
+          "description": "Source value is derived from the active recipe/player clock.",
+          "type": "object",
+          "properties": {
+            "clock": {
+              "description": "Clock sample source to use.",
+              "$ref": "#/$defs/ClockValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clock"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "clock"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -23,8 +23,8 @@ pub enum SceneElementVisibility {
     },
     /// Element visibility is decided by evaluating a typed value source.
     Predicate {
-        /// Source value used by the visibility predicate.
-        source: ValueSource,
+        /// Value source used by the visibility predicate.
+        predicate_source: ValueSource,
         /// Predicate that decides whether the element is visible.
         predicate: ValuePredicate,
     },
@@ -39,8 +39,11 @@ impl SceneElementVisibility {
     ) -> Result<(), DescriptorValidationError> {
         match self {
             Self::Always | Self::Phase { .. } => Ok(()),
-            Self::Predicate { source, predicate } => {
-                let kind = source.infer_kind(parameters, signals)?;
+            Self::Predicate {
+                predicate_source,
+                predicate,
+            } => {
+                let kind = predicate_source.infer_kind(parameters, signals)?;
                 predicate.validate_for_kind(kind)
             }
         }

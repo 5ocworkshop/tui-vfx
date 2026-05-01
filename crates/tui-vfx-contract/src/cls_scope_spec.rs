@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>v3.1 scope contract: add accepted built-in style scope vocabulary.</WCTX>
-// <CLOG>0.6.0: MINOR — add value-source-backed single-cell scopes for runtime-selected cells.
+// <CLOG>0.7.0: MINOR — treat new time/expression value sources as non-static scope coordinates.
+// 0.6.0: MINOR — add value-source-backed single-cell scopes for runtime-selected cells.
 // 0.5.0: MINOR — add modulo, non-empty, outer-band, and inner scopes.
 // 0.4.2: PATCH — add explicit Schemars descriptions for row/column range fields.</CLOG>
 
@@ -159,13 +160,15 @@ fn resolve_static_value_source(source: &ValueSource) -> Option<Value> {
         ValueSource::Signal { fallback, .. }
         | ValueSource::Parameter { fallback, .. }
         | ValueSource::GraphValue { fallback, .. }
-        | ValueSource::SampledField { fallback, .. } => fallback.clone(),
+        | ValueSource::SampledField { fallback, .. }
+        | ValueSource::SignalExpression { fallback, .. } => fallback.clone(),
         ValueSource::Map {
             from,
             input,
             output,
             clamp,
         } => map_static_numeric(resolve_static_value_source(from)?, *input, *output, *clamp),
+        ValueSource::PhaseProgress { .. } | ValueSource::Clock { .. } => None,
     }
 }
 
@@ -221,4 +224,4 @@ fn scope_dimensions(
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

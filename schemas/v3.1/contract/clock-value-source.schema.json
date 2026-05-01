@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClockValueSource",
+  "description": "Numeric clock source exposed to canonical `ValueSource::Clock`.",
+  "oneOf": [
+    {
+      "description": "Absolute recipe sample time in seconds.",
+      "type": "string",
+      "const": "recipeSeconds"
+    },
+    {
+      "description": "Current lifecycle phase sample time in seconds.",
+      "type": "string",
+      "const": "phaseSeconds"
+    },
+    {
+      "description": "Current loop-local sample time in seconds when a loop exists.",
+      "type": "string",
+      "const": "loopSeconds"
+    }
+  ]
+}

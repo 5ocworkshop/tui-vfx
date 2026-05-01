@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TransitionVisibilityGeometry",
+  "description": "Structured geometry for visibility transition tracks.",
+  "oneOf": [
+    {
+      "description": "Corner arc reveal/hide geometry.",
+      "type": "object",
+      "properties": {
+        "corner": {
+          "description": "Corner used as the reveal destination or origin.",
+          "$ref": "#/$defs/SceneAnchor"
+        },
+        "cornerArcMode": {
+          "description": "Corner arc reveal/hide mode.",
+          "$ref": "#/$defs/TransitionCornerArcMode"
+        },
+        "kind": {
+          "type": "string",
+          "const": "cornerArc"
+        },
+        "metric": {
+          "description": "Distance metric used to calculate corner coverage.",
+          "$ref": "#/$defs/TransitionDistanceMetric"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "cornerArcMode",
+        "corner",
+        "metric"
+      ]
+    }
+  ],
+  "$defs": {
+    "SceneAnchor": {
+      "description": "Named anchor point used to place an element inside a scene or sibling layer.",
+      "oneOf": [
+        {
+          "description": "Top-left corner.",
+          "type": "string",
+          "const": "topLeft"
+        },
+        {
+          "description": "Top edge centered horizontally.",
+          "type": "string",
+          "const": "topCenter"
+        },
+        {
+          "description": "Top-right corner.",
+          "type": "string",
+          "const": "topRight"
+        },
+        {
+          "description": "Left edge centered vertically.",
+          "type": "string",
+          "const": "centerLeft"
+        },
+        {
+          "description": "Center point.",
+          "type": "string",
+          "const": "center"
+        },
+        {
+          "description": "Right edge centered vertically.",
+          "type": "string",
+          "const": "centerRight"
+        },
+        {
+          "description": "Bottom-left corner.",
+          "type": "string",
+          "const": "bottomLeft"
+        },
+        {
+          "description": "Bottom edge centered horizontally.",
+          "type": "string",
+          "const": "bottomCenter"
+        },
+        {
+          "description": "Bottom-right corner.",
+          "type": "string",
+          "const": "bottomRight"
+        }
+      ]
+    },
+    "TransitionCornerArcMode": {
+      "description": "Directional mode for corner-arc visibility geometry.",
+      "oneOf": [
+        {
+          "description": "Reveal converges inward toward the selected corner.",
+          "type": "string",
+          "const": "inToCorner"
+        },
+        {
+          "description": "Reveal expands outward from the selected corner.",
+          "type": "string",
+          "const": "outFromCorner"
+        }
+      ]
+    },
+    "TransitionDistanceMetric": {
+      "description": "Distance metric used by structured visibility geometry.",
+      "oneOf": [
+        {
+          "description": "Euclidean distance.",
+          "type": "string",
+          "const": "euclidean"
+        },
+        {
+          "description": "Manhattan grid distance.",
+          "type": "string",
+          "const": "manhattan"
+        }
+      ]
+    }
+  }
+}

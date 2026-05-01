@@ -1,0 +1,3734 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TransitionSpec",
+  "description": "Native v3.1 state-change composition interval.\n\nA transition coordinates subjects, timing, lifecycle phase participation,\ninterruption policy, accessibility fallback policy, conditional variants,\nand executable tracks such as `visibility.iris`, `opacity.fade`,\n`motion.slide`, and `relation.crossfade`. Preset intent may be retained as\nmetadata, but the canonical executable form is the track list.",
+  "type": "object",
+  "properties": {
+    "activePhases": {
+      "description": "Lifecycle phases in which this transition participates; empty means the use site selects phases.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LifecyclePhase"
+      }
+    },
+    "id": {
+      "description": "Stable transition identifier.",
+      "$ref": "#/$defs/TransitionId"
+    },
+    "intent": {
+      "description": "Optional author intent preserved after shorthand canonicalization.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TransitionIntent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "interruption": {
+      "description": "Required policy for superseded interactive transitions.",
+      "$ref": "#/$defs/TransitionInterruption"
+    },
+    "reducedMotion": {
+      "description": "Required accessibility behavior for reduced-motion contexts.",
+      "$ref": "#/$defs/ReducedMotionPolicy"
+    },
+    "scope": {
+      "description": "Optional default scope inherited by tracks unless they override it.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ScopeSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subjects": {
+      "description": "Named subjects participating in this state-change interval.",
+      "$ref": "#/$defs/TransitionSubjects"
+    },
+    "timing": {
+      "description": "Default timing inherited by tracks unless they override it.",
+      "$ref": "#/$defs/TransitionTiming"
+    },
+    "tracks": {
+      "description": "Executable canonical transition tracks.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TransitionTrack"
+      }
+    },
+    "variants": {
+      "description": "Optional generic variants for reduced-motion, capability fallback, or host-selected substitutions.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TransitionVariant"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "subjects",
+    "timing",
+    "tracks",
+    "interruption",
+    "reducedMotion"
+  ],
+  "$defs": {
+    "ClockValueSource": {
+      "description": "Numeric clock source exposed to canonical `ValueSource::Clock`.",
+      "oneOf": [
+        {
+          "description": "Absolute recipe sample time in seconds.",
+          "type": "string",
+          "const": "recipeSeconds"
+        },
+        {
+          "description": "Current lifecycle phase sample time in seconds.",
+          "type": "string",
+          "const": "phaseSeconds"
+        },
+        {
+          "description": "Current loop-local sample time in seconds when a loop exists.",
+          "type": "string",
+          "const": "loopSeconds"
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "DurationSpec": {
+      "description": "Canonical duration used by lifecycle and trigger contracts.",
+      "oneOf": [
+        {
+          "description": "Duration expressed as whole milliseconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "milliseconds"
+            },
+            "value": {
+              "description": "Non-negative millisecond count.",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration expressed as finite seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "seconds"
+            },
+            "value": {
+              "description": "Non-negative finite seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "EasingSpec": {
+      "description": "Canonical easing specification for transition timing.",
+      "oneOf": [
+        {
+          "description": "Closed named easing curve.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "named"
+            },
+            "value": {
+              "description": "Named easing value.",
+              "$ref": "#/$defs/NamedEasing"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "CSS-compatible cubic-bezier control points.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cubicBezier"
+            },
+            "x1": {
+              "description": "First control point x coordinate.",
+              "type": "number",
+              "format": "double"
+            },
+            "x2": {
+              "description": "Second control point x coordinate.",
+              "type": "number",
+              "format": "double"
+            },
+            "y1": {
+              "description": "First control point y coordinate.",
+              "type": "number",
+              "format": "double"
+            },
+            "y2": {
+              "description": "Second control point y coordinate.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ]
+        },
+        {
+          "description": "Discrete stepped easing for intentionally quantized grid motion.",
+          "type": "object",
+          "properties": {
+            "count": {
+              "description": "Number of steps in the easing curve.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "steps"
+            },
+            "position": {
+              "description": "Step positioning, such as `start`, `end`, or `both`.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "count",
+            "position"
+          ]
+        },
+        {
+          "description": "Spring timing described with response and damping ratio.",
+          "type": "object",
+          "properties": {
+            "dampingRatio": {
+              "description": "Damping ratio, where values near 1.0 approach critical damping.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "spring"
+            },
+            "response": {
+              "description": "Approximate response time in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "response",
+            "dampingRatio"
+          ]
+        }
+      ]
+    },
+    "ElementId": {
+      "description": "Stable scene element identity used by diagnostics and future recipe references.",
+      "type": "string"
+    },
+    "GradientSpec": {
+      "description": "Canonical gradient value for descriptor inputs.",
+      "type": "object",
+      "properties": {
+        "space": {
+          "description": "Color interpolation space, such as `rgb` or `hct`.",
+          "type": "string"
+        },
+        "stops": {
+          "description": "Ordered or author-provided gradient stops.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GradientStop"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stops",
+        "space"
+      ]
+    },
+    "GradientStop": {
+      "description": "One color stop in a canonical gradient value.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "description": "Color sampled at this stop.",
+          "$ref": "#/$defs/Color"
+        },
+        "position": {
+          "description": "Normalized stop position in the inclusive 0..1 range.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "color"
+      ]
+    },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
+    },
+    "NamedEasing": {
+      "description": "Closed named easing vocabulary for canonical transition timing.",
+      "oneOf": [
+        {
+          "description": "Constant progress rate.",
+          "type": "string",
+          "const": "linear"
+        },
+        {
+          "description": "Quadratic ease-in.",
+          "type": "string",
+          "const": "inQuad"
+        },
+        {
+          "description": "Quadratic ease-out.",
+          "type": "string",
+          "const": "outQuad"
+        },
+        {
+          "description": "Quadratic ease-in-out.",
+          "type": "string",
+          "const": "inOutQuad"
+        },
+        {
+          "description": "Cubic ease-in.",
+          "type": "string",
+          "const": "inCubic"
+        },
+        {
+          "description": "Cubic ease-out.",
+          "type": "string",
+          "const": "outCubic"
+        },
+        {
+          "description": "Cubic ease-in-out.",
+          "type": "string",
+          "const": "inOutCubic"
+        },
+        {
+          "description": "Sine ease-in.",
+          "type": "string",
+          "const": "inSine"
+        },
+        {
+          "description": "Sine ease-out.",
+          "type": "string",
+          "const": "outSine"
+        },
+        {
+          "description": "Sine ease-in-out.",
+          "type": "string",
+          "const": "inOutSine"
+        },
+        {
+          "description": "Backtracking ease-in.",
+          "type": "string",
+          "const": "inBack"
+        },
+        {
+          "description": "Backtracking ease-out.",
+          "type": "string",
+          "const": "outBack"
+        },
+        {
+          "description": "Backtracking ease-in-out.",
+          "type": "string",
+          "const": "inOutBack"
+        }
+      ]
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "ReducedMotionKind": {
+      "description": "Accessibility policy kind for reducing or substituting motion-heavy transitions.",
+      "oneOf": [
+        {
+          "description": "Do not alter this transition for reduced-motion contexts.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "Replace the transition with an instant state change.",
+          "type": "string",
+          "const": "instant"
+        },
+        {
+          "description": "Preserve only opacity/fade tracks when possible.",
+          "type": "string",
+          "const": "keepOpacityOnly"
+        },
+        {
+          "description": "Substitute another named transition from the same recipe.",
+          "type": "string",
+          "const": "substitute"
+        }
+      ]
+    },
+    "ReducedMotionPolicy": {
+      "description": "Accessibility policy for reducing or substituting motion-heavy transitions.",
+      "type": "object",
+      "properties": {
+        "policy": {
+          "description": "Selected reduced-motion policy.",
+          "$ref": "#/$defs/ReducedMotionKind"
+        },
+        "transition": {
+          "description": "Optional replacement transition id used when `policy` is `substitute`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransitionId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "policy"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "SceneAnchor": {
+      "description": "Named anchor point used to place an element inside a scene or sibling layer.",
+      "oneOf": [
+        {
+          "description": "Top-left corner.",
+          "type": "string",
+          "const": "topLeft"
+        },
+        {
+          "description": "Top edge centered horizontally.",
+          "type": "string",
+          "const": "topCenter"
+        },
+        {
+          "description": "Top-right corner.",
+          "type": "string",
+          "const": "topRight"
+        },
+        {
+          "description": "Left edge centered vertically.",
+          "type": "string",
+          "const": "centerLeft"
+        },
+        {
+          "description": "Center point.",
+          "type": "string",
+          "const": "center"
+        },
+        {
+          "description": "Right edge centered vertically.",
+          "type": "string",
+          "const": "centerRight"
+        },
+        {
+          "description": "Bottom-left corner.",
+          "type": "string",
+          "const": "bottomLeft"
+        },
+        {
+          "description": "Bottom edge centered horizontally.",
+          "type": "string",
+          "const": "bottomCenter"
+        },
+        {
+          "description": "Bottom-right corner.",
+          "type": "string",
+          "const": "bottomRight"
+        }
+      ]
+    },
+    "SceneId": {
+      "description": "Stable canonical recipe scene identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match one cell using value sources for each coordinate.\n\nThis preserves runtime-bound cell targeting from the source pathway while\nstill allowing static literal coordinates for deterministic validation.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cell"
+            },
+            "x": {
+              "description": "X coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match rows where `row % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloRows"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select rows.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match columns where `column % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloColumns"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select columns.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match cells containing non-empty glyph content.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match the outer perimeter band.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "outerBand"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells that are not on the outer perimeter.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inner"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "SignalExpressionSpec": {
+      "description": "Deterministic numeric expression usable by preview loopbacks and authored value sources.",
+      "oneOf": [
+        {
+          "description": "Constant numeric expression.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "constant"
+            },
+            "value": {
+              "description": "Constant numeric value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Repeating ramp from `start` to `end`.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Value at normalized expression phase one.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "ramp"
+            },
+            "start": {
+              "description": "Value at normalized expression phase zero.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Sine oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sine"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Triangle oscillator.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Oscillator amplitude.",
+              "type": "number",
+              "format": "double"
+            },
+            "frequencyHz": {
+              "description": "Oscillator frequency in hertz.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "triangle"
+            },
+            "offset": {
+              "description": "Numeric offset added after oscillation.",
+              "type": "number",
+              "format": "double"
+            },
+            "phase": {
+              "description": "Phase offset in cycles.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "frequencyHz",
+            "amplitude",
+            "offset",
+            "phase"
+          ]
+        },
+        {
+          "description": "Mix two numeric expressions with a 0..1 blend factor.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "mix"
+            },
+            "mix": {
+              "description": "Blend factor where 0 selects `a` and 1 selects `b`.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b",
+            "mix"
+          ]
+        },
+        {
+          "description": "Add two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "add"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Multiply two numeric expressions.",
+          "type": "object",
+          "properties": {
+            "a": {
+              "description": "First expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "b": {
+              "description": "Second expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "multiply"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "a",
+            "b"
+          ]
+        },
+        {
+          "description": "Clamp a numeric expression into an inclusive range.",
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Expression input to clamp.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clamp"
+            },
+            "max": {
+              "description": "Inclusive maximum value.",
+              "type": "number",
+              "format": "double"
+            },
+            "min": {
+              "description": "Inclusive minimum value.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "input",
+            "min",
+            "max"
+          ]
+        }
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
+      ]
+    },
+    "StyleColorSource": {
+      "description": "Source of a color used by style interpolation tracks.",
+      "oneOf": [
+        {
+          "description": "Explicit RGBA color.",
+          "type": "object",
+          "properties": {
+            "explicitColor": {
+              "description": "Explicit RGBA color value.",
+              "$ref": "#/$defs/Color"
+            },
+            "kind": {
+              "type": "string",
+              "const": "explicitColor"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "explicitColor"
+          ]
+        },
+        {
+          "description": "Current canvas/background color under the subject.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "canvas"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fully transparent color.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "transparent"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Subject's current authored color.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "current"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Sampled source surface color.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "sampledSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Destination/composited color.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "destination"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "TransitionBlindsOrientation": {
+      "description": "Orientation for `visibility.blinds` transition reveal bands.",
+      "oneOf": [
+        {
+          "description": "Bands open or close across horizontal rows.",
+          "type": "string",
+          "const": "horizontal"
+        },
+        {
+          "description": "Bands open or close across vertical columns.",
+          "type": "string",
+          "const": "vertical"
+        }
+      ]
+    },
+    "TransitionCascadeOrder": {
+      "description": "Deterministic ordering for content reveal cascades.",
+      "oneOf": [
+        {
+          "description": "Reveal from the leftmost visible content toward the right.",
+          "type": "string",
+          "const": "leftToRight"
+        },
+        {
+          "description": "Reveal from the rightmost visible content toward the left.",
+          "type": "string",
+          "const": "rightToLeft"
+        },
+        {
+          "description": "Reveal from top rows toward bottom rows.",
+          "type": "string",
+          "const": "topToBottom"
+        },
+        {
+          "description": "Reveal from bottom rows toward top rows.",
+          "type": "string",
+          "const": "bottomToTop"
+        },
+        {
+          "description": "Reveal outward from the center.",
+          "type": "string",
+          "const": "centerOut"
+        },
+        {
+          "description": "Reveal inward toward the center.",
+          "type": "string",
+          "const": "edgesIn"
+        }
+      ]
+    },
+    "TransitionCornerArcMode": {
+      "description": "Directional mode for corner-arc visibility geometry.",
+      "oneOf": [
+        {
+          "description": "Reveal converges inward toward the selected corner.",
+          "type": "string",
+          "const": "inToCorner"
+        },
+        {
+          "description": "Reveal expands outward from the selected corner.",
+          "type": "string",
+          "const": "outFromCorner"
+        }
+      ]
+    },
+    "TransitionDistanceMetric": {
+      "description": "Distance metric used by structured visibility geometry.",
+      "oneOf": [
+        {
+          "description": "Euclidean distance.",
+          "type": "string",
+          "const": "euclidean"
+        },
+        {
+          "description": "Manhattan grid distance.",
+          "type": "string",
+          "const": "manhattan"
+        }
+      ]
+    },
+    "TransitionEdge": {
+      "description": "Edge treatment for visibility transition tracks.",
+      "oneOf": [
+        {
+          "description": "Hard threshold edge.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "hard"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Soft edge feathered by whole terminal cells.",
+          "type": "object",
+          "properties": {
+            "featherCells": {
+              "description": "Feather width in cells.",
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "soft"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "featherCells"
+          ]
+        }
+      ]
+    },
+    "TransitionFocal": {
+      "description": "Focal point used by aperture-style visibility tracks.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Focal x coordinate source.",
+          "$ref": "#/$defs/ValueSource"
+        },
+        "y": {
+          "description": "Focal y coordinate source.",
+          "$ref": "#/$defs/ValueSource"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "TransitionId": {
+      "description": "Stable canonical transition identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "TransitionIntent": {
+      "description": "Preset intent preserved after author shorthand canonicalization.\n\nThe compositor executes `TransitionTrack` values directly; intent is retained\nfor diagnostics, documentation, theme tooling, profiling labels, and corpus\nanalysis. It is not a runtime bridge or legacy execution DTO.",
+      "oneOf": [
+        {
+          "description": "Author selected a canonical transition preset.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "preset"
+            },
+            "preset": {
+              "description": "Canonical preset name selected by the authoring shorthand.",
+              "$ref": "#/$defs/TransitionPreset"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "preset"
+          ]
+        },
+        {
+          "description": "Author selected an alias that canonicalized to a preset.",
+          "type": "object",
+          "properties": {
+            "alias": {
+              "description": "Author-facing alias spelling.",
+              "type": "string"
+            },
+            "canonicalPreset": {
+              "description": "Canonical preset represented by the alias.",
+              "$ref": "#/$defs/TransitionPreset"
+            },
+            "kind": {
+              "type": "string",
+              "const": "alias"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "alias",
+            "canonicalPreset"
+          ]
+        }
+      ]
+    },
+    "TransitionInterruption": {
+      "description": "Policy used when a transition is superseded before completion.",
+      "oneOf": [
+        {
+          "description": "Restart the new transition from its beginning.",
+          "type": "string",
+          "const": "restart"
+        },
+        {
+          "description": "Reverse from the current visual state.",
+          "type": "string",
+          "const": "reverseFromCurrent"
+        },
+        {
+          "description": "Continue toward the new target from the current visual state.",
+          "type": "string",
+          "const": "continueToNewTarget"
+        },
+        {
+          "description": "Snap to the ending state.",
+          "type": "string",
+          "const": "snapToEnd"
+        },
+        {
+          "description": "Snap the current transition to its end before starting the next transition.",
+          "type": "string",
+          "const": "snapToEndThenStartNext"
+        },
+        {
+          "description": "Snap to the starting state.",
+          "type": "string",
+          "const": "snapToStart"
+        },
+        {
+          "description": "Preserve the current rendered frame until superseded by the next stable state.",
+          "type": "string",
+          "const": "preserveCurrentFrame"
+        },
+        {
+          "description": "Cancel without applying a replacement transition.",
+          "type": "string",
+          "const": "cancel"
+        }
+      ]
+    },
+    "TransitionMaterializePattern": {
+      "description": "Pattern used by `visibility.materialize` reveal tracks.",
+      "oneOf": [
+        {
+          "description": "Seeded noise/chunk reveal.",
+          "type": "string",
+          "const": "noise"
+        },
+        {
+          "description": "Ordered chunk reveal.",
+          "type": "string",
+          "const": "chunks"
+        }
+      ]
+    },
+    "TransitionMotionPath": {
+      "description": "Grid-native path followed by a `motion.path` transition track.",
+      "oneOf": [
+        {
+          "description": "Straight-line path between the transition's resolved start and end placements.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "linear"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Arc path with a signed bulge value; positive and negative values bend opposite directions.",
+          "type": "object",
+          "properties": {
+            "bulge": {
+              "description": "Signed arc bulge amount.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "arc"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "bulge"
+          ]
+        },
+        {
+          "description": "Spring-like path controlled by transition timing/easing and optional amplitude.",
+          "type": "object",
+          "properties": {
+            "amplitude": {
+              "description": "Optional overshoot/amplitude source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "spring"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Bezier-like path reserved for authored control-point motion.",
+          "type": "object",
+          "properties": {
+            "controlPoints": {
+              "description": "Control points or descriptor-owned payload encoded as a structured value source.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "bezier"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints"
+          ]
+        }
+      ]
+    },
+    "TransitionMotionSampling": {
+      "description": "Policy for sampling continuous motion paths onto a cell grid.",
+      "oneOf": [
+        {
+          "description": "Preserve continuous coordinates for consumers that support them.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "Round coordinates to the nearest cell.",
+          "type": "string",
+          "const": "roundToCell"
+        },
+        {
+          "description": "Floor coordinates to the lower cell.",
+          "type": "string",
+          "const": "floorToCell"
+        },
+        {
+          "description": "Ceil coordinates to the higher cell.",
+          "type": "string",
+          "const": "ceilToCell"
+        },
+        {
+          "description": "Dither between neighboring cells over time.",
+          "type": "string",
+          "const": "temporalDither"
+        },
+        {
+          "description": "Preserve sub-cell motion using braille cell density where supported.",
+          "type": "string",
+          "const": "brailleSubcell"
+        }
+      ]
+    },
+    "TransitionPreset": {
+      "description": "Author-facing transition preset names preserved as non-executable intent metadata.",
+      "oneOf": [
+        {
+          "description": "Between-surface blend from prior to next surface.",
+          "type": "string",
+          "const": "crossfade"
+        },
+        {
+          "description": "Directional coverage reveal.",
+          "type": "string",
+          "const": "wipe"
+        },
+        {
+          "description": "Aperture reveal around a focal point.",
+          "type": "string",
+          "const": "iris"
+        },
+        {
+          "description": "Coordinated from/to surface displacement.",
+          "type": "string",
+          "const": "push"
+        },
+        {
+          "description": "Per-cell randomized or ordered visibility reveal.",
+          "type": "string",
+          "const": "dissolve"
+        },
+        {
+          "description": "Between-surface content correspondence transform.",
+          "type": "string",
+          "const": "morph"
+        },
+        {
+          "description": "Stipple-pattern visibility reveal.",
+          "type": "string",
+          "const": "stippled"
+        },
+        {
+          "description": "Braille-pattern visibility reveal.",
+          "type": "string",
+          "const": "braille"
+        }
+      ]
+    },
+    "TransitionRevealDirection": {
+      "description": "Direction of coverage progression for a visibility wipe.",
+      "oneOf": [
+        {
+          "description": "Reveal progresses from left to right.",
+          "type": "string",
+          "const": "leftToRight"
+        },
+        {
+          "description": "Reveal progresses from right to left.",
+          "type": "string",
+          "const": "rightToLeft"
+        },
+        {
+          "description": "Reveal progresses from top to bottom.",
+          "type": "string",
+          "const": "topToBottom"
+        },
+        {
+          "description": "Reveal progresses from bottom to top.",
+          "type": "string",
+          "const": "bottomToTop"
+        },
+        {
+          "description": "Reveal progresses along a configured angle.",
+          "type": "string",
+          "const": "angle"
+        }
+      ]
+    },
+    "TransitionSubjectRef": {
+      "description": "Concrete subject participating in a transition envelope.",
+      "oneOf": [
+        {
+          "description": "Absence of a prior or next subject, used for enter/exit.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "empty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Explicit recipe scene subject.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced scene id.",
+              "$ref": "#/$defs/SceneId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "scene"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Explicit scene element subject.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced element id.",
+              "$ref": "#/$defs/ElementId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "element"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Role-scoped subject.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Semantic role tag.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Background or full canvas subject.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "canvas"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "TransitionSubjects": {
+      "description": "Named subjects participating in a transition.",
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "Prior surface or state.",
+          "$ref": "#/$defs/TransitionSubjectRef"
+        },
+        "shared": {
+          "description": "Optional shared/matched subjects for shared-element or shared-axis motion.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TransitionSubjectRef"
+          }
+        },
+        "to": {
+          "description": "Next surface or state.",
+          "$ref": "#/$defs/TransitionSubjectRef"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "TransitionTextCursor": {
+      "description": "Optional cursor behavior for `content.typewriter` tracks.",
+      "type": "object",
+      "properties": {
+        "character": {
+          "description": "Cursor glyph rendered at the reveal frontier.",
+          "type": "string"
+        },
+        "wake": {
+          "description": "Cursor wake/trail behavior.",
+          "$ref": "#/$defs/TransitionTextCursorWake"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "character",
+        "wake"
+      ]
+    },
+    "TransitionTextCursorWake": {
+      "description": "Cursor wake behavior for content reveal tracks.",
+      "oneOf": [
+        {
+          "description": "No cursor wake.",
+          "type": "string",
+          "const": "off"
+        },
+        {
+          "description": "Leave a short fading trail behind the cursor.",
+          "type": "string",
+          "const": "trail"
+        },
+        {
+          "description": "Blink the cursor while revealing content.",
+          "type": "string",
+          "const": "blink"
+        }
+      ]
+    },
+    "TransitionTiming": {
+      "description": "Reusable timing block for transition envelopes and per-track overrides.",
+      "type": "object",
+      "properties": {
+        "delay": {
+          "description": "Optional delay before the interval starts.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DurationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration": {
+          "description": "Optional duration; track timing inherits from the transition when omitted.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DurationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "easing": {
+          "description": "Optional easing; track timing inherits from the transition when omitted.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EasingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stagger": {
+          "description": "Optional per-cell, per-role, or author-defined stagger description.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructuredValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "TransitionTrack": {
+      "description": "Executable canonical V3.1 transition track.\n\nTracks express one animated concern inside a transition envelope. They are\nexecuted directly by a V3.1 compositor; they are not converted to a legacy\nDTO or interpreted through an effect-chain translation layer.",
+      "oneOf": [
+        {
+          "description": "`visibility.wipe` controls coverage/reveal with wipe geometry.",
+          "type": "object",
+          "properties": {
+            "angleDegrees": {
+              "description": "Optional custom reveal angle in degrees for diagonal wipes.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "edge": {
+              "description": "Optional visibility boundary treatment.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionEdge"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "geometry": {
+              "description": "Optional structured geometry for non-cardinal wipes.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionVisibilityGeometry"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "visibility.wipe"
+            },
+            "revealDirection": {
+              "description": "Qualified reveal direction; use `angle` with `angleDegrees` for diagonal/custom wipes.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionRevealDirection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`visibility.iris` controls aperture reveal around a focal point.",
+          "type": "object",
+          "properties": {
+            "edge": {
+              "description": "Optional visibility boundary treatment.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionEdge"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "focal": {
+              "description": "Optional focal point.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionFocal"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "visibility.iris"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "shape": {
+              "description": "Aperture shape.",
+              "$ref": "#/$defs/VisibilityIrisShape"
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "shape"
+          ]
+        },
+        {
+          "description": "`visibility.dissolve` controls per-cell visibility reveal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "visibility.dissolve"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "seed": {
+              "description": "Optional deterministic seed source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`visibility.stippled` controls stipple-pattern visibility reveal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "visibility.stippled"
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`visibility.braille` controls braille-pattern visibility reveal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "visibility.braille"
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`visibility.blinds` controls banded blind-style visibility reveal.",
+          "type": "object",
+          "properties": {
+            "count": {
+              "description": "Number of blinds/bands as a bindable source.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "visibility.blinds"
+            },
+            "orientation": {
+              "description": "Blind band orientation.",
+              "$ref": "#/$defs/TransitionBlindsOrientation"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "orientation",
+            "count"
+          ]
+        },
+        {
+          "description": "`visibility.materialize` reveals a subject through deterministic materialization.",
+          "type": "object",
+          "properties": {
+            "chunkSize": {
+              "description": "Optional chunk size source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "edge": {
+              "description": "Optional visibility boundary treatment.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionEdge"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fromAnchor": {
+              "description": "Optional anchor from which materialization begins.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SceneAnchor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "visibility.materialize"
+            },
+            "noiseAmount": {
+              "description": "Optional noise amount source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pattern": {
+              "description": "Materialization pattern.",
+              "$ref": "#/$defs/TransitionMaterializePattern"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "seed": {
+              "description": "Optional deterministic seed source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose visibility is controlled by this track.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "pattern"
+          ]
+        },
+        {
+          "description": "`opacity.fade` changes one subject's opacity.",
+          "type": "object",
+          "properties": {
+            "from": {
+              "description": "Optional starting opacity source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "opacity.fade"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose opacity changes.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "to": {
+              "description": "Optional ending opacity source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`motion.slide` moves a single subject.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "motion.slide"
+            },
+            "subject": {
+              "description": "Subject that travels.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "travelDirection": {
+              "description": "Qualified movement direction.",
+              "$ref": "#/$defs/TransitionTravelDirection"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "travelDirection"
+          ]
+        },
+        {
+          "description": "`motion.path` moves one subject along a grid-native path during a state-change interval.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "motion.path"
+            },
+            "path": {
+              "description": "Path shape to follow.",
+              "$ref": "#/$defs/TransitionMotionPath"
+            },
+            "sampling": {
+              "description": "Optional grid quantization/sampling policy.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionMotionSampling"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject that travels.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "path"
+          ]
+        },
+        {
+          "description": "`relation.crossfade` blends from/to surfaces in relation to each other.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "relation.crossfade"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "`relation.push` coordinates from/to surface displacement.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "relation.push"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "travelDirection": {
+              "description": "Qualified push travel direction.",
+              "$ref": "#/$defs/TransitionTravelDirection"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "travelDirection"
+          ]
+        },
+        {
+          "description": "`relation.morph` represents between-surface correspondence transform intent.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "relation.morph"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "`content.splitFlap` reveals or mutates textual content with split-flap glyph cycling.",
+          "type": "object",
+          "properties": {
+            "cascade": {
+              "description": "Optional cascade delay/amount.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "charset": {
+              "description": "Optional named character set, such as `uppercase`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cycles": {
+              "description": "Bindable number of flap cycles.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "flapRate": {
+              "description": "Bindable flap cycling rate.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "content.splitFlap"
+            },
+            "order": {
+              "description": "Optional deterministic cascade order.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionCascadeOrder"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose content changes.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "flapRate",
+            "cycles"
+          ]
+        },
+        {
+          "description": "`content.typewriter` reveals textual content over the transition interval.",
+          "type": "object",
+          "properties": {
+            "cursor": {
+              "description": "Optional cursor behavior.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTextCursor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "content.typewriter"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose content changes.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "typingRateVariance": {
+              "description": "Optional bindable variance in typing reveal rate.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject"
+          ]
+        },
+        {
+          "description": "`style.glistenBand` applies a transient style sweep during a transition interval.",
+          "type": "object",
+          "properties": {
+            "angleDegrees": {
+              "description": "Bindable sweep angle in degrees.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "bandWidth": {
+              "description": "Bindable band width in cells.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "headColor": {
+              "description": "Optional leading color source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "style.glistenBand"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose style is affected.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "sweepRate": {
+              "description": "Bindable sweep rate.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "tailColor": {
+              "description": "Optional trailing color source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "bandWidth",
+            "sweepRate",
+            "angleDegrees"
+          ]
+        },
+        {
+          "description": "`style.colorFade` interpolates cell colors, distinct from opacity blending.",
+          "type": "object",
+          "properties": {
+            "channelTarget": {
+              "description": "Optional foreground/background/both routing label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "fromColor": {
+              "description": "Starting color source.",
+              "$ref": "#/$defs/StyleColorSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "style.colorFade"
+            },
+            "scope": {
+              "description": "Optional per-track scope override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScopeSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject": {
+              "description": "Subject whose style is affected.",
+              "$ref": "#/$defs/TransitionTrackSubject"
+            },
+            "timing": {
+              "description": "Optional per-track timing override.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TransitionTiming"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "toColor": {
+              "description": "Ending color source.",
+              "$ref": "#/$defs/StyleColorSource"
+            },
+            "transitionProgress": {
+              "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "subject",
+            "fromColor",
+            "toColor"
+          ]
+        }
+      ]
+    },
+    "TransitionTrackSubject": {
+      "description": "Subject selector for a transition track.",
+      "oneOf": [
+        {
+          "description": "Prior surface or state.",
+          "type": "string",
+          "const": "from"
+        },
+        {
+          "description": "Next surface or state.",
+          "type": "string",
+          "const": "to"
+        },
+        {
+          "description": "Both prior and next surfaces.",
+          "type": "string",
+          "const": "both"
+        },
+        {
+          "description": "Shared or matched element pair.",
+          "type": "string",
+          "const": "shared"
+        }
+      ]
+    },
+    "TransitionTravelDirection": {
+      "description": "Movement direction for motion and relation tracks.",
+      "oneOf": [
+        {
+          "description": "Travel left.",
+          "type": "string",
+          "const": "left"
+        },
+        {
+          "description": "Travel right.",
+          "type": "string",
+          "const": "right"
+        },
+        {
+          "description": "Travel upward.",
+          "type": "string",
+          "const": "up"
+        },
+        {
+          "description": "Travel downward.",
+          "type": "string",
+          "const": "down"
+        }
+      ]
+    },
+    "TransitionVariant": {
+      "description": "Conditional transition replacement used for reduced motion, capability fallback, or host-selected variants.",
+      "type": "object",
+      "properties": {
+        "useTransition": {
+          "description": "Replacement transition id from the same recipe transition map.",
+          "$ref": "#/$defs/TransitionId"
+        },
+        "when": {
+          "description": "Engine-neutral condition that selects this variant.",
+          "$ref": "#/$defs/TransitionVariantCondition"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "when",
+        "useTransition"
+      ]
+    },
+    "TransitionVariantCondition": {
+      "description": "Engine-neutral condition that may select an alternate transition variant.",
+      "oneOf": [
+        {
+          "description": "Host/runtime signal is truthy according to the loader or player policy.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Public parameter is truthy according to the loader or player policy.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Host/runtime requests reduced motion.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "reducedMotionRequested"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "A named grid/backend capability is unavailable.",
+          "type": "object",
+          "properties": {
+            "capability": {
+              "description": "Stable capability name, such as `glyphSet.braille` or `color.truecolor`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "capabilityUnavailable"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "capability"
+          ]
+        }
+      ]
+    },
+    "TransitionVisibilityGeometry": {
+      "description": "Structured geometry for visibility transition tracks.",
+      "oneOf": [
+        {
+          "description": "Corner arc reveal/hide geometry.",
+          "type": "object",
+          "properties": {
+            "corner": {
+              "description": "Corner used as the reveal destination or origin.",
+              "$ref": "#/$defs/SceneAnchor"
+            },
+            "cornerArcMode": {
+              "description": "Corner arc reveal/hide mode.",
+              "$ref": "#/$defs/TransitionCornerArcMode"
+            },
+            "kind": {
+              "type": "string",
+              "const": "cornerArc"
+            },
+            "metric": {
+              "description": "Distance metric used to calculate corner coverage.",
+              "$ref": "#/$defs/TransitionDistanceMetric"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "cornerArcMode",
+            "corner",
+            "metric"
+          ]
+        }
+      ]
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Gradient stop payload.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "gradient"
+            },
+            "value": {
+              "description": "Gradient payload.",
+              "$ref": "#/$defs/GradientSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        },
+        {
+          "description": "Source value samples a deterministic per-cell spatial field.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback value when the sampled field is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "field": {
+              "description": "Canonical sampled field name, such as `surfaceAngleFrom`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sampledField"
+            },
+            "x": {
+              "description": "X coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "field",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "description": "Source value comes from an authored deterministic signal expression.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Numeric signal expression.",
+              "$ref": "#/$defs/SignalExpressionSpec"
+            },
+            "fallback": {
+              "description": "Optional fallback value when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "signalExpression"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        },
+        {
+          "description": "Source value is normalized lifecycle phase progress in 0..1.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "phaseProgress"
+            },
+            "phase": {
+              "description": "Lifecycle phase whose progress should be sampled.",
+              "$ref": "#/$defs/LifecyclePhase"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phase"
+          ]
+        },
+        {
+          "description": "Source value is derived from the active recipe/player clock.",
+          "type": "object",
+          "properties": {
+            "clock": {
+              "description": "Clock sample source to use.",
+              "$ref": "#/$defs/ClockValueSource"
+            },
+            "kind": {
+              "type": "string",
+              "const": "clock"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "clock"
+          ]
+        }
+      ]
+    },
+    "VisibilityIrisShape": {
+      "description": "Aperture shape used by a `visibility.iris` transition track.",
+      "oneOf": [
+        {
+          "description": "Circular aperture.",
+          "type": "string",
+          "const": "circle"
+        },
+        {
+          "description": "Diamond aperture.",
+          "type": "string",
+          "const": "diamond"
+        }
+      ]
+    }
+  }
+}

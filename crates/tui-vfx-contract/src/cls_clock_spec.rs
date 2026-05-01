@@ -10,7 +10,7 @@ use crate::{ClockMode, DescriptorValidationError, DurationSpec};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ClockSpec {
     /// Time sample-space mode.
-    pub mode: ClockMode,
+    pub clock_mode: ClockMode,
     /// Loop period required only when mode is `looping`.
     pub period: Option<DurationSpec>,
 }
@@ -18,7 +18,7 @@ pub struct ClockSpec {
 impl ClockSpec {
     /// Validate loop-period requirements and duration shape.
     pub fn validate(&self) -> Result<(), DescriptorValidationError> {
-        match (self.mode, self.period) {
+        match (self.clock_mode, self.period) {
             (ClockMode::Looping, Some(period)) => period.validate(),
             (ClockMode::Looping, None) => Err(DescriptorValidationError::MissingClockPeriod),
             (ClockMode::Monotonic, Some(_)) => {

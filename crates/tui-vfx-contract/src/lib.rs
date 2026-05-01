@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.12.0</VERS>
+// <VERS>VERSION: 0.14.0</VERS>
 // <WCTX>v3.1 pre-release scene vocabulary: expose typed scroll-factor reservation.</WCTX>
-// <CLOG>0.12.0: MINOR — export ScrollFactor scene-element metadata and schema root.
+// <CLOG>0.14.0: MINOR — export signal expressions, typed shadows, style color sources, and visibility geometry.
+// 0.13.0: MINOR — export transition recipe-oracle track support types.
+// 0.12.0: MINOR — export ScrollFactor scene-element metadata and schema root.
 // 0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
 // 0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
 // 0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
@@ -39,6 +41,7 @@ pub mod cls_cell_write_policy;
 pub mod cls_clip_policy;
 pub mod cls_clock_mode;
 pub mod cls_clock_spec;
+pub mod cls_clock_value_source;
 pub mod cls_coordinate_space;
 pub mod cls_descriptor_catalog;
 pub mod cls_descriptor_pack;
@@ -48,6 +51,7 @@ pub mod cls_descriptor_validation_error;
 pub mod cls_diagnostic_level;
 pub mod cls_duration_spec;
 pub mod cls_dwell_policy;
+pub mod cls_easing_spec;
 pub mod cls_effect_completion;
 pub mod cls_effect_descriptor;
 pub mod cls_effect_domain;
@@ -70,6 +74,7 @@ pub mod cls_graph_value_shape;
 pub mod cls_layer_id;
 pub mod cls_lifecycle_phase;
 pub mod cls_lifecycle_spec;
+pub mod cls_named_easing;
 pub mod cls_node_id;
 pub mod cls_node_output_source;
 pub mod cls_node_output_spec;
@@ -88,6 +93,8 @@ pub mod cls_recipe_id;
 pub mod cls_recipe_metadata;
 pub mod cls_recipe_scene;
 pub mod cls_recipe_scene_element;
+pub mod cls_reduced_motion_kind;
+pub mod cls_reduced_motion_policy;
 pub mod cls_role_space;
 pub mod cls_role_write_policy;
 pub mod cls_role_write_policy_kind;
@@ -106,7 +113,9 @@ pub mod cls_scope_kind;
 pub mod cls_scope_spec;
 pub mod cls_scope_support;
 pub mod cls_scroll_factor;
+pub mod cls_shadow_spec;
 pub mod cls_shift_sampler;
+pub mod cls_signal_expression_spec;
 pub mod cls_signal_id;
 pub mod cls_signal_spec;
 pub mod cls_source_descriptor;
@@ -121,10 +130,35 @@ pub mod cls_source_output_spec;
 pub mod cls_source_role_policy;
 pub mod cls_source_spec;
 pub mod cls_structured_value;
+pub mod cls_style_color_source;
 pub mod cls_surface;
 pub mod cls_surface_diagnostic;
 pub mod cls_surface_diagnostic_code;
 pub mod cls_surface_metadata;
+pub mod cls_transition_blinds_orientation;
+pub mod cls_transition_cascade_order;
+pub mod cls_transition_edge;
+pub mod cls_transition_focal;
+pub mod cls_transition_id;
+pub mod cls_transition_intent;
+pub mod cls_transition_interruption;
+pub mod cls_transition_materialize_pattern;
+pub mod cls_transition_motion_path;
+pub mod cls_transition_motion_sampling;
+pub mod cls_transition_preset;
+pub mod cls_transition_reveal_direction;
+pub mod cls_transition_spec;
+pub mod cls_transition_subject_ref;
+pub mod cls_transition_subjects;
+pub mod cls_transition_text_cursor;
+pub mod cls_transition_text_cursor_wake;
+pub mod cls_transition_timing;
+pub mod cls_transition_track;
+pub mod cls_transition_track_subject;
+pub mod cls_transition_travel_direction;
+pub mod cls_transition_variant;
+pub mod cls_transition_variant_condition;
+pub mod cls_transition_visibility_geometry;
 pub mod cls_trigger_action;
 pub mod cls_trigger_condition;
 pub mod cls_trigger_latch_policy;
@@ -135,6 +169,7 @@ pub mod cls_value_kind;
 pub mod cls_value_predicate;
 pub mod cls_value_source;
 pub mod cls_value_spec;
+pub mod cls_visibility_iris_shape;
 pub mod cls_write_support;
 pub mod fnc_collect_graph_value_kinds;
 pub mod fnc_scope_coordinate;
@@ -162,6 +197,7 @@ pub use cls_cell_write_policy::CellWritePolicy;
 pub use cls_clip_policy::ClipPolicy;
 pub use cls_clock_mode::ClockMode;
 pub use cls_clock_spec::ClockSpec;
+pub use cls_clock_value_source::ClockValueSource;
 pub use cls_coordinate_space::CoordinateSpace;
 pub use cls_descriptor_catalog::DescriptorCatalog;
 pub use cls_descriptor_pack::DescriptorPack;
@@ -171,6 +207,7 @@ pub use cls_descriptor_validation_error::DescriptorValidationError;
 pub use cls_diagnostic_level::DiagnosticLevel;
 pub use cls_duration_spec::DurationSpec;
 pub use cls_dwell_policy::DwellPolicy;
+pub use cls_easing_spec::EasingSpec;
 pub use cls_effect_completion::EffectCompletion;
 pub use cls_effect_descriptor::EffectDescriptor;
 pub use cls_effect_domain::EffectDomain;
@@ -193,6 +230,7 @@ pub use cls_graph_value_shape::GraphValueShape;
 pub use cls_layer_id::LayerId;
 pub use cls_lifecycle_phase::LifecyclePhase;
 pub use cls_lifecycle_spec::LifecycleSpec;
+pub use cls_named_easing::NamedEasing;
 pub use cls_node_id::NodeId;
 pub use cls_node_output_source::NodeOutputSource;
 pub use cls_node_output_spec::NodeOutputSpec;
@@ -211,6 +249,8 @@ pub use cls_recipe_id::RecipeId;
 pub use cls_recipe_metadata::RecipeMetadata;
 pub use cls_recipe_scene::RecipeScene;
 pub use cls_recipe_scene_element::RecipeSceneElement;
+pub use cls_reduced_motion_kind::ReducedMotionKind;
+pub use cls_reduced_motion_policy::ReducedMotionPolicy;
 pub use cls_role_space::RoleSpace;
 pub use cls_role_write_policy::RoleWritePolicy;
 pub use cls_role_write_policy_kind::RoleWritePolicyKind;
@@ -229,7 +269,12 @@ pub use cls_scope_kind::ScopeKind;
 pub use cls_scope_spec::ScopeSpec;
 pub use cls_scope_support::ScopeSupport;
 pub use cls_scroll_factor::ScrollFactor;
+pub use cls_shadow_spec::{
+    ShadowBlendMode, ShadowCompositeMode, ShadowEdge, ShadowFalloff, ShadowGlyphMaterial,
+    ShadowInset, ShadowOffset, ShadowOutset, ShadowSpec,
+};
 pub use cls_shift_sampler::ShiftSampler;
+pub use cls_signal_expression_spec::SignalExpressionSpec;
 pub use cls_signal_id::SignalId;
 pub use cls_signal_spec::SignalSpec;
 pub use cls_source_descriptor::SourceDescriptor;
@@ -244,10 +289,37 @@ pub use cls_source_output_spec::SourceOutputSpec;
 pub use cls_source_role_policy::SourceRolePolicy;
 pub use cls_source_spec::SourceSpec;
 pub use cls_structured_value::StructuredValue;
+pub use cls_style_color_source::StyleColorSource;
 pub use cls_surface::Surface;
 pub use cls_surface_diagnostic::SurfaceDiagnostic;
 pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
 pub use cls_surface_metadata::SurfaceMetadata;
+pub use cls_transition_blinds_orientation::TransitionBlindsOrientation;
+pub use cls_transition_cascade_order::TransitionCascadeOrder;
+pub use cls_transition_edge::TransitionEdge;
+pub use cls_transition_focal::TransitionFocal;
+pub use cls_transition_id::TransitionId;
+pub use cls_transition_intent::TransitionIntent;
+pub use cls_transition_interruption::TransitionInterruption;
+pub use cls_transition_materialize_pattern::TransitionMaterializePattern;
+pub use cls_transition_motion_path::TransitionMotionPath;
+pub use cls_transition_motion_sampling::TransitionMotionSampling;
+pub use cls_transition_preset::TransitionPreset;
+pub use cls_transition_reveal_direction::TransitionRevealDirection;
+pub use cls_transition_spec::TransitionSpec;
+pub use cls_transition_subject_ref::TransitionSubjectRef;
+pub use cls_transition_subjects::TransitionSubjects;
+pub use cls_transition_text_cursor::TransitionTextCursor;
+pub use cls_transition_text_cursor_wake::TransitionTextCursorWake;
+pub use cls_transition_timing::TransitionTiming;
+pub use cls_transition_track::TransitionTrack;
+pub use cls_transition_track_subject::TransitionTrackSubject;
+pub use cls_transition_travel_direction::TransitionTravelDirection;
+pub use cls_transition_variant::TransitionVariant;
+pub use cls_transition_variant_condition::TransitionVariantCondition;
+pub use cls_transition_visibility_geometry::{
+    TransitionCornerArcMode, TransitionDistanceMetric, TransitionVisibilityGeometry,
+};
 pub use cls_trigger_action::TriggerAction;
 pub use cls_trigger_condition::TriggerCondition;
 pub use cls_trigger_latch_policy::TriggerLatchPolicy;
@@ -258,6 +330,7 @@ pub use cls_value_kind::ValueKind;
 pub use cls_value_predicate::ValuePredicate;
 pub use cls_value_source::{GraphValueKinds, ValueSource};
 pub use cls_value_spec::ValueSpec;
+pub use cls_visibility_iris_shape::VisibilityIrisShape;
 pub use cls_write_support::WriteSupport;
 pub use tr_coordinate_sampler::CoordinateSampler;
 
@@ -266,19 +339,21 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DurationSpec,
-        DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GradientSpec, GraphSpec,
-        GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
-        LifecycleSpec, NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec,
-        PreviewLoopbackSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene,
-        RecipeSceneElement, Scene, SceneAnchor, SceneElement, SceneElementOverflowPolicy,
-        SceneElementPlacementRule, SceneElementSurface, SceneElementVisibility, SceneOutcome,
-        ScopeSpec, ScrollFactor, SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId,
-        SourceOutputSpec, SourceSpec, StructuredValue, Surface, SurfaceDiagnostic, TriggerSpec,
-        Value, ValuePredicate, ValueSource,
+        AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, ClockValueSource,
+        DurationSpec, DwellPolicy, EasingSpec, EffectDescriptor, EffectInputSpec, EffectOutputSpec,
+        GradientSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy,
+        GraphValueShape, LifecycleSpec, NamedEasing, NodeOutputSource, NodeOutputSpec, NodeSpec,
+        ParameterSpec, PhaseSpec, PreviewLoopbackSpec, RecipeDocument, RecipeElementPipeline,
+        RecipeMetadata, RecipeScene, RecipeSceneElement, ReducedMotionPolicy, Scene, SceneAnchor,
+        SceneElement, SceneElementOverflowPolicy, SceneElementPlacementRule, SceneElementSurface,
+        SceneElementVisibility, SceneOutcome, ScopeSpec, ScrollFactor, ShadowSpec,
+        SignalExpressionSpec, SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId,
+        SourceOutputSpec, SourceSpec, StructuredValue, StyleColorSource, Surface,
+        SurfaceDiagnostic, TransitionSpec, TransitionVisibilityGeometry, TriggerSpec, Value,
+        ValuePredicate, ValueSource,
     };
     pub use crate::{DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef};
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.12.0</VERS>
+// <VERS>END OF VERSION: 0.14.0</VERS>

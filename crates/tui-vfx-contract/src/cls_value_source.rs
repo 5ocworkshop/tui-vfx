@@ -1,15 +1,16 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value_source.rs</FILE> - <DESC>Declarative value source DTO</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>K2.13 schema decision burn-down: add deterministic sampled-field value sources.</WCTX>
-// <CLOG>0.3.0: MINOR — add sampledField numeric value source.
+// <CLOG>0.4.0: MINOR — add typed signal-expression, phase-progress, and clock value sources.
+// 0.3.0: MINOR — add sampledField numeric value source.
 // 0.2.0: MINOR — add graphValue source and context-aware validation.
 // 0.1.0: INIT — add declarative ValueSource variants and reference/kind validation.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
-    DescriptorValidationError, GraphValueId, NumericRange, ParameterId, ParameterSpec, SignalId,
-    SignalSpec, Value, ValueKind,
+    ClockValueSource, DescriptorValidationError, GraphValueId, LifecyclePhase, NumericRange,
+    ParameterId, ParameterSpec, SignalExpressionSpec, SignalId, SignalSpec, Value, ValueKind,
 };
 
 /// Value kind lookup for graph-local values available to a node input.
@@ -66,6 +67,23 @@ pub enum ValueSource {
         y: Box<ValueSource>,
         /// Optional fallback value when the sampled field is unavailable.
         fallback: Option<Value>,
+    },
+    /// Source value comes from an authored deterministic signal expression.
+    SignalExpression {
+        /// Numeric signal expression.
+        expression: SignalExpressionSpec,
+        /// Optional fallback value when the expression cannot be sampled.
+        fallback: Option<Value>,
+    },
+    /// Source value is normalized lifecycle phase progress in 0..1.
+    PhaseProgress {
+        /// Lifecycle phase whose progress should be sampled.
+        phase: LifecyclePhase,
+    },
+    /// Source value is derived from the active recipe/player clock.
+    Clock {
+        /// Clock sample source to use.
+        clock: ClockValueSource,
     },
 }
 
@@ -176,6 +194,22 @@ impl ValueSource {
                 }
                 Ok(ValueKind::Number)
             }
+            Self::SignalExpression {
+                expression,
+                fallback,
+            } => {
+                expression.validate()?;
+                if let Some(value) = fallback
+                    && value.kind() != ValueKind::Number
+                {
+                    return Err(DescriptorValidationError::ValueKindMismatch {
+                        expected: ValueKind::Number,
+                        actual: value.kind(),
+                    });
+                }
+                Ok(ValueKind::Number)
+            }
+            Self::PhaseProgress { .. } | Self::Clock { .. } => Ok(ValueKind::Number),
         }
     }
 
@@ -259,4 +293,4 @@ fn validate_map_range(
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value_source.rs</FILE> - <DESC>Declarative value source DTO</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
