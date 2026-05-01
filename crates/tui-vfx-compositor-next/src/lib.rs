@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compositor-next/src/lib.rs</FILE> - <DESC>Copied compositor-next baseline library entry point</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Compositor-next Phase 2 — copied baseline crate starts from hardened compositor behavior.</WCTX>
-// <CLOG>0.1.0: INIT add copy-first compositor-next crate docs and exports.</CLOG>
+// <CLOG>0.2.0: MINOR expose direct v3.1 recipe rendering module.
+// 0.1.0: INIT add copy-first compositor-next crate docs and exports.</CLOG>
 
 //! Copied compositor-next baseline.
 //!
@@ -19,7 +20,8 @@ pub(crate) mod samplers;
 pub mod traits;
 pub mod types;
 pub mod utils;
+pub mod v31;
 pub mod widgets;
 
 // <FILE>crates/tui-vfx-compositor-next/src/lib.rs</FILE> - <DESC>Copied compositor-next baseline library entry point</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

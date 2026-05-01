@@ -89,7 +89,8 @@ This avoids the failure mode where broad horizontal work appears complete at one
    - Include timing/cadence concepts explicitly: presentation target frame rate, recipe/source/effect update cadence, fixed-step versus continuous sampling, and absolute elapsed time requirements such as the Madeira flag procedural source.
 
 8. **Design one representative co-located primitive tree.**
-   - Start with one shader primitive, likely `shader.highlighter` or `shader.focusField`.
+   - Start with `shader.linearGradient`; use `shader.highlighter` or
+     `shader.focusField` as richer follow-up slices.
    - Include descriptor, generated assets, compositor-next runtime module, fixtures, tests, docs, and migration mapping.
 
 9. **Build the Primitive Workbench MVP.**
@@ -156,7 +157,7 @@ CURRENT STATE
 ┌──────────────────────────────────────────────┐
 │ Co-located primitive source trees            │
 │                                              │
-│ primitives/shader/highlighter/               │
+│ primitives/shader/linear-gradient/           │
 │   descriptor.v31.json                        │
 │   migration.v2.json                          │
 │   generated/                                 │
@@ -619,18 +620,30 @@ Acceptance criteria:
 
 ### Phase 5 — Select the First Representative Primitive
 
-Recommended first candidate: `shader.highlighter`.
+Current first candidate: `shader.linearGradient`.
+
+Execution note, 2026-05-01: `shader.linearGradient` was selected as the
+first vertical slice because it is the smallest existing shader primitive that
+can prove the pure v3.1 load-validation → direct compositor-next route before
+larger primitives add field breadth. The initial slice intentionally validates
+literal-only direct inputs at recipe load time, supports the canonical v3.1
+`gradient` payload, and rejects unresolved runtime-sourced source/effect inputs
+before rendering. `shader.highlighter` remains a richer follow-up candidate
+after this direct path is stable.
 
 Why:
 
-- It is rich enough to exercise real schema/runtime boundaries.
-- It includes color, numeric fields, enums, direction/mode/apply-to semantics, and known unsupported cases.
-- It is not as broad as terminal fire/water.
-- Current code already has descriptor entries and compositor/style implementation surfaces.
+- It is small enough to validate the new direct path without transition-seam
+  code.
+- It exercises descriptor-pack validation, source materialization, graph order,
+  canonical gradient stops, numeric fields, enums, and apply-to semantics.
+- Current code already has descriptor entries and compositor/style
+  implementation surfaces.
 
 Alternative candidates:
 
-- `shader.linearGradient` — safer but may not expose enough complexity.
+- `shader.highlighter` — richer next candidate for broader schema/runtime
+  boundaries.
 - `shader.focusField` — rich geometry/falloff case, good second primitive.
 - `shader.glistenBand` — good for direction/blend/band-width decisions.
 
@@ -644,10 +657,10 @@ Acceptance criteria:
 
 For the selected primitive, perform the full end-to-end slice.
 
-1. Create co-located primitive tree:
+1. Create co-located primitive tree or direct-runtime slice artifact:
 
 ```text
-primitives/shader/highlighter/
+primitives/shader/linear-gradient/
   descriptor.v31.json
   migration.v2.json
   primitive.toml
@@ -665,7 +678,8 @@ primitives/shader/highlighter/
 6. Add minimal fixture.
 7. Add V2 parity fixture if a source recipe exists.
 8. Add validation manifest.
-9. Add player → compositor-next direct v3.1 route for this primitive only.
+9. Add load-validated v3.1 → compositor-next direct route for this primitive
+   only; do not add bridge/shim/transition-seam code.
 10. Run full vertical validation.
 11. Perform commonality extraction review.
 12. Sign off the primitive.
@@ -762,8 +776,8 @@ Repeat the full vertical slice for the next primitive.
 
 Recommended order:
 
-1. `shader.highlighter`
-2. `shader.linearGradient`
+1. `shader.linearGradient` — signed off as the first direct v3.1 slice.
+2. `shader.highlighter`
 3. `shader.focusField`
 4. `shader.glistenBand`
 5. `shader.borderSweep`

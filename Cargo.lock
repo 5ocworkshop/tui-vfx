@@ -2387,6 +2387,7 @@ dependencies = [
  "smallvec",
  "tui-vfx-compositor",
  "tui-vfx-content",
+ "tui-vfx-contract",
  "tui-vfx-core",
  "tui-vfx-debug",
  "tui-vfx-geometry",

@@ -1,0 +1,288 @@
+// <FILE>crates/tui-vfx-compositor-next/tests/test_v31_direct_recipe.rs</FILE> - <DESC>Pure v3.1 RecipeDocument to compositor-next rendering tests</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Compositor-next pure v3.1 path: verify load-validated canonical recipes enter compositor-next directly without transition-seam code.</WCTX>
+// <CLOG>0.2.0: MINOR add strict v3.1 load and canonical gradient-stop coverage.
+// 0.1.0: INIT add direct v3.1 linearGradient recipe render.</CLOG>
+
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use tui_vfx_compositor_next::v31::{
+    LoadedV31Recipe, V31LoadError, V31SampleContext, render_v31_recipe,
+};
+use tui_vfx_contract::{DescriptorCatalog, DescriptorPack, DescriptorPackId, RecipeDocument};
+use tui_vfx_types::Color;
+
+fn repo_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .expect("crate lives under <repo>/crates/tui-vfx-compositor-next")
+        .to_path_buf()
+}
+
+fn primitive_catalog() -> DescriptorCatalog {
+    let pack_path = repo_root().join("descriptors/v3.1/packs/primitive.json");
+    let pack: DescriptorPack =
+        serde_json::from_str(&fs::read_to_string(pack_path).expect("read primitive pack"))
+            .expect("deserialize primitive pack");
+    let mut packs = BTreeMap::new();
+    packs.insert(DescriptorPackId::new("v3.1.primitive"), pack);
+    DescriptorCatalog { packs }
+}
+
+fn linear_gradient_recipe_value() -> serde_json::Value {
+    serde_json::json!({
+        "id": "compositorNextDirectLinearGradient",
+        "version": "3.1",
+        "metadata": {
+            "title": "Compositor Next Direct Linear Gradient",
+            "description": "Minimal load-validated v3.1 direct compositor-next fixture",
+            "authors": [],
+            "tags": ["v3.1", "compositor-next", "linear-gradient"],
+            "expectedVisual": "foreground gradient applied by compositor-next"
+        },
+        "lifecycle": null,
+        "assets": {},
+        "descriptorPacks": [{ "id": "v3.1.primitive" }],
+        "sourceDescriptors": {},
+        "sources": {
+            "mainCard": {
+                "source": "source.card",
+                "inputs": {
+                    "message": { "kind": "literal", "value": { "kind": "text", "value": "DIRECT V31" } },
+                    "width": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
+                    "height": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
+                    "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
+                    "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 0, "a": 255 } } },
+                    "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "none" } },
+                    "borderTrim": { "kind": "literal", "value": { "kind": "enum", "value": "none" } }
+                },
+                "assets": {}
+            }
+        },
+        "graph": {
+            "id": "mainGraph",
+            "version": "3.1",
+            "parameters": {},
+            "signals": {},
+            "bindings": [],
+            "effects": {},
+            "nodes": {
+                "gradient": {
+                    "id": "gradient",
+                    "effect": "shader.linearGradient",
+                    "inputs": {
+                        "startColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 0, "b": 0, "a": 255 } } },
+                        "endColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 255, "a": 255 } } },
+                        "colorSpace": { "kind": "literal", "value": { "kind": "enum", "value": "rgb" } },
+                        "angleDeg": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
+                        "intensity": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+                        "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+                    },
+                    "outputs": {},
+                    "activePhases": [],
+                    "scope": { "kind": "all" },
+                    "cellWritePolicy": "writeCell",
+                    "roleWritePolicy": { "kind": "preserveDestination" }
+                }
+            },
+            "order": ["gradient"],
+            "topology": null
+        },
+        "scenes": [{
+            "id": "mainScene",
+            "width": 8,
+            "height": 2,
+            "elements": [{
+                "id": "mainElement",
+                "layer": "primary",
+                "zIndex": 0,
+                "placement": { "x": 0, "y": 0 },
+                "source": "mainCard",
+                "pipeline": null,
+                "clipPolicy": "clip",
+                "cellWritePolicy": "writeCell",
+                "roleWritePolicy": { "kind": "preserveDestination" }
+            }]
+        }]
+    })
+}
+
+fn recipe_from_value(value: serde_json::Value) -> RecipeDocument {
+    serde_json::from_value(value).expect("canonical v3.1 recipe")
+}
+
+fn linear_gradient_recipe() -> RecipeDocument {
+    recipe_from_value(linear_gradient_recipe_value())
+}
+
+#[test]
+fn rejects_non_v31_recipe_before_rendering() {
+    let catalog = primitive_catalog();
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["version"] = serde_json::Value::String("3.2".to_string());
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects future recipe versions");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedVersion {
+            recipe_version,
+            graph_version,
+        } if recipe_version == "3.2" && graph_version == "3.1"
+    ));
+}
+
+#[test]
+fn rejects_runtime_sourced_linear_gradient_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["graph"]["parameters"]["angle"] = serde_json::json!({
+        "id": "angle",
+        "displayName": "Angle",
+        "description": null,
+        "value": {
+            "kind": "number",
+            "default": { "kind": "number", "value": 0.0 },
+            "range": { "min": 0.0, "max": 360.0 },
+            "allowedValues": [],
+            "unit": "degrees",
+            "semantic": null
+        },
+        "bindable": true
+    });
+    recipe["graph"]["nodes"]["gradient"]["inputs"]["angleDeg"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "angle",
+        "fallback": { "kind": "number", "value": 0.0 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unresolved runtime inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            node_id,
+            effect,
+            input,
+            ..
+        } if node_id == "gradient" && effect == "shader.linearGradient" && input == "angleDeg"
+    ));
+}
+
+#[test]
+fn rejects_runtime_sourced_source_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["graph"]["parameters"]["messageText"] = serde_json::json!({
+        "id": "messageText",
+        "displayName": "Message Text",
+        "description": null,
+        "value": {
+            "kind": "text",
+            "default": { "kind": "text", "value": "DIRECT V31" },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "label"
+        },
+        "bindable": true
+    });
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "messageText",
+        "fallback": { "kind": "text", "value": "DIRECT V31" }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unresolved source inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedSourceInput {
+            source_id,
+            input,
+            ..
+        } if source_id == "mainCard" && input == "message"
+    ));
+}
+
+#[test]
+fn load_validated_v31_linear_gradient_uses_canonical_gradient_stops() {
+    let catalog = primitive_catalog();
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "text", "value": "ABC" }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 3 }
+    });
+    recipe["scenes"][0]["width"] = serde_json::Value::from(3);
+    let inputs = recipe["graph"]["nodes"]["gradient"]["inputs"]
+        .as_object_mut()
+        .expect("node inputs object");
+    inputs.remove("startColor");
+    inputs.remove("endColor");
+    inputs.remove("colorSpace");
+    inputs.insert(
+        "gradient".to_string(),
+        serde_json::json!({
+            "kind": "literal",
+            "value": {
+                "kind": "gradient",
+                "value": {
+                    "space": "rgb",
+                    "stops": [
+                        { "position": 0.0, "color": { "r": 255, "g": 0, "b": 0, "a": 255 } },
+                        { "position": 0.5, "color": { "r": 0, "g": 255, "b": 0, "a": 255 } },
+                        { "position": 1.0, "color": { "r": 0, "g": 0, "b": 255, "a": 255 } }
+                    ]
+                }
+            }
+        }),
+    );
+
+    let loaded = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect("recipe validates at load time");
+    let frame = render_v31_recipe(&loaded, &V31SampleContext::default())
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().fg, Color::RED);
+    assert_eq!(frame.grid.cell((1, 0)).unwrap().fg, Color::GREEN);
+    assert_eq!(frame.grid.cell((2, 0)).unwrap().fg, Color::BLUE);
+}
+
+#[test]
+fn load_validated_v31_linear_gradient_renders_directly_in_compositor_next() {
+    let catalog = primitive_catalog();
+    let loaded = LoadedV31Recipe::load(linear_gradient_recipe(), &catalog)
+        .expect("recipe validates at load time");
+
+    let frame = render_v31_recipe(&loaded, &V31SampleContext::default())
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.recipe_id, "compositorNextDirectLinearGradient");
+    assert_eq!(frame.width, 8);
+    assert_eq!(frame.height, 2);
+    assert_eq!(frame.diagnostics, Vec::<String>::new());
+    assert_eq!(
+        frame.applied_effect_kinds,
+        vec!["shader.linearGradient".to_string()]
+    );
+    assert_ne!(frame.grid.cell((0, 0)).unwrap().fg, Color::WHITE);
+    assert_ne!(frame.grid.cell((7, 0)).unwrap().fg, Color::WHITE);
+    assert_ne!(
+        frame.grid.cell((0, 0)).unwrap().fg,
+        frame.grid.cell((7, 0)).unwrap().fg,
+        "horizontal gradient should produce different edge colors"
+    );
+}
+
+// <FILE>crates/tui-vfx-compositor-next/tests/test_v31_direct_recipe.rs</FILE>
+// <VERS>END OF VERSION: 0.2.0</VERS>
