@@ -1,7 +1,7 @@
 <!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
-<!-- <WCTX>Clarify one-time subagent grounding so follow-on packet prompts do not trigger repeated global orientation.</WCTX> -->
-<!-- <CLOG>0.1.1: PATCH — clarify that accepted `READY FOR WORK PACKET` grounding satisfies later packet grounding requirements.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.3</VERS> -->
+<!-- <WCTX>Clarify subagent workspaces and prohibit packet wording that makes helpers copy repos/crates; active compositor work targets tui-vfx-compost.</WCTX> -->
+<!-- <CLOG>0.1.3: PATCH — retarget copy/workspace discipline to tui-vfx-compost and classify abandoned copied-crate work as recovery material only.</CLOG> -->
 
 # Orchestration Protocol
 
@@ -316,6 +316,21 @@ The orchestration root is `/usr/projects/gt-design`, but active implementation m
 
 Use full paths in briefing docs, task packets, and reports whenever ambiguity is possible.
 
+Workspace/copy discipline:
+- Do not tell subagents to create a fresh copy of `/usr/projects/tui-vfx`,
+  `tui-vfx-compositor`, `tui-vfx-compost`, or any abandoned copied-crate path for each slice.
+- A leader-provided git worktree is already the isolated checkout. The assigned
+  subagent should use that worktree directly and must not create nested clones,
+  nested worktrees, or copied crates inside it.
+- Historical copied-crate work was a one-time leader/project setup/recovery path;
+  it is not the active target and not a per-agent or per-packet instruction.
+- Future packets should name exact files/modules in the current repo or an
+  already-provided workspace. If isolation is required, the leader creates and
+  owns that isolation explicitly before dispatch; the packet must still prohibit
+  cloning or copying the repo/crate.
+- Existing preserved slice worktrees are recovery artifacts. Reuse/inspect them
+  as assigned; do not create more as a default dispatch pattern.
+
 ## 6. Performance rule
 
 Always watch for non-performant patterns in touched scopes.
@@ -528,4 +543,4 @@ Escalation rule:
   dispatching more similar work
 
 <!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.3</VERS> -->

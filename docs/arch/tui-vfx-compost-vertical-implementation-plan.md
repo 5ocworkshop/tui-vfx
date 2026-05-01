@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 2.0.1</VERS> -->
+<!-- <VERS>VERSION: 2.0.3</VERS> -->
 <!-- <WCTX>tui-vfx-compost clean-sheet build: active plan is pure v3.1 substrate first, then primitive migration.</WCTX> -->
-<!-- <CLOG>2.0.1: PATCH — remove the current-state fence from the resume checklist because phase fences must be regenerated at implementation start.</CLOG> -->
+<!-- <CLOG>2.0.3: PATCH — reset primitive migration status to zero and clarify substrate validation/value-source boundaries before the first future primitive proof.</CLOG> -->
 
 # tui-vfx-compost Vertical Implementation Plan
 
@@ -21,15 +21,15 @@ Completed and recorded:
 - v3.1 native transition schema model is documented and implemented.
 - v3.1 descriptor/schema ambiguous-name audit is complete and guardrailed.
 - `tui-vfx-compost` has the basic crate/family layout.
-- `shader.linearGradient` exists as the first compost primitive proof.
+- No primitive is signed as migrated in the active compost path; `shader.linearGradient` is the first likely future candidate after substrate work.
 
 Current next step:
 
 ```text
 bring over non-primitive compositor substrate from tui-vfx-compositor
   → adapt it to canonical v3.1 structures directly
-  → keep shader.linearGradient as the first primitive proof
-  → then resume primitive migration slices
+  → then redo shader.linearGradient as the first primitive proof
+  → then resume additional primitive migration slices
 ```
 
 ## Executive Summary
@@ -117,10 +117,10 @@ crates/tui-vfx-compost/src/
 The root family README anchors document what belongs in the empty primitive
 families and validation family directories.
 
-### Complete — First primitive proof seed
+### Pending — First primitive proof
 
-`shader.linearGradient` is the first proof slice. It remains the smoke test while
-non-primitive substrate is brought over and strengthened.
+No primitive is currently complete. After non-primitive substrate work is green,
+redo `shader.linearGradient` as the first signed primitive proof and smoke test.
 
 ## Current Phase — Non-Primitive Substrate Migration
 
@@ -173,8 +173,10 @@ Acceptance:
   fields are consumed directly.
 - Text/card/asset/procedural support is added only as far as the first direct
   scene tests require.
-- Unsupported source descriptors fail at load or render-contract validation with
-  explicit diagnostics.
+- Unsupported source descriptors fail during `LoadedV31Recipe::load`, including
+  its render-contract validation subpass, with explicit diagnostics. Render-time
+  diagnostics are reserved for sample-dependent failures that cannot be known at
+  load.
 - Tests use current v3.1 field names.
 
 ### Packet C — Scene and layer placement substrate
@@ -203,12 +205,23 @@ Acceptance:
 
 Acceptance:
 
-- Signal/value-source resolution supports the current canonical schema surface
-  needed by examples.
+- Player/runtime owns sample-context production: lifecycle phase, `phaseT`,
+  `loopT`, absolute time, host signals, capabilities, and presentation data.
+- Compost/shared v3.1 runtime owns canonical value-source evaluation against the
+  loaded recipe and sample context.
 - Preview loopback is represented as v3.1 signal/value behavior, not player-only
-  ad hoc state.
+  ad hoc state, and player-next must delegate rather than duplicate loader or
+  evaluator rules.
 - Dwell effects can consume sample time without pretending to be transitions.
 - Tests cover at least one runtime/preview-driven value path.
+
+## Shared Runtime Kernel Rule
+
+When a transition track and a primitive descriptor share visual semantics, use a
+shared runtime helper/kernel where practical. The transition track owns interval,
+subject, timing, interruption, and reduced-motion semantics; the primitive owns
+graph/effect-node semantics. Do not duplicate visual math just because the
+operation can appear in both places.
 
 ## Primitive Migration After Substrate
 
@@ -231,7 +244,7 @@ time. Each primitive slice must include:
 Initial primitive order after substrate:
 
 ```text
-1. shader.linearGradient       # keep green as smoke proof
+1. shader.linearGradient       # redo as the first signed compost proof
 2. shader.revealWipe           # only if preserved work maps cleanly
 3. remaining shader slices      # one at a time or carefully parallelized later
 4. filters
@@ -322,4 +335,4 @@ Resume at the first incomplete phase. As of this version, the next incomplete
 phase is non-primitive substrate migration.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 2.0.1</VERS> -->
+<!-- <VERS>END OF VERSION: 2.0.3</VERS> -->

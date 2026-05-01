@@ -1,7 +1,7 @@
 <!-- <FILE>steering/SUBAGENT-GROUNDING.md</FILE> - <DESC>Mandatory grounding pass for subagents before work packets are assigned</DESC> -->
-<!-- <VERS>VERSION: 0.1.2</VERS> -->
-<!-- <WCTX>Separate subagent onboarding from work-packet execution so agents read project goals, standards, OFPF tooling, and vocabulary guidance before receiving implementation scope.</WCTX> -->
-<!-- <CLOG>0.1.2: PATCH — require version-precise wording so v3.1 tasks are not collapsed into generic V3 pipeline scope.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.4</VERS> -->
+<!-- <WCTX>Separate subagent onboarding from work-packet execution and prohibit helpers from creating repo/crate copies as part of packet work.</WCTX> -->
+<!-- <CLOG>0.1.4: PATCH — retarget grounding examples and copy prohibitions from the abandoned copied-crate path to tui-vfx-compost work.</CLOG> -->
 
 # Subagent Grounding
 
@@ -28,7 +28,7 @@ Version labels are scope. Do not collapse `v3.1` work into generic `V3` wording.
 If a packet says `v3.1`, reports, summaries, docs, and implementation comments
 must say `v3.1` or `V3.1` unless they are explicitly referring to a historical
 V3 artifact. Treat `V3`, `V3.1`, and V2 as different surfaces with different
-authority. A grounding or packet report that describes v3.1 compositor-next
+authority. A grounding or packet report that describes v3.1 tui-vfx-compost
 work as "V3 pipeline" work is imprecise and must be corrected before work
 continues.
 
@@ -75,7 +75,7 @@ Recommended practice sequence:
 ```bash
 ofpf-orientation --root /usr/projects/tui-vfx
 ofpf-inspect --root /usr/projects/tui-vfx crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs
-ofpf-content --root /usr/projects/tui-vfx "tui-vfx-compositor-next" --files-with-matches
+ofpf-content --root /usr/projects/tui-vfx "tui-vfx-compost" --files-with-matches
 ofpf-defs --root /usr/projects/tui-vfx render_pipeline
 ofpf-callers --root /usr/projects/tui-vfx render_pipeline
 ofpf-blast --root /usr/projects/tui-vfx crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs --why
@@ -96,6 +96,14 @@ If the future packet clearly cannot touch public vocabulary or wording, say that
 you skipped this file and why in the grounding report. If this file is required
 for the anticipated scope, it must be read completely; a partial read is a
 blocker, not acceptable grounding.
+
+## Workspace and copy prohibition
+
+A leader-provided git worktree is already the isolated checkout. Do not create
+a copy of `/usr/projects/tui-vfx`, `tui-vfx-compositor`, or
+the abandoned copied-crate path, and do not create nested clones or nested worktrees
+inside an assigned worktree. Work packets should give exact write-scope files;
+a whole project or crate copy is not an acceptable substitute for scope control.
 
 ## Grounding report
 
@@ -121,4 +129,4 @@ Only after the leader receives and accepts this report should a work packet be
 assigned.
 
 <!-- <FILE>steering/SUBAGENT-GROUNDING.md</FILE> - <DESC>Mandatory grounding pass for subagents before work packets are assigned</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.4</VERS> -->

@@ -1,15 +1,12 @@
 <!-- <FILE>docs/arch/primitive-workbench-schema-driven-workflow.md</FILE> - <DESC>Draft architecture for schema-driven primitive scaffolding, migration, and validation workflow</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Top-down v3.1 architecture discussion: generate pass-through surfaces for load-validated canonical recipes and compositor-next runtime boundaries.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — clarify that workbench scaffolding should support load-time validation and direct v3.1 pass-through, with no bridge/shim growth.
-0.5.0: MINOR — add timing/cadence concepts and Madeira absolute-time fixture to workbench inputs.
-0.4.0: MINOR — add IndexedField as first from-scratch workbench validation primitive.
-0.3.0: MINOR — add schema hindsight audit as pre-generation input.
-0.2.0: MINOR — prefer co-located primitive source trees and add commonality extraction discipline.
-0.1.1: PATCH — clarify that the final accepted primitive resides in the compositor/runtime layer.
-0.1.0: INIT — capture proposed Primitive Workbench workflow and block diagram for refinement.</CLOG> -->
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>Top-down v3.1 architecture discussion: generate pure v3.1 primitive work packets and reject legacy lowering surfaces.</WCTX> -->
+<!-- <CLOG>0.8.0: MINOR — retarget workbench guidance to tui-vfx-compost and distinguish pending commonality review from the completed naming audit.</CLOG> -->
 
 # Primitive Workbench: Schema-Driven Primitive Workflow
+
+**HARD DIRECTIVE — PURE v3.1 END TO END:** The active runtime target is `tui-vfx-compost`, a pure v3.1 system from recipe load through primitive execution. Work packets must migrate proven behavior into the compost file tree while lightly updating implementations to consume canonical v3.1 schema fields directly. Any attempt to adapt v3.1 into `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge/shim DTOs, or transitional lowering layers is a failure. Halt immediately if a slice starts adding that kind of adapter. The same work is the opportunity to split large legacy files into OFPF-compliant, professionally named, size-guideline-respecting modules.
+
 
 ## Status
 
@@ -21,7 +18,7 @@ This document proposes a reusable workflow for adding, migrating, scaffolding, a
 
 The core idea is that v3.1 descriptors and schemas should be the source of truth. Runtime support, migration helpers, validation manifests, studio controls, and documentation should be derived from that contract wherever possible, instead of being hand-mapped independently in multiple places.
 
-Validation should happen when a canonical v3.1 recipe is loaded. After that load-time validation step, runtime code should pass the canonical v3.1 structure and explicit sample context directly to compositor-next-owned boundaries. Workbench-generated surfaces should make that direct path safe and typed; they must not add bridge, shim, or legacy-input support to the v3.1 pathway.
+Validation should happen when a canonical v3.1 recipe is loaded. After that load-time validation step, runtime code should execute from the canonical v3.1 structure and explicit sample context directly inside compost-owned primitive boundaries. Workbench-generated surfaces should make that direct path safe and typed; they must not add bridge, shim, legacy-input support, or lowering into `CompositionSpec`/`ShaderLayerSpec`/`SpatialShaderType` to the v3.1 pathway.
 
 ## Vocabulary
 
@@ -32,7 +29,7 @@ Use the project vocabulary from `docs/VOCABULARY.md`:
 - **Effect descriptor**: schema/descriptor definition for an executable primitive effect.
 - **Graph node**: recipe instance of an effect descriptor.
 - **Canonical Recipe**: strict v3.1 `RecipeDocument`.
-- **Direct v3.1 compositor execution**: player/runtime passes the load-validated canonical v3.1 structure plus sample context into compositor-next-owned runtime entrypoints.
+- **Direct v3.1 compost execution**: player/runtime passes the load-validated canonical v3.1 structure plus sample context into compost-owned runtime entrypoints.
 
 ## Architectural Goal
 
@@ -105,7 +102,7 @@ then generated validation gates.
 │  structural validation                       │
 │  field coverage                              │
 │  direct runtime support                      │
-│  strict compositor-next evidence             │
+│  strict tui-vfx-compost evidence             │
 │  V2 oracle parity where applicable           │
 │  generated docs/control catalog              │
 └───────────────────────┬──────────────────────┘
@@ -176,11 +173,11 @@ Run generated validation suite
 Primitive accepted in compositor/runtime layer
 ```
 
-## Pre-Generation Schema Hindsight Audit
+## Pre-Generation Workbench Commonality Review
 
-Before the workbench generates broad primitive scaffolding, run a descriptor/schema hindsight audit. The audit should detect repeated primitive concepts and decide which ones become shared workbench concepts, generated helper families, descriptor fragments, or migration-only aliases.
+Before the workbench generates broad primitive scaffolding, run a descriptor/workbench commonality review. This pending review is separate from the completed ambiguous field-name audit. It should detect repeated primitive concepts and decide which ones become shared workbench concepts, generated helper families, descriptor fragments, or migration-only mapping notes.
 
-The audit should classify common fields before generation so the workbench does not encode accidental duplication into every primitive.
+The review should classify common fields before generation so the workbench does not encode accidental duplication into every primitive. It is not a reason to reopen core schema design before substrate work unless a concrete primitive/example proves a contract defect.
 
 ## Preferred Co-Located Primitive Source Tree
 
@@ -242,7 +239,7 @@ Candidate generated outputs:
    - Generated match arms or registration entries.
    - Generated unsupported-field guards for load-time and strict runtime checks.
    - Generated field extraction boilerplate for the loaded canonical v3.1 model.
-   - Generated direct compositor-next entrypoint stubs for canonical v3.1 inputs.
+   - Generated direct tui-vfx-compost entrypoint stubs for canonical v3.1 inputs.
    - Human-filled semantic body where behavior decisions are required.
 
 4. **Migration mapping skeletons**
@@ -262,7 +259,7 @@ Candidate generated outputs:
    - Structural validation targets.
    - Field coverage targets.
    - Direct runtime-support coverage targets.
-   - Strict compositor-next targets.
+   - Strict tui-vfx-compost targets.
    - Oracle comparison sample points where applicable.
 
 7. **Documentation and studio metadata**
@@ -283,7 +280,7 @@ Human-owned work remains:
 - parity approval;
 - nuanced edge-case tests.
 
-The generator should make the correct path easy, but it should not hide decisions behind generated code. The correct target path is load-time validation followed by typed direct v3.1 pass-through to compositor-next, not bridge/shim code that reinterprets recipe semantics at render time.
+The generator should make the correct path easy, but it should not hide decisions behind generated code. The correct target path is load-time validation followed by typed direct v3.1 pass-through to tui-vfx-compost, not bridge/shim code that reinterprets recipe semantics at render time.
 
 ## Commonality Extraction Discipline
 
@@ -323,7 +320,7 @@ This workflow would:
 - protect the schema as the source of truth;
 - keep primitive contract, generated outputs, fixtures, tests, and docs co-located for human and AI readability;
 - reduce repeated hand-written mapping code;
-- make primitive support consistent across player, compositor-next, recipes, tools, studio, and docs;
+- make primitive support consistent across player, tui-vfx-compost, recipes, tools, studio, and docs;
 - make future primitive additions predictable;
 - turn recipe migration into a table-driven process where possible;
 - prevent silent drift between descriptor fields and runtime-supported fields;
@@ -388,7 +385,7 @@ Alternative names can be chosen later. The important concept is that primitive a
 ## Open Design Questions
 
 1. Should generated Rust live in checked-in generated files, macro-expanded code, or build-time generated artifacts?
-2. What exact v3.1-native compositor-next entrypoint shape should generated runtime skeletons target?
+2. What exact v3.1-native tui-vfx-compost entrypoint shape should generated runtime skeletons target?
 3. How should generated code preserve hand-written semantic sections without being overwritten?
 4. What is the exact schema for migration mapping tables?
 5. Should the workbench produce recipe patches directly, or only reports and candidate patches for review?
@@ -404,10 +401,10 @@ The durable principle is:
 The v3.1 schema describes what a primitive is.
 Recipes are validated at load time.
 The Primitive Workbench derives the boring implementation surfaces.
-Runtime passes the loaded canonical v3.1 structure and sample context directly to compositor-next.
+Runtime passes the loaded canonical v3.1 structure and sample context directly to tui-vfx-compost.
 Humans fill in behavior and semantic decisions in the compositor/runtime layer.
 Validation proves the generated and human-owned layers agree.
 ```
 
 <!-- <FILE>docs/arch/primitive-workbench-schema-driven-workflow.md</FILE> - <DESC>Draft architecture for schema-driven primitive scaffolding, migration, and validation workflow</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->

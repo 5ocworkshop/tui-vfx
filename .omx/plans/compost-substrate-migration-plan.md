@@ -1,7 +1,7 @@
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Plan mode artifact: migrate non-primitive compost substrate first, preserving pure v3.1 shape and OFPF file discipline.</WCTX> -->
-<!-- <CLOG>0.3.0: MINOR — add tui-vfx-recipes usage-oracle findings and recommended schema shape for transition/motion. 0.2.0: MINOR — add typed transition and motion schema decision gate before substrate implementation. 0.1.0: INIT — formalize substrate-first migration plan for tui-vfx-compost.</CLOG> -->
+<!-- <CLOG>0.4.0: MINOR — align the substrate plan with completed native transition/schema decisions and the active tui-vfx-compost docs.</CLOG> -->
 
 # Compost Substrate Migration Plan
 
@@ -10,11 +10,10 @@
 Build `tui-vfx-compost` into the clean v3.1-native compositor substrate before
 resuming broad primitive migration. The crate is already positioned as the clean
 crate-level staging ground, while `tui-vfx-compositor` remains read-only
-reference material (`docs/arch/compositor-next-agent-workflow-handoff.md:81-88`).
+reference material (`docs/arch/tui-vfx-compost-agent-workflow-handoff.md`).
 The existing hard directive remains: pure v3.1 end to end, no `CompositionSpec`,
 `ShaderLayerSpec`, `SpatialShaderType`, bridge/shim DTO, or transitional
-lowering layer (`docs/arch/compositor-next-agent-workflow-handoff.md:18-19`,
-`docs/arch/compositor-next-agent-workflow-handoff.md:79`).
+lowering layer (`docs/arch/tui-vfx-compost-agent-workflow-handoff.md`).
 
 Current compost state is intentionally minimal:
 
@@ -30,7 +29,7 @@ Current compost state is intentionally minimal:
   (`crates/tui-vfx-compost/src/render/fnc_render_recipe.rs:33-58`,
   `crates/tui-vfx-compost/src/render/fnc_render_recipe.rs:90-135`).
 - README anchors exist for all v3.1 effect families: shader, filter, mask,
-  sampler, content, and style (`docs/arch/compositor-next-agent-workflow-handoff.md:100-109`).
+  sampler, content, and style (`docs/arch/tui-vfx-compost-agent-workflow-handoff.md`).
 
 The target is to migrate **non-primitive-specific substrate** first, in small
 OFPF-shaped phases, without copying the legacy pipeline wholesale. Legacy
@@ -41,8 +40,9 @@ fast path, sampler/mask/filter preparation, role-map caching, timing, and
 inspected/non-inspected loops (`crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs:35-84`,
 `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs:86-171`).
 
-Before substrate implementation continues, settle the v3.1 authoring shape for
-**typed transitions** and their relationship to **motion**. Current support is
+The v3.1 authoring shape for **typed transitions** and their relationship to
+**motion** is now settled enough for substrate implementation; keep it stable
+unless a concrete canonical example proves a contract defect. Current support is
 not empty: transition-shaped behavior already exists across `mask.wipe`,
 `mask.wipeCorner`, `mask.iris`, `mask.dissolve`, `content.dissolve`,
 `content.morph`, `content.cellMotion`, `content.slideShift`, `style.fadeIn`,
@@ -104,9 +104,8 @@ replacement.
 10. Each substrate phase completes with tests, `cargo fmt`, `cargo check`,
     targeted tests, OFPF metadata check, AI de-slop, architecture review,
     code review, fixes, re-verification, docs update, and a commit.
-11. Phase 0 produces a schema decision for typed transitions versus motion,
-    grounded in current descriptor/code support, `/usr/projects/tui-vfx-recipes`
-    usage evidence, and normal product use cases.
+11. Phase 0 transition/motion decision is complete enough for substrate work and is
+    recorded in `docs/arch/v31-native-transition-model.md`.
 12. The decision explicitly covers fades in addition to new crossfade behavior,
     explicitly distinguishes fixed diagonal wipe variants from configurable-angle
     wipe, and defines how motion and fade compose for toasts/modals/panel
@@ -114,10 +113,11 @@ replacement.
 
 ## Implementation Phases
 
-### Phase 0 — Typed Transition and Motion Schema Decision
+### Phase 0 — Typed Transition and Motion Schema Decision — Complete
 
-Goal: decide the canonical v3.1 schema shape for typed transitions before
-substrate code bakes transition semantics into lower-level primitive slots.
+Goal: preserve the decided canonical v3.1 schema shape for typed transitions so
+substrate code does not bake transition semantics into lower-level primitive
+slots.
 
 Current inventory to ground the decision:
 
@@ -183,7 +183,7 @@ low-level primitives for normal toast, modal, and replacement cases.
   must decide whether this becomes typed motion tracks, remains temporary
   metadata, or is replaced by transition-bound motion.
 
-Recommended schema direction to validate:
+Accepted schema direction to preserve:
 
 ```text
 recipe
@@ -510,7 +510,7 @@ Run these at each phase boundary:
 cargo fmt -p tui-vfx-compost
 cargo check -p tui-vfx-compost
 cargo test -p tui-vfx-compost
-/usr/local/bin/ofpf-sync --check Cargo.toml crates/tui-vfx-compost/... docs/arch/compositor-next-agent-workflow-handoff.md
+/usr/local/bin/ofpf-sync --check Cargo.toml crates/tui-vfx-compost/... docs/arch/tui-vfx-compost-agent-workflow-handoff.md
 rg -n 'CompositionSpec|ShaderLayerSpec|SpatialShaderType|src/v31|v31/|lowering|adapter|bridge' crates/tui-vfx-compost
 ```
 
@@ -553,10 +553,10 @@ Settle typed transition/motion schema, then migrate compost substrate before bro
 
 - Transition and motion need a schema-level authoring shape before render substrate APIs harden.
 - Future primitives need stable scene/source/render/timing/write/runtime seams.
-- The copied compositor-next tree proved too easy to pollute with legacy DTOs and
+- The abandoned copied-crate tree proved too easy to pollute with legacy DTOs and
   versioned paths.
-- `tui-vfx-compost` already demonstrates the desired crate-level shape with one
-  signed shader slice.
+- `tui-vfx-compost` already demonstrates the desired crate-level shape with the intended crate-level shape; primitive counters reset to zero until slices are
+  redone on the substrate-first path.
 
 ### Alternatives Considered
 
@@ -593,6 +593,11 @@ while preserving the pure v3.1 architecture and OFPF modularity.
   testing.
 - Revisit crate rename only after substrate and enough primitive slices are
   stable and no external consumers are using the temporary name.
+- Completed in `steering/MARKETING.md` v0.4.0: capture the new authoring
+  philosophy that tui-vfx is an engine-neutral, grid-native VFX engine,
+  authoring toolkit, and compositor with end-user authoring ergonomics inspired
+  by familiar animation/compositing concepts such as timelines, tracks, easing,
+  masks, mattes, transitions, keyframes, and presets.
 
 <!-- <FILE>.omx/plans/compost-substrate-migration-plan.md</FILE> - <DESC>Formal plan for migrating v3.1-native compost substrate before broad primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->

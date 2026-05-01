@@ -2,6 +2,11 @@
 
 These rules apply to every packet in this directory unless the packet explicitly narrows or overrides something.
 
+## Workspace / copy discipline — applies to every packet
+A leader-provided repository checkout or git worktree is already the assigned workspace. Subagents must use that workspace directly. They must not create nested clones, nested git worktrees, project copies, or crate copies as a substitute for scope control.
+
+This is a general rule for all work packets, not only compost work. If a packet needs a new isolated workspace, the leader creates it before dispatch and names it explicitly. The packet still gives exact write-scope files/modules inside that workspace.
+
 ## Role and quality bar
 Assume the assigned subagent is a junior-but-capable engineer:
 - be explicit
@@ -30,7 +35,7 @@ When dispatching an unroled `gpt-5.5` low agent:
   option exists yet
 - require a final self-check for OFPF line pressure, test placement, and whether
   filtered test commands actually exercised the new tests
-- expect the leader to rerun verification, review semantics, and make small
+- expect the leader to rerun verification, review semantics, review the touched-file list every time, and make small
   integration fixes before accepting the work
 - one mid-flight status check after localized compile failures is useful; repeated
   interruptions are unnecessary when the agent is clearly converging
@@ -51,9 +56,7 @@ Packet execution starts from one of two states:
   inspect, focus, around.
 - Keep reads surgical before broad file reads.
 - Do not drift into broad cleanup while on a blocker packet.
-- For compositor-next lanes, copy the existing hardened compositor first and
-  migrate vertically; do not rewrite horizontally or retarget old backends
-  before evidence proves the new path.
+- For tui-vfx-compost lanes, the active target is the existing `crates/tui-vfx-compost` tree. A leader-provided git worktree is already the isolated checkout. Do not tell agents to copy the repo, copy `tui-vfx-compositor`, copy any abandoned copied-crate path, create nested clones, or create nested/per-slice worktrees. Migrate vertically in the assigned worktree/files only; historical copied-crate work is reference/recovery material, not a reusable packet instruction.
 
 ## TDD / regression discipline
 - If behavior is subtle or easy to regress, prefer adding or tightening a focused regression test before broad edits.
@@ -70,10 +73,14 @@ Every final report should include:
 - 3 short reflection bullets
 - exact task-scope paths used for grounding
 - changed files (full paths)
+- every file created or edited by the packet, with origin/action marked as `edited-existing`, `new-authored`, `copied`, `moved`, or `generated`
 - exact commands run
 - pass/fail outcome per command
 - blocker or handoff notes
 - performance risks noticed
+
+## Touched-file list review
+Every subagent final report must include a touched-file list. For each path created or edited during the packet, state whether the file was `edited-existing`, `new-authored`, `copied`, `moved`, or `generated`. If no files were changed, say `Touched files: none`. This applies even when a copied/generated file is later edited heavily. The leader must review this list every time before acceptance or integration; any unexpected or inappropriate file, copied source, generated artifact, broad-scope edit, or unexplained origin is a blocker until corrected.
 
 ## File metadata discipline
 When touching files that carry file-level metadata headers:
@@ -82,12 +89,16 @@ When touching files that carry file-level metadata headers:
 - do not append a running history; git is the history
 - keep `<WCTX>` focused on durable work context unless the file's role changes
 
+## Required file-tree briefing
+Every implementation/refactor packet must include the intended file tree for the assigned slice and an approximate expected file-name breakdown before work begins. The breakdown should name likely modules/files, note which files are expected edits vs new files, and state that deviations must be reported before broad edits. This is required because file layout is part of the architecture, not an implementation afterthought.
+
 ## Scope split rule
 Every packet should make a clear distinction between:
 - `task-scope paths` = the files/areas the assignee must ground on
 - `write scope` = the smallest justified set of files they may actually edit
 
 Do not rely on repo names alone when the packet can support exact path strings.
+Exact write scope is enforced inside the assigned workspace; it is never a request to create another workspace or copy.
 Do not rely on conceptual “run tests” language when the packet can support exact
 shell-ready verification commands.
 
@@ -99,14 +110,15 @@ The preferred packet structure is:
 4. mode
 5. task-scope paths for grounding
 6. exact write scope
-7. explicit out-of-scope items
-8. packet-specific extra docs
-9. repo-boundary guardrails
-10. first steps / grounding instructions that confirm prior shared grounding
+7. expected file tree / approximate file-name breakdown
+8. explicit out-of-scope items
+9. packet-specific extra docs
+10. repo-boundary guardrails
+11. first steps / grounding instructions that confirm prior shared grounding
     instead of repeating it
-11. exact verification commands
-12. reporting contract
-13. closing task reminder
+12. exact verification commands
+13. reporting contract
+14. closing task reminder
 
 ## Performance checklist
 If the packet touches runtime/render paths, explicitly check for:

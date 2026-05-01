@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <VERS>VERSION: 0.12.2</VERS> -->
 <!-- <WCTX>tui-vfx-compost clean-sheet build handoff: pure v3.1 end-to-end, exact write scopes, no runtime bridges, no copied crates.</WCTX> -->
-<!-- <CLOG>0.12.0: MINOR — retarget the handoff to the tui-vfx-compost clean-sheet pure v3.1 build, mark completed schema/structure work, and remove active target references to the abandoned copied-crate path.</CLOG> -->
+<!-- <CLOG>0.12.2: PATCH — reset primitive migration counters to zero, classify prior primitive work as reference only, and keep primitive fan-out blocked behind substrate completion.</CLOG> -->
 
 # tui-vfx-compost Agent Workflow Handoff
 
@@ -80,7 +80,7 @@ No new bridge, shim, legacy-input, alias-acceptance, `CompositionSpec` lowering,
 The current direction is to build `tui-vfx-compost` as the clean v3.1 compositor
 crate instead of continuing to repair abandoned copied-crate work. `tui-vfx-compositor`
 remains read-only reference material. `tui-vfx-compost` already has the basic
-family layout and first shader proof; the next step is to bring over the
+family layout and first shader prototype/candidate; the next step is to bring over the
 non-primitive runtime substrate needed for real scenes and rendering:
 
 ```text
@@ -92,11 +92,14 @@ shaders/     contains only signed migrated shader slices
 filters/     empty until first filter slice is migrated
 masks/       empty until first mask slice is migrated
 samplers/    empty until first sampler slice is migrated
+content/     empty until first content slice is migrated
+styles/      empty until first style slice is migrated
 ```
 
-The first compost primitive proof is `shader.linearGradient`. It proves load
-validation, source materialization, direct render orchestration, and one migrated
-shader without a `src/v31` path, legacy DTO lowering, or crate copies. The primitive
+No primitive is currently signed as migrated in `tui-vfx-compost`.
+`shader.linearGradient` remains the likely first primitive candidate to redo
+after the non-primitive substrate is complete; any existing linear-gradient code
+is reference/prototype material until it passes the new substrate-first gate. The primitive
 family directories now include README anchors for future agents:
 `src/shaders/`, `src/filters/`, `src/masks/`, `src/samplers/`, `src/content/`, `src/styles/`, and the matching
 `src/validation/{filters,masks,samplers,content,styles}/` directories. Those READMEs define
@@ -113,48 +116,48 @@ Current descriptor-effect count:
 120 v3.1 effect descriptors
 ```
 
-Historical signed primitive proofs from earlier abandoned copied-crate work:
+Active `tui-vfx-compost` signed primitive migrations:
 
 ```text
-5 / 120
+0 / 120
 ```
 
-Historical signed primitive proofs from the abandoned copied-crate path:
+No primitive is currently complete in the active compost path.
 
-1. `shader.linearGradient`
-2. `shader.highlighter`
-3. `shader.glistenBand`
-4. `shader.focusField`
-5. `shader.borderSweep`
+Historical copied-crate/direct-v3.1 work is reference material only. It is not
+counted as active compost progress and must be re-reviewed or redone against the
+current substrate-first plan before use.
 
-Note: these are signed historical slices from the abandoned copied-crate path.
-For the current `tui-vfx-compost` path, `shader.linearGradient` is the first
-active primitive proof. The immediate next work is non-primitive substrate
-migration before more primitive fan-out.
-
-Remaining:
+Remaining active compost migration count:
 
 ```text
-115 / 120
+120 / 120
 ```
 
 Human-facing progress banner:
 
 ```text
-╔════════════════════════════════════════════════════╗
-║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
-╠════════════════════════════════════════════════════╣
-║ Signed:  5 / 120  █████░░░░░░░░░░░░░░░░░  4.2%   ║
-║ Active:  paused — no new worktrees/copies         ║
-║ Queue:   fix OFPF structure, then resume slices    ║
-╚════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════╗
+║ tui-vfx-compost DIRECT v3.1 SCOREBOARD                      ║
+╠══════════════════════════════════════════════════════════════╣
+║ Active compost signed:       0 / 120  ░░░░░░░░░░░░  0.0%   ║
+║ Historical reference only:   5 proofs, not counted          ║
+║ Active phase: non-primitive substrate migration             ║
+║ Queue: primitive slices paused until substrate is green      ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
 ## Primitive Completion Tracker
 
 Source of truth: `descriptors/v3.1/packs/primitive.json` effect descriptors. Update this list in the same commit that signs off a primitive.
 
-Completed/historical direct v3.1 primitive proofs:
+Active compost primitive migrations:
+
+```text
+none
+```
+
+Historical direct v3.1 primitive work retained as reference only:
 
 ```text
 shader.linearGradient
@@ -300,7 +303,7 @@ style.spatial
 Parallel slice work is paused. The preserved worktrees are recovery/reference
 material only; do not merge them until the clean `tui-vfx-compost` substrate is
 ready and each diff is re-reviewed against the current schema and file layout. Do **not** delete, prune, reset, overwrite, or merge
-these worktrees while performing the structural correction. They are preserved
+these worktrees while performing substrate migration. They are preserved
 recovery material for later review. A leader-provided worktree is already enough
 isolation; agents must not create nested clones, nested worktrees, or copied
 compositor crates inside it.
@@ -325,7 +328,7 @@ Preserved slice worktrees:
 | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` | historical worktree; primitive already signed on `master` |
 | `shader.glitchLines` | `/usr/projects/tui-vfx-slice-glitch-lines` | `slice/glitch-lines` | paused; not integrated |
 | `shader.radar` | `/usr/projects/tui-vfx-slice-radar` | `slice/radar` | paused; not integrated |
-| `shader.revealWipe` | `/usr/projects/tui-vfx-slice-reveal-wipe` | `slice/reveal-wipe` | implementation material exists; blocked from integration until OFPF structure is corrected and diff is rebased/re-reviewed |
+| `shader.revealWipe` | `/usr/projects/tui-vfx-slice-reveal-wipe` | `slice/reveal-wipe` | implementation material exists; blocked until compost substrate packets are complete and green, then must be rebased/re-reviewed |
 | `shader.wayfindingNode` | `/usr/projects/tui-vfx-slice-wayfinding-node` | `slice/wayfinding-node` | paused; not integrated |
 
 Resume order after the compost substrate is ready: review/rebase
@@ -466,8 +469,6 @@ crates/tui-vfx-compost/src/
   pipeline/                                       # compositor execution orchestration, not schema lowering
     orc_render_pipeline.rs                        # expected edit only if direct primitive execution requires it
     fnc_render_pipeline_*.rs                      # expected edit only for existing pipeline behavior
-    cls_composition_spec.rs                       # legacy-readonly/remove deliberately; do not use for v3.1 slices
-    cls_shader_layer_spec.rs                      # legacy-readonly/remove deliberately; do not use for v3.1 slices
     mod.rs                                        # narrow export/registration edit only
 
   traits/                                         # stable runtime traits
@@ -494,6 +495,17 @@ crates/tui-vfx-compost/tests/direct_recipe/
 
 docs/arch/tui-vfx-compost-agent-workflow-handoff.md # expected edit for status/signoff only
 ```
+
+
+Forbidden legacy DTO filenames if present from earlier recovery work:
+
+```text
+cls_composition_spec.rs
+cls_shader_layer_spec.rs
+```
+
+Those names must not be used by compost v3.1 execution and should be removed
+or quarantined deliberately when safe.
 
 Packet authors must paste the relevant subset of this tree into every dispatched
 primitive packet and mark each path as read-only reference, expected edit,
@@ -646,22 +658,33 @@ Do not add co-authors.
 
 ## Required Verification Gates
 
-At minimum, after integrating a slice:
+Substrate phase minimum gates:
 
 ```bash
 cargo fmt --check
 git diff --check
 cargo test -p tui-vfx-compost --test direct_recipe -- --nocapture
-cargo test -p tui-vfx-player-next --test player_next_v31 -- --nocapture
-cargo test -p tui-vfx-compost --test direct_recipe
-cargo test -p tui-vfx-player --test test_compositor_next_primitive_tree
 cargo test -p tui-vfx-compost
+```
+
+Primitive-slice integration gates add the relevant player/runtime proof only
+when that slice touches a player path or end-to-end playback contract:
+
+```bash
+cargo test -p tui-vfx-player-next --test player_next_v31 -- --nocapture
 cargo check -p tui-vfx-player-next
+```
+
+Full phase/release gates add clippy once the crate is ready for that level of
+enforcement:
+
+```bash
 cargo clippy -p tui-vfx-compost --all-targets -- -D warnings
 cargo clippy -p tui-vfx-player-next --all-targets -- -D warnings
 ```
 
-Run additional tests for any crate or tooling touched by the slice.
+Run additional tests for any crate or tooling touched by the slice or substrate
+packet.
 
 ## Loader / Player Boundary Deferral
 
@@ -720,17 +743,19 @@ show a real contract defect.
 
 ## Paused Queue
 
-Current queue is paused until the OFPF structural correction is committed on
-`master`. Do not dispatch more agents and do not merge preserved slice worktrees
-until that commit exists. When dispatch resumes, the existing assigned worktree
-is the workspace; do not ask agents to create another copy inside it.
+Current queue is paused for non-primitive substrate migration. Do not dispatch
+primitive agents and do not merge preserved slice worktrees until the compost
+substrate packets are complete, green, reviewed, and committed. When dispatch
+resumes, the existing assigned worktree is the workspace; do not ask agents to
+create another copy inside it.
 
-First item to revisit after the correction:
+First primitive candidate to revisit after substrate completion:
 
 ```text
-shader.revealWipe — implementation material exists in preserved worktree; needs
-rebased diff, OFPF-shaped files, right-to-left coverage, version/footer cleanup,
-and fresh architect/code review before integration.
+shader.revealWipe — implementation material exists in preserved worktree; use it
+only if it rebases cleanly to the current compost layout and passes current
+schema names, right-to-left coverage, version/footer cleanup, and fresh
+architect/code review before integration.
 ```
 
 Preserved paused slice candidates after `shader.revealWipe`:
@@ -790,4 +815,4 @@ git worktree list --porcelain
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.2</VERS> -->

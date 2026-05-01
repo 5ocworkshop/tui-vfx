@@ -41,6 +41,19 @@ If the packet cannot justify exact paths yet, say that the write scope is not co
 - `[full path]`
 - `[full path]`
 
+## Expected file tree / file-name breakdown
+
+Give the intended tree and approximate expected file names before implementation starts. Mark each path as expected edit, expected new file, generated file, or should-not-touch. If the actual work appears to require a different structure, stop and report the proposed deviation before broad edits.
+
+```text
+[example]
+path/to/family/
+  mod.rs                         # expected edit
+  fnc_<primitive>_<action>.rs     # expected new file
+path/to/tests/
+  test_<primitive>.rs             # expected edit/new as specified
+```
+
 ## Explicit out of scope
 Do not widen into:
 - `steering/ORCHESTRATION.md` or any leader-only orchestration policy; subagents should not read or use it
@@ -194,6 +207,7 @@ Your final report must include:
 - 3 reflection bullets
 - exact task-scope paths used for grounding
 - exact changed files (full paths)
+- touched-file list: every file created or edited by the packet, with origin/action marked as `edited-existing`, `new-authored`, `copied`, `moved`, or `generated`; if none, say `Touched files: none`
 - exact commands run
 - pass/fail outcome per command
 - blocker or handoff notes

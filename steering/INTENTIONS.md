@@ -1,16 +1,13 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build. Organized in two parts: Part I durable principles, Part II project-specific rules; numbering stable across the split for cross-reference compatibility.</DESC> -->
-<!-- <VERS>VERSION: 0.8.2</VERS> -->
-<!-- <WCTX>Clarify version-precision wording so v3.1 work is not summarized as generic V3 pipeline scope.</WCTX> -->
-<!-- <CLOG>0.8.2: PATCH — clarify version-precision wording around schema and pipeline-touch obligations.
-0.8.1: PATCH — refresh Intention 44's Companion block to point at `steering/work-packets/completed/64-…/65-…/66-…` after the trilogy moved out of the active dir.
-0.8.0: MINOR — add Intention 44 (recipe-JSON signal authoring goes through VfxRecipeSignalSpec; engine direct-API consumers use mixed_signals::* directly). Describes the as-built newtype facade per packet 65, not the obsolete Phase γ wrapper sketch.
-0.7.1: promote two-part reorganization (Part I durable principles, Part II project-specific rules; numbering stable across the split). New Intention-shape subsection under Writing style — Why mandatory, length is judgment not a gate. New How-this-file-is-organized navigation section. Audit-pass edits: renamed second #26 to 26A; fixed grammar nit in Intention 38. Body content otherwise verbatim from v0.6.4.</CLOG> -->
+<!-- <VERS>VERSION: 0.10.0</VERS> -->
+<!-- <WCTX>Add pure v3.1 tui-vfx-compost and subagent file-scope discipline as durable project intentions.</WCTX> -->
+<!-- <CLOG>0.10.0: MINOR — retarget Intention 45 from the abandoned copied-crate path to active tui-vfx-compost work and flatten the file changelog.</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), versioned shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done with exact version labels (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42), and recipe-JSON signal authoring goes through the `VfxRecipeSignalSpec` facade while engine direct-API consumers use `mixed_signals::*` directly — the two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields (Intention 44).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), versioned shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done with exact version labels (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42), recipe-JSON signal authoring goes through the `VfxRecipeSignalSpec` facade while engine direct-API consumers use `mixed_signals::*` directly — the two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields (Intention 44), and tui-vfx-compost v3.1 work is pure v3.1 end to end with no lowering/adaptation layers and mandatory touched-file/file-tree packet discipline (Intention 45).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -1324,5 +1321,54 @@ packets that shipped this surface).
 
 ---
 
+## 45. tui-vfx-compost v3.1 work is pure v3.1 end to end; packet structure and touched-file lists are leader-reviewed gates
+
+The active v3.1 compositor target is `tui-vfx-compost`. Historical copied-crate
+work is reference/recovery material only, not a reusable subagent instruction.
+Future compost work migrates proven behavior in place, in the existing assigned
+workspace or leader-provided worktree, by lightly updating implementation
+boundaries to consume canonical v3.1 schema fields directly.
+
+Rules:
+
+1. **Pure v3.1 end to end.** The accepted path is canonical v3.1 recipe/load
+   structures plus explicit sample context into tui-vfx-compost runtime
+   execution. Do not adapt v3.1 back into `CompositionSpec`,
+   `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge
+   DTOs, shim DTOs, or transition-seam lowerers. Adding such a layer is a
+   failure condition; halt and correct scope.
+2. **No per-agent crate copies.** Historical copied-crate work is not the active
+   target and must not appear as a narrow subagent task. A subagent assigned to an existing worktree already
+   has its isolated checkout; it must not create nested clones, nested
+   worktrees, project copies, or crate copies.
+3. **Packets include expected tree shape.** Every implementation/refactor work
+   packet names the intended file tree and approximate file-name breakdown before
+   work starts. It marks expected edits, expected new files, generated files, and
+   should-not-touch files. If the work needs a different structure, the agent
+   reports that deviation before broad edits.
+4. **Touched-file list is reviewed every time.** Every subagent report lists all
+   created or edited files and marks each as `edited-existing`, `new-authored`,
+   `copied`, `moved`, or `generated`. The leader must review that list before
+   acceptance/integration. Unexpected files, broad edits, copied source,
+   generated artifacts, or unexplained origins are blockers until corrected.
+5. **OFPF structure is part of correctness.** The migration is also the chance to
+   break large legacy files into professional OFPF-compliant modules. File layout
+   is not cleanup after the fact; it is part of the packet's definition of done.
+
+Why: tui-vfx-compost exists to remove transition complexity, not to institutionalize
+another translation layer. If work packets omit tree shape, origin reporting, or
+leader review of touched files, capable helpers will fill gaps with local
+structure choices and duplicate code. The result is exactly the failure this
+intention prevents: technically compiling work that increases legacy surface area
+and creates cleanup debt before the primitive migration is even finished.
+
+Companion: `steering/ORCHESTRATION.md`;
+`steering/work-packets/COMMON_EXECUTION_RULES.md`;
+`docs/arch/tui-vfx-compost-agent-workflow-handoff.md`;
+`docs/arch/tui-vfx-compost-vertical-implementation-plan.md`;
+`docs/arch/v31-schema-boundary-north-star.md`.
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.8.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->

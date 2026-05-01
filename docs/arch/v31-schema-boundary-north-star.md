@@ -1,15 +1,12 @@
-<!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>Top-down v3.1 architecture discussion: validate recipes at load time, then pass canonical v3.1 structures through to compositor-next.</WCTX> -->
-<!-- <CLOG>0.7.0: MINOR — record typed transitions as a schema-audit candidate after vertical migration evidence.
-0.6.0: MINOR — state the pure load-time validation and direct v3.1 pass-through compositor-next target; reject bridge/shim growth.
-0.5.0: MINOR — distinguish presentation cadence, semantic update cadence, and absolute sample time in boundary model.
-0.4.0: MINOR — document source.indexedField as zero-schema from-scratch primitive validation case.
-0.3.0: MINOR — add descriptor/schema hindsight audit principle.
-0.2.0: MINOR — add co-located primitive source tree and commonality extraction principles.
-0.1.0: INIT — document schema-boundary north star, block diagram, and crate responsibility model.</CLOG> -->
+<!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, native transitions, data models, and primitive workflow responsibilities</DESC> -->
+<!-- <VERS>VERSION: 0.11.0</VERS> -->
+<!-- <WCTX>Top-down v3.1 architecture discussion: pure v3.1 end-to-end boundaries with no legacy lowering layers.</WCTX> -->
+<!-- <CLOG>0.11.0: MINOR — align the north-star with tui-vfx-compost naming, substrate-first execution, value-source ownership, and post-audit commonality review boundaries.</CLOG> -->
 
 # v3.1 Schema-Boundary North Star
+
+**HARD DIRECTIVE — PURE v3.1 END TO END:** The active target is `tui-vfx-compost`, a clean-sheet pure v3.1 compositor path from recipe load through primitive execution. Work packets must bring over proven behavior into the compost file tree while adapting implementations to consume canonical v3.1 schema fields directly. Any attempt to adapt v3.1 into `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge/shim DTOs, or transitional lowering layers is a failure. Halt immediately if a slice starts adding that kind of adapter. The same work is the opportunity to split large legacy files into OFPF-compliant, professionally named, size-guideline-respecting modules.
+
 
 ## Status
 
@@ -29,7 +26,7 @@ The boundary contract between crates should be one of:
 
 Crates should not depend on arbitrary internal structs from other crates unless those structs are themselves the named boundary contract.
 
-The target compositor-next path is **load-time validation followed by direct v3.1 execution**: validate a `RecipeDocument` when it is loaded, normalize it into the canonical v3.1 in-memory structure, and then pass that structure plus sample context to `tui-vfx-compositor-next`. The v3.1 pathway does not support legacy inputs and must not grow bridge, shim, or compositor-shaped translation layers.
+The target `tui-vfx-compost` path is **load-time validation followed by direct v3.1 execution**: validate a `RecipeDocument` when it is loaded, normalize it into the canonical v3.1 in-memory structure, and then let compost runtime implementations consume that structure plus sample context directly. The v3.1 pathway does not support legacy inputs and must not grow bridge, shim, `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, or compositor-shaped translation layers. Adding such a layer is a work-packet failure, not an acceptable stepping stone.
 
 In short:
 
@@ -105,7 +102,7 @@ With disciplined boundaries:
          │ sample context          │ validation reports
          ▼                         ▼
 ┌──────────────────────────────────────────────┐
-│      Compositor-Next Boundary Target         │
+│      tui-vfx-compost Boundary Target         │
 │                                              │
 │  Pass through load-validated v3.1 structures │
 │  plus explicit runtime sample context.       │
@@ -146,7 +143,7 @@ With disciplined boundaries:
 | --- | --- |
 | Recipe corpus → player | Canonical v3.1 `RecipeDocument` |
 | Descriptor pack → tools/workbench | Descriptor schema and descriptor pack JSON |
-| Player load/runtime → compositor-next | Load-validated canonical v3.1 `RecipeDocument` / in-memory model plus explicit sample context |
+| Player load/runtime → tui-vfx-compost | Load-validated canonical v3.1 `RecipeDocument` / in-memory model plus explicit sample context |
 | Compositor/runtime → validation | Backend output, visual frame report, styled-cell evidence, diagnostics |
 | Legacy recipe corpus → migration tooling | Source recipe evidence plus explicit mapping report |
 | Migration tooling → recipe corpus | Canonical recipe candidate plus migration/evidence report |
@@ -159,6 +156,7 @@ With disciplined boundaries:
 Owns authored recipe structure:
 
 - lifecycle;
+- native transitions;
 - sources;
 - scenes;
 - graph nodes;
@@ -168,6 +166,29 @@ Owns authored recipe structure:
 - metadata.
 
 A canonical recipe is the input contract to the player. It is not itself a render output, compositor DTO, or parity proof.
+
+### Native Transitions
+
+Own state/surface-change composition:
+
+- transition identity;
+- from/to/shared subjects;
+- lifecycle phase participation;
+- timing, easing, and stagger defaults;
+- interruption policy;
+- reduced-motion policy;
+- generic conditional variants for accessibility and capability fallback;
+- executable tracks such as `visibility.iris`, `visibility.blinds`, `opacity.fade`, `motion.slide`, `motion.path`, `relation.crossfade`, `content.typewriter`, `content.splitFlap`, and `style.glistenBand`.
+
+Native transitions are engine-level grid animation concepts. They must not encode consumer semantics such as modal names, Material roles, route/navigation concepts, or gt-design token names. Consumer layers may attach metadata or choose transition ids, but tui-vfx executes only canonical grid animation and compositing structures.
+
+Recipe-oracle boundary rule:
+
+- transitions handle moments of change: enter, exit, replacement, reveal, crossfade, push, typewriter, split-flap, transient glisten, and path motion;
+- sources produce surfaces, including animated procedural surfaces such as a waving braille flag;
+- scenes arrange surfaces;
+- graph nodes with `activePhases` handle persistent or phase-scoped effects such as dwell matrix rain or enter-only CRT jitter when they are not themselves the state-change envelope;
+- reduced-motion substitution chains must terminate in a non-substitution policy and must not form cycles.
 
 ### Descriptor Packs
 
@@ -287,8 +308,10 @@ Not responsible for:
 Responsible for:
 
 - consuming canonical recipes;
-- sampling lifecycle and value sources;
-- resolving authored loopback and host signals;
+- producing sample context: lifecycle phase, `phaseT`, `loopT`, absolute time,
+  host signals, capabilities, and presentation information;
+- delegating canonical value-source evaluation to the shared v3.1 runtime path
+  instead of duplicating recipe acceptance logic;
 - rendering player evidence;
 - producing render IR and visual frame reports;
 - keeping player-owned evidence independent of compositor internals.
@@ -299,7 +322,7 @@ Not responsible for:
 - mutating canonical recipes during playback;
 - claiming visual parity without oracle/backend comparison evidence.
 
-### Player → Compositor-Next Boundary
+### Player → tui-vfx-compost Boundary
 
 Target status: direct v3.1 path.
 
@@ -315,7 +338,7 @@ Not responsible for:
 - accepting legacy or compositor-shaped inputs;
 - adding bridge/shim code to make old pathways look native;
 - silently falling back in strict-native mode;
-- reimplementing compositor-owned effects outside compositor-next;
+- reimplementing compositor-owned effects outside tui-vfx-compost;
 - hiding unsupported fields by dropping semantics.
 
 If the existing player/runtime path cannot satisfy this without expanding old translation code, create a stripped `player-next` path that removes non-v3.1 compatibility concerns rather than carrying them forward.
@@ -358,7 +381,7 @@ Responsible for:
 - structural validation;
 - field coverage;
 - direct runtime support coverage;
-- strict compositor-next evidence;
+- strict tui-vfx-compost evidence;
 - oracle comparison where applicable;
 - fixture QC;
 - explicit PASS/BLOCKED/FAIL evidence.
@@ -452,15 +475,15 @@ Adding a new primitive should follow this path:
 7. Use from canonical recipes, studio controls, migration tools, and tests
 ```
 
-## Descriptor/Schema Hindsight Audit
+## Descriptor/Workbench Commonality Review
 
-Before generating large amounts of primitive scaffolding, run a bounded descriptor/schema hindsight audit. The audit should identify common primitive fields and semantic concepts that were missed or duplicated during earlier schema build-out.
+Before generating large amounts of primitive scaffolding, run a bounded descriptor/workbench commonality review. The review should identify common primitive fields and semantic concepts that were missed or duplicated during earlier schema build-out.
 
-The purpose is schema hardening, not unbounded redesign. Accepted common concepts should feed generated helpers, descriptor fragments, migration mapping tables, and validation manifests. Rejected collapses should be documented so future agents do not rediscover the same ambiguity.
+The purpose is generated-helper and commonality discipline, not unbounded schema redesign and not a repeat of the completed ambiguous field-name audit. Accepted common concepts should feed generated helpers, descriptor fragments, migration mapping tables, and validation manifests. Rejected collapses should be documented so future agents do not rediscover the same ambiguity.
 
-Examples of concepts worth auditing include progress, apply-to routing, color channels, direction/axis/edge geometry, seed, density, speed/frequency, presentation cadence, semantic update cadence, absolute elapsed sample time, radius/falloff/feather, threshold, intensity, glyph sets, and bindability.
+Examples of concepts worth reviewing include progress, apply-to routing, color channels, direction/axis/edge geometry, seed, density, speed/frequency, presentation cadence, semantic update cadence, absolute elapsed sample time, radius/falloff/feather, threshold, intensity, glyph sets, and bindability.
 
-Typed transitions are a named audit candidate. Classic transitions such as crossfade, wipe, iris, push, dissolve, morph, stippled, and braille may deserve first-class recipe/schema representation because they describe binary temporal A→B intent, not just a generic unary cell effect. The audit should preserve primitive-level implementations while evaluating whether author-facing typed transitions improve validation, theming, optimization, documentation, AI generation, and schema diet opportunities.
+Typed transitions are now a completed first-class contract direction. Classic transitions such as crossfade, wipe, iris, push, dissolve, morph, stippled, and braille describe state/surface-change intent, not just generic unary cell effects. Future commonality review should preserve primitive-level implementations as escape hatches while looking for shared kernels, descriptor aliases, visual signatures, performance hints, and schema diet opportunities.
 
 ## Timing Boundary Rule
 
@@ -470,7 +493,7 @@ Do not use `fps` as a catch-all schema concept. The boundary model should distin
 - **semantic update cadence**: how often a recipe/source/effect recomputes state when fixed-step behavior is desired;
 - **sample time**: the actual `phaseT`, optional `loopT`, and absolute elapsed time used for one deterministic sample.
 
-The current Madeira flag v3.1 recipes demonstrate why this matters. The procedural flag wave and fireworks need absolute elapsed time so motion can advance even when normalized `phaseT`/`loopT` remain fixed, and authored preview loopback ramps use elapsed time to honor durations. A compositor-next/workbench timing model must preserve that seam instead of baking wall-time behavior into individual primitives ad hoc.
+The current Madeira flag v3.1 recipes demonstrate why this matters. The procedural flag wave and fireworks need absolute elapsed time so motion can advance even when normalized `phaseT`/`loopT` remain fixed, and authored preview loopback ramps use elapsed time to honor durations. A compost/workbench timing model must preserve that seam instead of baking wall-time behavior into individual primitives ad hoc.
 
 ## Commonality Extraction Rule
 
@@ -497,9 +520,9 @@ A change should be questioned if it violates any of these rules:
 
 ## Relationship to Current Compositor-First Work
 
-The old compositor-first pathway remains useful as reference behavior and parity evidence, but it is not the architecture for new v3.1 work. New v3.1 compositor-next work should not add support to the current translation path.
+The old compositor-first pathway remains useful as reference behavior and parity evidence, but it is not the architecture for new v3.1 work. New v3.1 compost work should not add support to the current translation path.
 
-Target direction: create a v3.1-native compositor-next boundary. The recipe is validated when loaded; after that, the canonical v3.1 structure should pass through with explicit sample context to compositor-next-owned v3.1 runtime boundaries. If the current player/runtime path makes that awkward, copy and strip a `player-next` path rather than expanding translation code.
+Target direction: use the v3.1-native `tui-vfx-compost` boundary. The recipe is validated when loaded; after that, the canonical v3.1 structure should pass through with explicit sample context to compost-owned runtime boundaries. If the current player/runtime path makes that awkward, copy and strip a `player-next` path rather than expanding translation code.
 
 The v3.1 path must obey this north-star rule:
 
@@ -524,7 +547,7 @@ The north-star workflow should be tested not only by migrating existing primitiv
 2. Should generated Rust be checked in or generated at build time?
 3. What files are generated versus hand-owned for a primitive?
 4. How do generated files preserve hand-written semantic sections?
-5. What exact v3.1-native compositor-next entrypoint should replace compositor-shaped inputs?
+5. What exact v3.1-native tui-vfx-compost entrypoint should replace compositor-shaped inputs?
 6. What is the canonical migration mapping table schema?
 7. How should CI detect descriptor/runtime drift?
 8. How should parity tooling distinguish schema support, player support, backend support, and visual parity in one report?
@@ -536,10 +559,10 @@ The schema defines the contract.
 Descriptors define primitive capabilities.
 Generated tooling derives repetitive surfaces.
 The player samples canonical recipes into evidence.
-The player passes only load-validated canonical v3.1 contracts to compositor-next.
+The player passes only load-validated canonical v3.1 contracts plus sample context to `tui-vfx-compost`.
 The compositor/runtime owns final primitive behavior.
 Validation proves every boundary.
 ```
 
-<!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
+<!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, native transitions, data models, and primitive workflow responsibilities</DESC> -->
+<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
