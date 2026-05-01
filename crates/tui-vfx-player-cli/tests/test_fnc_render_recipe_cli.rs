@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.35.0</VERS>
+// <VERS>VERSION: 0.36.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.35.0: MINOR — lock shader.highlighter compositor shader-layer lowering.
+// <CLOG>0.36.0: MINOR — lock shader.glistenBand compositor shader-layer lowering.
+// 0.35.0: MINOR — lock shader.highlighter compositor shader-layer lowering.
 // 0.34.0: MINOR — lock shader.radar compositor shader-layer lowering.
 // 0.33.0: MINOR — lock vignette rejection for player-style-only fields after removing backend style-stage adapters.
 // 0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
@@ -150,11 +151,6 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
             "shader.focusField",
         ),
         (
-            "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
-            "debugShaderGlistenBandDirectionBlendBinding",
-            "shader.glistenBand",
-        ),
-        (
             "shaders/compositions/shader_wayfinding_node_current_index_binding.json",
             "debugShaderWayfindingNodeCurrentIndexBinding",
             "shader.wayfindingNode",
@@ -183,6 +179,119 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
             "{recipe}"
         );
     }
+}
+
+#[test]
+fn test_fnc_cli_lowers_glisten_band_shader_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/compositions/shader_glisten_band_direction_blend_binding.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native glisten-band shader compositor layer player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(
+        report["recipeId"],
+        "debugShaderGlistenBandDirectionBlendBinding"
+    );
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["shader.glistenBand"])
+    );
+}
+
+#[test]
+fn test_fnc_cli_rejects_glisten_band_numeric_head_tail_positions_json() {
+    for (input_id, value) in [("head", 0.25), ("tail", 0.75)] {
+        let temp_root = std::env::temp_dir().join(format!(
+            "tui-vfx-native-glisten-band-{input_id}-position-unsupported"
+        ));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp glisten-band position fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
+            Some((input_id, literal_number_input(value))),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("glisten_band_{input_id}_position.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize glisten-band position recipe"),
+        )
+        .expect("write glisten-band position recipe");
+
+        let output = run_native_render_backend_with_fail_on_fallback(
+            recipe_path.display().to_string(),
+            "render-backend native glisten-band position player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "glisten-band {input_id} position unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "glisten-band {input_id} stderr: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_glisten_band_fractional_band_width_json() {
+    let temp_root =
+        std::env::temp_dir().join("tui-vfx-native-glisten-band-fractional-band-width-unsupported");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp glisten-band bandWidth fixture root");
+    let recipe = unsupported_native_effect_shape_recipe(
+        "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
+        Some(("bandWidth", literal_number_input(6.5))),
+        None,
+        None,
+    );
+    let recipe_path = temp_root.join("glisten_band_fractional_band_width.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize glisten-band bandWidth recipe"),
+    )
+    .expect("write glisten-band bandWidth recipe");
+
+    let output = run_native_render_backend_with_fail_on_fallback(
+        recipe_path.display().to_string(),
+        "render-backend native glisten-band fractional bandWidth player cli",
+    );
+
+    assert!(
+        !output.status.success(),
+        "glisten-band fractional bandWidth unexpectedly succeeded"
+    );
+    assert!(
+        stderr(&output).contains("unsupportedNativeEffect"),
+        "glisten-band fractional bandWidth stderr: {}",
+        stderr(&output)
+    );
 }
 
 #[test]

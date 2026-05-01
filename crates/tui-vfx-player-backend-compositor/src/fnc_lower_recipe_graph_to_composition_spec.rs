@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.35.0</VERS>
+// <VERS>VERSION: 0.36.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
+// <CLOG>0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
 // 0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
 // 0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
 // 0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
@@ -44,10 +45,10 @@ use tui_vfx_player::{
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
-    BorderSweepShader, ColorConfig, ColorSpace, Gradient, HighlighterApplyTo, HighlighterDirection,
-    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion,
-    TextContrast,
+    BorderSweepShader, ColorConfig, ColorSpace, GlistenApplyTo, GlistenBandShader,
+    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
+    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
+    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -220,17 +221,6 @@ pub enum NativeStyleStage {
         feather: f64,
         intensity: f64,
         apply_to: String,
-    },
-    /// Apply player-compatible glisten band shader styling.
-    GlistenBand {
-        color: String,
-        blend_strength: f64,
-        angle_deg: f64,
-        speed: f64,
-        head: f64,
-        tail: f64,
-        band_width: f64,
-        direction: String,
     },
     /// Apply player-compatible wayfinding node shader styling.
     WayfindingNode {
@@ -611,7 +601,7 @@ fn lower_node_into_spec(
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
         "shader.highlighter" => lower_highlighter_shader(node, spec, request, warnings),
         "shader.focusField" => lower_focus_field_shader(node, style_stages, request, warnings),
-        "shader.glistenBand" => lower_glisten_band_shader(node, style_stages, request, warnings),
+        "shader.glistenBand" => lower_glisten_band_shader(node, spec, request, warnings),
         "shader.wayfindingNode" => {
             lower_wayfinding_node_shader(node, style_stages, request, warnings)
         }
@@ -2304,7 +2294,7 @@ fn lower_focus_field_shader(
 
 fn lower_glisten_band_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2325,28 +2315,38 @@ fn lower_glisten_band_shader(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let direction = match strict_enum_input(
-        node,
-        request,
-        "direction",
-        "leftToRight",
-        &["leftToRight", "rightToLeft"],
-        "shader.glistenBand",
-    ) {
+    let direction = match glisten_direction_input(node, request, "direction") {
         Ok(direction) => direction,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    style_stages.push(NativeStyleStage::GlistenBand {
-        color: color_label_from_config(
-            resolved_color_input(node, request, "color").unwrap_or(ColorConfig::White),
-        ),
-        blend_strength: resolved_number_input(node, request, "blendStrength", 1.0).clamp(0.0, 1.0),
-        angle_deg: resolved_number_input(node, request, "angleDeg", 0.0),
-        speed: resolved_number_input(node, request, "speed", 1.0).max(0.0),
-        head: resolved_number_input(node, request, "head", 0.0).clamp(0.0, 1.0),
-        tail: resolved_number_input(node, request, "tail", 1.0).clamp(0.0, 1.0),
-        band_width: resolved_number_input(node, request, "bandWidth", 2.0).max(1.0),
-        direction,
+    if node_has_input(node, "head") || node_has_input(node, "tail") {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `shader.glistenBand` uses numeric `head`/`tail` band-position fields; compositor-native GlistenBandShader models head/tail as colors.".to_string(),
+        };
+    }
+    let color = resolved_color_input(node, request, "color").unwrap_or(ColorConfig::White);
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::GlistenBand(GlistenBandShader {
+            speed: resolved_number_input(node, request, "speed", 1.0).max(0.0) as f32,
+            speed_binding: signal_source_id(node, "speed").map(|id| id.as_str().to_string()),
+            band_width: match glisten_band_width_input(node, request) {
+                Ok(band_width) => band_width,
+                Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+            },
+            angle_deg: resolved_number_input(node, request, "angleDeg", 0.0) as f32,
+            head: color,
+            tail: color,
+            direction,
+            direction_binding: signal_source_id(node, "direction")
+                .map(|id| id.as_str().to_string()),
+            repeat_count: 0,
+            apply_to: GlistenApplyTo::Foreground,
+            blend_strength: resolved_number_input(node, request, "blendStrength", 1.0)
+                .clamp(0.0, 1.0) as f32,
+            blend_strength_binding: signal_source_id(node, "blendStrength")
+                .map(|id| id.as_str().to_string()),
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3705,6 +3705,34 @@ fn highlighter_direction_input(
         Some("bottomToTop" | "bottom_to_top") => Ok(HighlighterDirection::BottomUp),
         Some(value) => Err(format!(
             "Effect `shader.highlighter` uses `direction` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
+fn glisten_band_width_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<u16, String> {
+    let band_width = resolved_number_input(node, request, "bandWidth", 2.0).max(1.0);
+    if (band_width.fract()).abs() > f64::EPSILON {
+        return Err(format!(
+            "Effect `shader.glistenBand` uses fractional `bandWidth` value `{band_width}` but compositor-native GlistenBandShader requires an integer cell width."
+        ));
+    }
+    Ok(band_width.clamp(1.0, u16::MAX as f64) as u16)
+}
+
+fn glisten_direction_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<GlistenDirection, String> {
+    match enum_input(node, request, key) {
+        Some("leftToRight" | "left_to_right" | "forward") | None => Ok(GlistenDirection::Forward),
+        Some("rightToLeft" | "right_to_left" | "reverse") => Ok(GlistenDirection::Reverse),
+        Some("pingPong" | "ping_pong") => Ok(GlistenDirection::PingPong),
+        Some(value) => Err(format!(
+            "Effect `shader.glistenBand` uses `direction` value `{value}` that has no compositor-native GlistenBandShader equivalent."
         )),
     }
 }

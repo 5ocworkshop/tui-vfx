@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.32.0</VERS>
+// <VERS>VERSION: 0.33.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
+// <CLOG>0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
+// 0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
 // 0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
 // 0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
 // 0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
@@ -357,28 +358,6 @@ fn scene_ir_with_native_content_stages(
                     feather: *feather,
                     intensity: *intensity,
                     apply_to,
-                },
-            ),
-            NativeStyleStage::GlistenBand {
-                color,
-                blend_strength,
-                angle_deg,
-                speed,
-                head,
-                tail,
-                band_width,
-                direction,
-            } => apply_glisten_band_style_stage(
-                &mut staged,
-                GlistenBandStyleInputs {
-                    color,
-                    blend_strength: *blend_strength,
-                    angle_deg: *angle_deg,
-                    speed: *speed,
-                    head: *head,
-                    tail: *tail,
-                    band_width: *band_width,
-                    direction,
                 },
             ),
             NativeStyleStage::WayfindingNode {
@@ -1139,50 +1118,6 @@ fn apply_focus_field_style_stage(
                     inputs.apply_to,
                     focus_color.as_str(),
                     "ShaderFocusField",
-                );
-            }
-        }
-    }
-}
-
-struct GlistenBandStyleInputs<'a> {
-    color: &'a str,
-    blend_strength: f64,
-    angle_deg: f64,
-    speed: f64,
-    head: f64,
-    tail: f64,
-    band_width: f64,
-    direction: &'a str,
-}
-
-fn apply_glisten_band_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: GlistenBandStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let angle = inputs.angle_deg.to_radians();
-    let band_width = inputs.band_width.max(1.0) * (inputs.tail - inputs.head).abs().max(0.25);
-    let mut center = (report.phase_t * inputs.speed).fract();
-    if inputs.direction == "rightToLeft" {
-        center = 1.0 - center;
-    }
-    let max_x = width.saturating_sub(1).max(1) as f64;
-    let max_y = height.max(1) as f64;
-    let color = lerp_rgba_label(inputs.color, WHITE_RGBA, inputs.blend_strength as f32);
-    for y in 0..height {
-        for x in 0..width {
-            let nx = x as f64 / max_x;
-            let diagonal = (nx * angle.cos() + y as f64 * angle.sin() / max_y).fract();
-            if (diagonal - center).abs() <= band_width / max_x {
-                set_report_shader_cell(
-                    report,
-                    x,
-                    y,
-                    "foreground",
-                    color.as_str(),
-                    "ShaderGlistenBand",
                 );
             }
         }
