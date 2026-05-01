@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.2.1</VERS>
-# <WCTX>Fix the visible row-jump at the end of the morph transition by switching _sample_nn() from floor-based to round-based nearest-neighbour sampling; floor is unstable at integer y boundaries, causing cells whose warped y is "1.0 minus float-epsilon" through the morph to sample row 0 then snap to row 1 only at the exact final frame.</WCTX>
-# <CLOG>0.2.1: _sample_nn() switched from floor (int(x), int(y)) to round (int(x + 0.5), int(y + 0.5)) for nearest-neighbour sampling. Eliminates the visible "top line jumps up a line" at the end of the morph transition: with floor-NN, top-row cells sampled row 0 throughout the morph because their warped b_y was always 0.999… (just below 1.0 due to floating-point), then snapped to row 1 only at the exact final frame where bulge=0 and b_y=1.0 exactly. With round-NN, b_y in [0.5, 1.5) all rounds to 1, stable across the float wobble.</CLOG>
+# <VERS>VERSION: 0.3.1</VERS>
+# <WCTX>Replace 'B' in scope mode with a structurally-distinct toast panel (off-white body, green accent stripe, gray border) instead of another landscape — the previous choice (Day/Night/Plasma) shared mountain geometry across scenes, hiding the visual artifacts of wipe / iris / dissolve / morph inside the rect because the underlying cell content was similar on both sides of the transition.</WCTX>
+# <CLOG>0.3.1: add render_toast() — solid-colour panel with off-white body, mint-green accent stripe (2 cells wide on the left), and gray 1-cell border, sized to fill the active scope rect exactly. When scope is on, b_buf is the toast instead of the pair-selected scene; the underlying 'A' (pair-selected first scene) remains the surround. Solid-block content makes wipe edges, iris circles, dissolve stippling, push slides, and morph warps clearly visible against the destination panel.</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -20,6 +20,7 @@ Keys:  1..7     transition primitive
                   (left → right → up → down → diagonal)
        t        cycle scene pair (Day↔Night → Day↔Plasma → Night↔Plasma)
        h        toggle temporal value-dither (sub-frame integer precision)
+       s        cycle scope rectangle (off → small → medium → large → tall)
        space    trigger transition NOW (skip the current hold)
        p        pause / resume motion (also pauses the auto-cycle)
        +/-      lengthen / shorten transition duration (250 ms steps)
@@ -86,6 +87,42 @@ ground. Pair it against Day or Night and crossfade gets actual
 structural difference to interpolate. Press 't' at runtime to cycle
 through the three pairs.
 
+SCOPE: TARGETED TRANSITIONS
+
+When scope is OFF (default), transitions cover the whole scene. When
+scope is ON, the transition is applied only inside a centred rectangle;
+cells outside the rect always show scene A. This is the natural model
+for toasts / modals / panels: a region animates while the surrounding
+scene holds its base state. Five sizes via 's':
+
+    off      full-screen
+    small    16 × 3   — toast / notification strip
+    medium   30 × 6   — modal dialog
+    large    48 × 8   — panel
+    tall     14 × 9   — sidebar
+
+When scope is ON, the **B buffer is replaced** with a UI-style toast
+panel — off-white body, mint-green accent stripe on the left, light
+gray border. Without this swap, every transition would be Day-mountain
+crossfading into Night-mountain inside the rect — and because Day and
+Night share their mountain silhouette, the rect's cell content is
+nearly identical to the surround at every progress, hiding the
+transition's actual behaviour. The toast panel has zero structural
+overlap with any of the three scenes (no horizon, no peaks, no plasma
+swirl), so wipe edges, iris circles, dissolve stippling, push slides,
+and morph warps are crisply visible against the destination content.
+
+The "outside is always A" choice: during a→b inside the rect transitions
+toward the toast while outside stays A; at hold_b the rect shows the
+toast over a still-A surround (the toast is "up"); during b→a inside
+transitions back. At hold_a inside and outside are both A — the rect is
+invisible, which is the expected "toast dismissed" state.
+
+Crossfade reads as a soft fade-in of the toast; stippled is a screen-
+door appearance; wipe and iris reveal the toast directionally; push
+slides the toast in from an edge; dissolve scatters; morph warps the
+underlying scene's pixels through the toast's solid blocks.
+
 TEMPORAL VALUE-DITHER (the 60 Hz trick)
 
 8-bit-per-channel truecolor gives 256 levels per channel. A linear lerp
@@ -144,6 +181,19 @@ BAYER_DENOM = 16.0
 # Module-global is the cheapest way to thread these into every per-cell call
 # without changing every transition's signature.
 _FRAME_STATE = {'frame': 0, 'dither': False}
+
+# Scope rectangles — (cells_w, cells_h) centred in the scene. Index 0 = off.
+# Cycled with 's'; the active transition runs inside the rect, scene A is
+# composited everywhere else. Sizes chosen to evoke common UI shapes: a
+# toast strip, a modal dialog, a panel, a sidebar.
+SCOPE_NAMES = ("off", "small", "medium", "large", "tall")
+SCOPE_RECTS = (
+    None,
+    (16, 3),
+    (30, 6),
+    (48, 8),
+    (14, 9),
+)
 
 # ============================================================================
 # Themes (per-scene colour palettes)
@@ -402,6 +452,49 @@ SCENES = {
     "night":  render_night,
     "plasma": render_plasma,
 }
+
+# ============================================================================
+# Toast panel — used as the 'B' buffer when scope is on
+# ============================================================================
+# Solid-colour UI element that fills the scope rect with three distinct
+# regions: a 1-cell light-gray border, a 2-cell-wide mint-green accent
+# stripe just inside the left border, and an off-white body filling the
+# rest. Outside the rect the buffer is left zero; those cells are
+# discarded by the scope composite (which substitutes a_buf there).
+#
+# The toast deliberately has zero structural overlap with the three
+# landscape scenes — no horizon, no peaks, no plasma swirl — so a
+# transition into it inside the rect reveals the primitive's actual
+# behaviour (wipe edges, iris radius, dissolve stipple, push offset,
+# morph warp) crisply against the destination panel.
+
+TOAST_BODY    = (235, 240, 245)
+TOAST_ACCENT  = ( 52, 199,  89)
+TOAST_BORDER  = (180, 190, 200)
+
+def render_toast(rect_x, rect_y, rect_w, rect_h):
+    buf = _empty_buf()
+    sub_x_lo = rect_x * 2
+    sub_x_hi = sub_x_lo + rect_w * 2
+    border_top = rect_y
+    border_bot = rect_y + rect_h - 1
+    border_left_end_subx    = sub_x_lo + 2     # 1 cell border on left
+    border_right_start_subx = sub_x_hi - 2     # 1 cell border on right
+    accent_end_subx         = sub_x_lo + 6     # left border + 2-cell accent stripe
+
+    for y in range(rect_y, rect_y + rect_h):
+        for sub_x in range(sub_x_lo, sub_x_hi):
+            on_border = (
+                y == border_top or y == border_bot or
+                sub_x < border_left_end_subx or sub_x >= border_right_start_subx
+            )
+            if on_border:
+                buf[y][sub_x] = TOAST_BORDER
+            elif sub_x < accent_end_subx:
+                buf[y][sub_x] = TOAST_ACCENT
+            else:
+                buf[y][sub_x] = TOAST_BODY
+    return buf
 
 # Pair = (A_scene_name, B_scene_name). Cycled with the 't' key at runtime.
 PAIRS = (
@@ -714,8 +807,8 @@ _EASE_SHORT = {
 }
 
 def _render_header(out, state):
-    out.append("Transitions  —  1-7 type · e ease · t pair · h dither · d dir · "
-               "space go · p pause · +/- dur · 0 reset · q quit\n")
+    out.append("Transitions  —  1-7 type · e ease · t pair · h dither · s scope · "
+               "d dir · space go · p pause · +/- dur · 0 reset · q quit\n")
     out.append("Type:    ")
     for i, name in enumerate(TRANSITION_ORDER, start=1):
         marker = "▶" if state['transition'] == name else " "
@@ -732,8 +825,10 @@ def _render_header(out, state):
     for i, (a, b) in enumerate(PAIRS):
         marker = "▶" if state['pair_idx'] == i else " "
         label = f"{a}↔{b}"
-        out.append(f"{marker}{label:<14}")
-    out.append(f"  dither:{' on ' if state['dither_value'] else ' off'}{CLEAR_EOL}\n")
+        out.append(f"{marker}{label:<13}")
+    dither_str = "on" if state['dither_value'] else "off"
+    scope_str  = SCOPE_NAMES[state['scope_idx']]
+    out.append(f"  dither:{dither_str:<3}  scope:{scope_str:<6}{CLEAR_EOL}\n")
 
     raw = state['raw_progress']
     e   = state['eased_progress']
@@ -778,13 +873,41 @@ def render(state, a_buf, b_buf):
     elif state['phase'] in ('a_to_b', 'b_to_a'):
         # Resolve direction: A→B uses (a_buf, b_buf); B→A uses (b_buf, a_buf).
         from_buf, to_buf = (a_buf, b_buf) if state['phase'] == 'a_to_b' else (b_buf, a_buf)
+        # If scope is on, focus iris on the rect centre; otherwise screen centre.
+        focal = (SUB_W / 2.0, SCENE_H / 2.0)
+        rect = SCOPE_RECTS[state['scope_idx']]
+        if rect is not None:
+            rw, rh = rect
+            rx = (W - rw) // 2
+            ry = (SCENE_H - rh) // 2
+            focal = ((rx + rw / 2.0) * 2, ry + rh / 2.0)
         params = {
             'direction': state['direction'],
-            'focal':     (SUB_W / 2.0, SCENE_H / 2.0),
+            'focal':     focal,
         }
         scene = TRANSITIONS[state['transition']](from_buf, to_buf, state['eased_progress'], params)
     else:
         scene = a_buf  # safety net
+
+    # Scope: composite scene inside the rect, a_buf outside. Outside the rect
+    # always shows scene A — the "base" — regardless of phase, so the rect
+    # reads as a toast / panel animating over a stable underlying scene.
+    rect = SCOPE_RECTS[state['scope_idx']]
+    if rect is not None:
+        rw, rh = rect
+        rx = (W - rw) // 2
+        ry = (SCENE_H - rh) // 2
+        # Convert cell-x bounds to sub-x bounds.
+        sub_x_lo = rx * 2
+        sub_x_hi = sub_x_lo + rw * 2
+        composed = []
+        for y in range(SCENE_H):
+            if ry <= y < ry + rh:
+                row = a_buf[y][:sub_x_lo] + scene[y][sub_x_lo:sub_x_hi] + a_buf[y][sub_x_hi:]
+            else:
+                row = a_buf[y][:]
+            composed.append(row)
+        scene = composed
 
     _emit_buf(out, scene)
     sys.stdout.write("".join(out))
@@ -840,6 +963,10 @@ def parse_args():
     parser.add_argument("--dither", action="store_true",
                         help="enable temporal value-dither in the lerp from the start. "
                              "Toggle at runtime with 'h'.")
+    parser.add_argument("--scope", choices=SCOPE_NAMES, default="off",
+                        help="restrict transitions to a centred rectangle in the scene "
+                             "(default: off — full-screen). Cycle at runtime with 's'. "
+                             "Outside the rect always shows scene A — the toast model.")
     parser.add_argument("--duration", type=float, default=1.0, metavar="SEC",
                         help="transition duration in seconds (default: 1.0).")
     parser.add_argument("--hold", type=float, default=1.5, metavar="SEC",
@@ -865,6 +992,7 @@ def main():
 
         'pair_idx':     _PAIR_NAMES.index(args.pair),
         'dither_value': bool(args.dither),
+        'scope_idx':    SCOPE_NAMES.index(args.scope),
         'frame_count':  0,
 
         'phase':        'hold_a',
@@ -923,6 +1051,9 @@ def main():
                     if key in ("h", "H"):
                         state['dither_value'] = not state['dither_value']
                         continue
+                    if key in ("s", "S"):
+                        state['scope_idx'] = (state['scope_idx'] + 1) % len(SCOPE_NAMES)
+                        continue
                     if key in (" ",):
                         # Trigger now: jump to the next transition phase from
                         # whichever hold we're in, or restart the current
@@ -962,6 +1093,7 @@ def main():
                         state['hold']         = args.hold
                         state['pair_idx']     = _PAIR_NAMES.index(args.pair)
                         state['dither_value'] = bool(args.dither)
+                        state['scope_idx']    = SCOPE_NAMES.index(args.scope)
                         state['phase']        = 'hold_a'
                         state['phase_start']  = time.perf_counter()
                         state['paused']       = False
@@ -981,10 +1113,19 @@ def main():
                 state['raw_progress']   = raw
                 state['eased_progress'] = EASINGS[state['easing']](raw)
 
-            # Render scenes for the active pair.
+            # Render scenes for the active pair. When scope is on, B is the
+            # toast panel instead of the second pair scene — the rect needs
+            # structurally-distinct content to make transition artifacts
+            # visible against a non-landscape destination.
             a_name, b_name = PAIRS[state['pair_idx']]
             a_buf = SCENES[a_name](now)
-            b_buf = SCENES[b_name](now)
+            if state['scope_idx'] > 0:
+                rect_w, rect_h = SCOPE_RECTS[state['scope_idx']]
+                rect_x = (W - rect_w) // 2
+                rect_y = (SCENE_H - rect_h) // 2
+                b_buf = render_toast(rect_x, rect_y, rect_w, rect_h)
+            else:
+                b_buf = SCENES[b_name](now)
 
             t0 = time.perf_counter()
             render(state, a_buf, b_buf)
@@ -1026,4 +1167,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.2.1</VERS>
+# <VERS>END OF VERSION: 0.3.1</VERS>
