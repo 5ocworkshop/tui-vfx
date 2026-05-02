@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_apply_preset.rs</FILE> - <DESC>Materialize an author-side transition preset into a canonical TransitionSpec JSON value</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 2b of canonicalize: expand named presets into TransitionSpec values, recording TransitionIntent::Preset provenance.</WCTX>
-// <CLOG>0.1.0: INIT — handle the visibility iris/wipe/dissolve/blinds/fade family plus relation crossfade/push/morph and visibility stippled/braille via the per-preset materialize switch.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase B of canonicalize completion: emit the schema-declared track parameters end-to-end and use Previous/Current subjects on relation transitions.</WCTX>
+// <CLOG>0.2.0: MINOR — emit stipple pattern/density/seed, braille subcellOrder/seed, dissolve chunkSize, and morph match onto canonical tracks; switch crossfade/push/morph subjects to Previous/Current; refuse radial/cellular as UnsupportedShorthand.</CLOG>
 
 use serde_json::{Map, Value, json};
 
@@ -30,10 +30,7 @@ pub fn apply_preset(
     let mut spec = Map::new();
     spec.insert("id".into(), Value::String(transition_id));
     spec.insert("intent".into(), build_intent(preset));
-    spec.insert(
-        "subjects".into(),
-        json!({ "from": { "kind": "empty" }, "to": { "kind": "empty" } }),
-    );
+    spec.insert("subjects".into(), build_subjects_for_preset(preset));
     spec.insert("timing".into(), build_timing(author, &mut consumed_params)?);
     spec.insert("activePhases".into(), json!([phase_key]));
     spec.insert("tracks".into(), json!([track]));
@@ -52,23 +49,27 @@ pub fn apply_preset(
     ))
 }
 
-/// Build the [`TransitionIntent`] JSON for a preset name. Names in the closed
-/// `TransitionPreset` enum become `Preset { preset }`; corpus-witnessed
-/// non-canonical names (`radial`, `cellular`) become `Alias { alias,
-/// canonicalPreset }` referencing the closest canonical preset they expand to.
+/// Build the [`TransitionIntent`] JSON for a canonical preset name. `preset`
+/// is required to be one of the closed `TransitionPreset` enum spellings;
+/// caller-side preset dispatch refuses unknown names before this point so
+/// no aliasing is needed here.
 fn build_intent(preset: &str) -> Value {
+    json!({ "kind": "preset", "preset": preset })
+}
+
+/// Pick the canonical [`TransitionSubjects`] shape for a preset. The v3.1
+/// expansion table specifies that relation transitions (crossfade/push/morph)
+/// run between the prior and next surfaces; the canonicalize emits the
+/// symbolic `previous`/`current` subjects so the runtime resolves concrete
+/// scene ids at scheduling time. All other presets default to `empty`/`empty`
+/// because they operate on a single subject within one surface.
+fn build_subjects_for_preset(preset: &str) -> Value {
     match preset {
-        "radial" => json!({
-            "kind": "alias",
-            "alias": "radial",
-            "canonicalPreset": "iris"
+        "crossfade" | "push" | "morph" => json!({
+            "from": { "kind": "previous" },
+            "to": { "kind": "current" },
         }),
-        "cellular" => json!({
-            "kind": "alias",
-            "alias": "cellular",
-            "canonicalPreset": "dissolve"
-        }),
-        canonical => json!({ "kind": "preset", "preset": canonical }),
+        _ => json!({ "from": { "kind": "empty" }, "to": { "kind": "empty" } }),
     }
 }
 
@@ -88,12 +89,16 @@ fn build_track_for_preset(
         "crossfade" => build_relation_track("relation.crossfade", author, consumed),
         "push" => build_push_track(author, consumed),
         "morph" => build_morph_track(author, consumed),
-        // `radial` is an iris-from-anchor variant; emit as visibility.iris
-        // with circle shape so the canonical pipeline can execute it.
-        "radial" => build_iris_track(author, consumed),
-        // `cellular` reads as a per-cell stipple reveal in the corpus; emit
-        // as visibility.dissolve so it round-trips structurally.
-        "cellular" => build_dissolve_track(author, consumed),
+        "radial" | "cellular" => Err(CanonicalizationError::new(
+            CanonicalizationErrorKind::UnsupportedShorthand {
+                detail: format!("transition preset `{preset}`"),
+            },
+            format!(
+                "preset `{preset}` is not part of the v3.1 transition expansion table; \
+                 use a canonical preset (iris/wipe/dissolve/blinds/fade/stippled/braille/\
+                 crossfade/push/morph) or extend the expansion table."
+            ),
+        )),
         _ => Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnknownPreset {
                 axis: "transition".into(),
@@ -208,11 +213,9 @@ fn build_dissolve_track(
         consumed.push("seed".into());
         track["seed"] = wrap_value_source(seed)?;
     }
-    // chunkSize is author-side metadata; the canonical visibility.dissolve
-    // track does not carry it. Record consumption so PresetUsage reflects the
-    // author-side intent without polluting the track.
-    if author.contains_key("chunkSize") {
+    if let Some(chunk_size) = author.get("chunkSize") {
         consumed.push("chunkSize".into());
+        track["chunkSize"] = wrap_value_source(chunk_size)?;
     }
     Ok(track)
 }
@@ -239,27 +242,70 @@ fn build_stippled_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    // The canonical visibility.stippled track only accepts `subject` and
-    // `transitionProgress`. Record pattern/density/seed as consumed for
-    // PresetUsage but do not emit them onto the track.
-    for author_key in ["pattern", "density", "seed"] {
-        if author.contains_key(author_key) {
-            consumed.push(author_key.into());
+    let pattern = match consume_string(author, "pattern", consumed).as_deref() {
+        Some("ordered") | None => "ordered",
+        Some("bayer") => "bayer",
+        Some("blueNoise") => "blueNoise",
+        Some(other) => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::UnsupportedShorthand {
+                    detail: format!("stipple pattern `{other}`"),
+                },
+                format!(
+                    "TransitionStipplePattern has no variant for `{other}`. \
+                     Use ordered / bayer / blueNoise, or extend TransitionStipplePattern."
+                ),
+            )
+            .at(JsonPathSegment::field("pattern")));
         }
+    };
+    let mut track = json!({
+        "kind": "visibility.stippled",
+        "subject": "to",
+        "pattern": pattern,
+    });
+    if let Some(density) = author.get("density") {
+        consumed.push("density".into());
+        track["density"] = wrap_value_source(density)?;
     }
-    Ok(json!({ "kind": "visibility.stippled", "subject": "to" }))
+    if let Some(seed) = author.get("seed") {
+        consumed.push("seed".into());
+        track["seed"] = wrap_value_source(seed)?;
+    }
+    Ok(track)
 }
 
 fn build_braille_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    for author_key in ["subcellOrder", "seed"] {
-        if author.contains_key(author_key) {
-            consumed.push(author_key.into());
+    let subcell_order = match consume_string(author, "subcellOrder", consumed).as_deref() {
+        Some("raster") | None => "raster",
+        Some("morton") => "morton",
+        Some("spiral") => "spiral",
+        Some(other) => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::UnsupportedShorthand {
+                    detail: format!("braille subcellOrder `{other}`"),
+                },
+                format!(
+                    "TransitionBrailleOrder has no variant for `{other}`. \
+                     Use raster / morton / spiral, or extend TransitionBrailleOrder."
+                ),
+            )
+            .at(JsonPathSegment::field("subcellOrder")));
         }
+    };
+    let mut track = json!({
+        "kind": "visibility.braille",
+        "subject": "to",
+        "subcellOrder": subcell_order,
+    });
+    if let Some(seed) = author.get("seed") {
+        consumed.push("seed".into());
+        track["seed"] = wrap_value_source(seed)?;
     }
-    Ok(json!({ "kind": "visibility.braille", "subject": "to" }))
+    Ok(track)
 }
 
 fn build_relation_track(
@@ -286,10 +332,24 @@ fn build_morph_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    if author.contains_key("match") {
-        consumed.push("match".into());
-    }
-    Ok(json!({ "kind": "relation.morph" }))
+    let match_kind = match consume_string(author, "match", consumed).as_deref() {
+        Some("glyph") | None => "glyph",
+        Some("block") => "block",
+        Some("outline") => "outline",
+        Some(other) => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::UnsupportedShorthand {
+                    detail: format!("morph match `{other}`"),
+                },
+                format!(
+                    "TransitionMatchKind has no variant for `{other}`. \
+                     Use glyph / block / outline, or extend TransitionMatchKind."
+                ),
+            )
+            .at(JsonPathSegment::field("match")));
+        }
+    };
+    Ok(json!({ "kind": "relation.morph", "matchKind": match_kind }))
 }
 
 /// Wrap an author-side raw value into a canonical ValueSource literal envelope

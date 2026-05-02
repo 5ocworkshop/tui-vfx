@@ -163,6 +163,14 @@
       "tracks": [
         {
           "kind": "visibility.braille",
+          "seed": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 42
+            }
+          },
+          "subcellOrder": "raster",
           "subject": "to"
         }
       ]

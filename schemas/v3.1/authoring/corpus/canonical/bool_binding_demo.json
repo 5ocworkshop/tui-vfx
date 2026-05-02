@@ -58,7 +58,7 @@
               "action": "advancePhase",
               "condition": {
                 "predicate": {
-                  "kind": "isTrue"
+                  "kind": "truthy"
                 },
                 "predicateSource": {
                   "fallback": null,

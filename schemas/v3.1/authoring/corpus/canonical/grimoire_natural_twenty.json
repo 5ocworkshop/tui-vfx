@@ -482,6 +482,13 @@
       },
       "tracks": [
         {
+          "chunkSize": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 2
+            }
+          },
           "kind": "visibility.dissolve",
           "seed": {
             "kind": "literal",

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_lift_lifecycle.rs</FILE> - <DESC>Lift the lifecycle: { enter, dwell, exit } shorthand into canonical clock + phases</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 2d of canonicalize: turn the per-phase duration shorthand into the canonical phases array.</WCTX>
-// <CLOG>0.1.0: INIT — accept string per-phase durations and object form with route/easing extras (route deferred).</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase B of canonicalize completion: switch the dwell-until trigger predicate default from isTrue to truthy so it is type-correct for any predicate-compatible binding kind without requiring the canonicalize to inspect binding declarations.</WCTX>
+// <CLOG>0.2.0: MINOR — switch dwell-until default predicate from isTrue to truthy for broader binding-type coverage.</CLOG>
 
 use serde_json::{Value, json};
 
@@ -120,10 +120,13 @@ fn build_phase(name: &str, value: &Value) -> Result<Value, CanonicalizationError
 /// Synthesize a `DwellPolicy::Until` from `{ until: <trigger-source>, fallback }`
 /// shorthand. The trigger source is parsed as a ValueSource (typically a
 /// `$bind:<id>` signal reference) and wrapped in a TriggerCondition that
-/// fires when the sampled value is `isTrue`. Defaults: latch=untilPhaseReset,
-/// reset=phaseStart, action=advancePhase. The `fallback` duration becomes
-/// the policy's maxDuration cap so the dwell terminates even if the trigger
-/// never fires.
+/// fires when the sampled value is truthy. The `truthy` predicate is
+/// kind-correct for boolean, integer, number, string, text, color, gradient,
+/// and duration sources, which covers every binding type the canonicalize
+/// can produce without inspecting binding declarations. Defaults:
+/// latch=untilPhaseReset, reset=phaseStart, action=advancePhase. The
+/// `fallback` duration becomes the policy's maxDuration cap so the dwell
+/// terminates even if the trigger never fires.
 fn build_until_dwell(obj: &serde_json::Map<String, Value>) -> Result<Value, CanonicalizationError> {
     let until = obj.get("until").ok_or_else(|| {
         CanonicalizationError::new(
@@ -143,7 +146,7 @@ fn build_until_dwell(obj: &serde_json::Map<String, Value>) -> Result<Value, Cano
     let trigger = json!({
         "condition": {
             "predicateSource": predicate_source,
-            "predicate": { "kind": "isTrue" }
+            "predicate": { "kind": "truthy" }
         },
         "latch": "untilPhaseReset",
         "reset": "phaseStart",

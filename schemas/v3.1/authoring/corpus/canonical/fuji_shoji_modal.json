@@ -205,9 +205,8 @@
       ],
       "id": "enterCompose",
       "intent": {
-        "alias": "compose",
-        "canonicalPreset": "wipe",
-        "kind": "alias"
+        "kind": "preset",
+        "preset": "compose"
       },
       "interruption": "snapToEndThenStartNext",
       "reducedMotion": {

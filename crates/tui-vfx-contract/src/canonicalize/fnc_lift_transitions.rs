@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_lift_transitions.rs</FILE> - <DESC>Lift the author-side transitions block into RecipeDocument.transitions keyed by phase+preset</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 2b of canonicalize: dispatch transitions: { enter, dwell, exit } to per-preset apply_preset and record PresetUsage provenance.</WCTX>
-// <CLOG>0.1.0: INIT — handle preset-keyed transition entries; emit transitions map keyed by phase+preset name.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase B of canonicalize completion: emit the canonical Compose preset intent for compose-form transitions instead of aliasing to the first sub-preset.</WCTX>
+// <CLOG>0.2.0: MINOR — emit TransitionPreset::Compose for compose-form transitions; record sub-preset names in PresetUsage rather than the intent label.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -179,20 +179,16 @@ fn apply_compose_transition(
         }
     }
 
-    // Build the merged TransitionSpec borrowing timing/intent from the parent
-    // entry. Author-side compose blocks describe a single coordinated
-    // transition; alias-style intent records both the compose name and the
-    // sub-presets it expanded to.
+    // Build the merged TransitionSpec borrowing timing from the parent entry.
+    // Author-side compose blocks describe a single coordinated transition;
+    // intent is recorded as the canonical Compose preset, and the sub-preset
+    // names ride along in PresetUsage.consumed_params for provenance.
     use serde_json::json;
     let mut spec = Map::new();
     spec.insert("id".into(), Value::String(transition_id.clone()));
     spec.insert(
         "intent".into(),
-        json!({
-            "kind": "alias",
-            "alias": "compose",
-            "canonicalPreset": sub_presets.first().cloned().unwrap_or_else(|| "fade".into()),
-        }),
+        json!({ "kind": "preset", "preset": "compose" }),
     );
     spec.insert(
         "subjects".into(),

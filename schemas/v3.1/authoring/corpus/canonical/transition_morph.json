@@ -148,10 +148,10 @@
       },
       "subjects": {
         "from": {
-          "kind": "empty"
+          "kind": "previous"
         },
         "to": {
-          "kind": "empty"
+          "kind": "current"
         }
       },
       "timing": {
@@ -166,7 +166,8 @@
       },
       "tracks": [
         {
-          "kind": "relation.morph"
+          "kind": "relation.morph",
+          "matchKind": "glyph"
         }
       ]
     }

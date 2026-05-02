@@ -1370,6 +1370,26 @@
         }
       ]
     },
+    "TransitionBrailleOrder": {
+      "description": "Subcell traversal order for a `visibility.braille` transition track.\n\nEach braille cell holds eight dot positions; the canonical track lights\nthem in a deterministic order so the reveal pattern is reproducible. The\nv3.1 author-side expansion table declares this parameter as a closed\nenum (`raster`, `morton`, `spiral`).",
+      "oneOf": [
+        {
+          "description": "Row-major raster traversal order.",
+          "type": "string",
+          "const": "raster"
+        },
+        {
+          "description": "Z-order (Morton) curve traversal.",
+          "type": "string",
+          "const": "morton"
+        },
+        {
+          "description": "Spiral traversal expanding outward from a central anchor.",
+          "type": "string",
+          "const": "spiral"
+        }
+      ]
+    },
     "TransitionCascadeOrder": {
       "description": "Deterministic ordering for content reveal cascades.",
       "oneOf": [
@@ -1593,6 +1613,26 @@
         }
       ]
     },
+    "TransitionMatchKind": {
+      "description": "Correspondence match kind for a `relation.morph` transition track.\n\nSelects how the runtime pairs source and target cells for the morph\ntransform: per-glyph identity matching, contiguous-block matching, or\nsilhouette/outline matching. The v3.1 author-side expansion table\ndeclares this parameter as a closed enum (`glyph`, `block`, `outline`).",
+      "oneOf": [
+        {
+          "description": "Match cells with the same glyph identity across surfaces.",
+          "type": "string",
+          "const": "glyph"
+        },
+        {
+          "description": "Match contiguous cell blocks across surfaces.",
+          "type": "string",
+          "const": "block"
+        },
+        {
+          "description": "Match the surface silhouette/outline across surfaces.",
+          "type": "string",
+          "const": "outline"
+        }
+      ]
+    },
     "TransitionMaterializePattern": {
       "description": "Pattern used by `visibility.materialize` reveal tracks.",
       "oneOf": [
@@ -1726,7 +1766,7 @@
       ]
     },
     "TransitionPreset": {
-      "description": "Author-facing transition preset names preserved as non-executable intent metadata.",
+      "description": "Author-facing transition preset names preserved as non-executable intent metadata.\n\nEach variant names a closed-vocabulary transition shape declared by the\nv3.1 author-side expansion table. The `compose` variant labels\nmulti-track transitions written with the `compose: \"<mode>\"` author form;\nthe executable structure (multiple tracks under one envelope) is already\nexpressed by `TransitionSpec.tracks` regardless of intent.",
       "oneOf": [
         {
           "description": "Between-surface blend from prior to next surface.",
@@ -1777,6 +1817,11 @@
           "description": "Braille-pattern visibility reveal.",
           "type": "string",
           "const": "braille"
+        },
+        {
+          "description": "Multi-track composed transition; track list expresses the executable shape.",
+          "type": "string",
+          "const": "compose"
         }
       ]
     },
@@ -1830,8 +1875,28 @@
         }
       ]
     },
+    "TransitionStipplePattern": {
+      "description": "Stipple pattern selection for a `visibility.stippled` transition track.\n\nThe v3.1 author-side expansion table declares this parameter as a closed\nenum (`ordered`, `bayer`, `blueNoise`); the canonical track carries the\nselected pattern verbatim so the runtime can dispatch on it without\nre-parsing author-side strings.",
+      "oneOf": [
+        {
+          "description": "Deterministic ordered (matrix) stipple pattern.",
+          "type": "string",
+          "const": "ordered"
+        },
+        {
+          "description": "Bayer-matrix stipple pattern.",
+          "type": "string",
+          "const": "bayer"
+        },
+        {
+          "description": "Pre-computed blue-noise stipple pattern.",
+          "type": "string",
+          "const": "blueNoise"
+        }
+      ]
+    },
     "TransitionSubjectRef": {
-      "description": "Concrete subject participating in a transition envelope.",
+      "description": "Concrete subject participating in a transition envelope.\n\nSubjects identify *what* a transition operates on. The `previous` and\n`current` variants are symbolic — they defer concrete-id resolution to\nthe runtime, which knows the scene order. The remaining variants name\nconcrete recipe entities and resolve eagerly.",
       "oneOf": [
         {
           "description": "Absence of a prior or next subject, used for enter/exit.",
@@ -1840,6 +1905,34 @@
             "kind": {
               "type": "string",
               "const": "empty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Symbolic reference to the surface that was active before the transition began.\nRelation transitions (crossfade/push/morph) use this in the `from` slot to\ndefer concrete scene-id resolution to the runtime.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "previous"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Symbolic reference to the surface that becomes active after the transition completes.\nRelation transitions use this in the `to` slot for the same deferred-resolution reason.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "current"
             }
           },
           "additionalProperties": false,
@@ -2218,6 +2311,17 @@
           "description": "`visibility.dissolve` controls per-cell visibility reveal.",
           "type": "object",
           "properties": {
+            "chunkSize": {
+              "description": "Optional cell-block size source; non-1 values reveal cells in coherent chunks.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "kind": {
               "type": "string",
               "const": "visibility.dissolve"
@@ -2281,9 +2385,35 @@
           "description": "`visibility.stippled` controls stipple-pattern visibility reveal.",
           "type": "object",
           "properties": {
+            "density": {
+              "description": "Optional 0..1 stipple density source; defaults are descriptor-defined.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "kind": {
               "type": "string",
               "const": "visibility.stippled"
+            },
+            "pattern": {
+              "description": "Stipple pattern selection (ordered/Bayer/blue-noise).",
+              "$ref": "#/$defs/TransitionStipplePattern"
+            },
+            "seed": {
+              "description": "Optional deterministic seed source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "subject": {
               "description": "Subject whose visibility is controlled by this track.",
@@ -2304,7 +2434,8 @@
           "additionalProperties": false,
           "required": [
             "kind",
-            "subject"
+            "subject",
+            "pattern"
           ]
         },
         {
@@ -2315,6 +2446,21 @@
               "type": "string",
               "const": "visibility.braille"
             },
+            "seed": {
+              "description": "Optional deterministic seed source.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ValueSource"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subcellOrder": {
+              "description": "Subcell traversal order (raster/Morton/spiral).",
+              "$ref": "#/$defs/TransitionBrailleOrder"
+            },
             "subject": {
               "description": "Subject whose visibility is controlled by this track.",
               "$ref": "#/$defs/TransitionTrackSubject"
@@ -2334,7 +2480,8 @@
           "additionalProperties": false,
           "required": [
             "kind",
-            "subject"
+            "subject",
+            "subcellOrder"
           ]
         },
         {
@@ -2751,6 +2898,10 @@
               "type": "string",
               "const": "relation.morph"
             },
+            "matchKind": {
+              "description": "Cell-correspondence match kind (glyph/block/outline).",
+              "$ref": "#/$defs/TransitionMatchKind"
+            },
             "transitionProgress": {
               "description": "Optional normalized 0..1 transition progress source overriding time-derived progress.",
               "anyOf": [
@@ -2765,7 +2916,8 @@
           },
           "additionalProperties": false,
           "required": [
-            "kind"
+            "kind",
+            "matchKind"
           ]
         },
         {

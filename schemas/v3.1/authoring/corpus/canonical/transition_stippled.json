@@ -163,7 +163,22 @@
       },
       "tracks": [
         {
+          "density": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.5
+            }
+          },
           "kind": "visibility.stippled",
+          "pattern": "ordered",
+          "seed": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 42
+            }
+          },
           "subject": "to"
         }
       ]
