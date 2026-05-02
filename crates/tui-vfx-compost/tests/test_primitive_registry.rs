@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.4.0: ADD — prove sampler.gravity installs through the primitive pack.
+// <CLOG>0.5.0: ADD — prove filter.invert installs through the primitive pack.
+// 0.4.0: ADD — prove sampler.gravity installs through the primitive pack.
 // 0.3.0: ADD — prove mask.dissolve installs through the primitive pack.
 // 0.2.0: ADD — prove filter.dim v3.1 descriptor shape, pack installation, and runtime color semantics without reading generated artifacts.</CLOG>
 
@@ -256,6 +257,19 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     );
     assert!(registry.has_runtime(&id, EffectRuntimeKind::FrameFilter));
 
+    let invert_id = EffectId::new("filter.invert");
+    let invert_descriptor = registry
+        .effect(&invert_id)
+        .expect("filter.invert descriptor is registered");
+    assert_eq!(invert_descriptor.domain, EffectDomain::FrameFilter);
+    assert_eq!(
+        invert_descriptor.inputs[&EffectInputId::new("channelTarget")]
+            .value
+            .default,
+        Some(Value::Enum("both".to_string()))
+    );
+    assert!(registry.has_runtime(&invert_id, EffectRuntimeKind::FrameFilter));
+
     let mask_id = EffectId::new("mask.dissolve");
     let mask_descriptor = registry
         .effect(&mask_id)
@@ -345,4 +359,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
