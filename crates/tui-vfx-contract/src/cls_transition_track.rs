@@ -1,16 +1,14 @@
 // <FILE>crates/tui-vfx-contract/src/cls_transition_track.rs</FILE> - <DESC>Native v3.1 transition track union</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>V3.1 native motion/compositing language: executable transition tracks, not effect chains.</WCTX>
-// <CLOG>0.3.0: MINOR — add color-fade, materialize, and structured wipe geometry track shapes.
-// 0.2.0: MINOR — add recipe-oracle content, style, blinds, and path track shapes.
-// 0.1.0: INIT — add visibility, opacity, motion, and relation track families.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase A of canonicalize completion: add the schema-declared track parameters that the canonicalize was previously dropping (stipple pattern/density/seed, braille subcellOrder/seed, dissolve chunkSize, morph match).</WCTX>
+// <CLOG>0.4.0: MINOR — add stipple pattern/density/seed, braille subcellOrder/seed, dissolve chunkSize, and morph match fields so canonicalize can carry author intent end-to-end.</CLOG>
 
 use crate::{
-    SceneAnchor, ScopeSpec, StyleColorSource, TransitionBlindsOrientation, TransitionCascadeOrder,
-    TransitionEdge, TransitionFocal, TransitionMaterializePattern, TransitionMotionPath,
-    TransitionMotionSampling, TransitionRevealDirection, TransitionTextCursor, TransitionTiming,
-    TransitionTrackSubject, TransitionTravelDirection, TransitionVisibilityGeometry, ValueSource,
-    VisibilityIrisShape,
+    SceneAnchor, ScopeSpec, StyleColorSource, TransitionBlindsOrientation, TransitionBrailleOrder,
+    TransitionCascadeOrder, TransitionEdge, TransitionFocal, TransitionMaterializePattern,
+    TransitionMatchKind, TransitionMotionPath, TransitionMotionSampling, TransitionRevealDirection,
+    TransitionStipplePattern, TransitionTextCursor, TransitionTiming, TransitionTrackSubject,
+    TransitionTravelDirection, TransitionVisibilityGeometry, ValueSource, VisibilityIrisShape,
 };
 
 /// Executable canonical V3.1 transition track.
@@ -84,6 +82,9 @@ pub enum TransitionTrack {
         /// Optional deterministic seed source.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         seed: Option<ValueSource>,
+        /// Optional cell-block size source; non-1 values reveal cells in coherent chunks.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        chunk_size: Option<ValueSource>,
         /// Optional per-track timing override.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         timing: Option<TransitionTiming>,
@@ -99,6 +100,14 @@ pub enum TransitionTrack {
     VisibilityStippled {
         /// Subject whose visibility is controlled by this track.
         subject: TransitionTrackSubject,
+        /// Stipple pattern selection (ordered/Bayer/blue-noise).
+        pattern: TransitionStipplePattern,
+        /// Optional 0..1 stipple density source; defaults are descriptor-defined.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        density: Option<ValueSource>,
+        /// Optional deterministic seed source.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        seed: Option<ValueSource>,
         /// Optional normalized 0..1 transition progress source overriding time-derived progress.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         transition_progress: Option<ValueSource>,
@@ -108,6 +117,11 @@ pub enum TransitionTrack {
     VisibilityBraille {
         /// Subject whose visibility is controlled by this track.
         subject: TransitionTrackSubject,
+        /// Subcell traversal order (raster/Morton/spiral).
+        subcell_order: TransitionBrailleOrder,
+        /// Optional deterministic seed source.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        seed: Option<ValueSource>,
         /// Optional normalized 0..1 transition progress source overriding time-derived progress.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         transition_progress: Option<ValueSource>,
@@ -234,6 +248,8 @@ pub enum TransitionTrack {
     /// `relation.morph` represents between-surface correspondence transform intent.
     #[serde(rename = "relation.morph")]
     RelationMorph {
+        /// Cell-correspondence match kind (glyph/block/outline).
+        match_kind: TransitionMatchKind,
         /// Optional normalized 0..1 transition progress source overriding time-derived progress.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         transition_progress: Option<ValueSource>,

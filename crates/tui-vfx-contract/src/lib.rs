@@ -1,21 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.15.0</VERS>
-// <WCTX>Authoring shorthand canonicalize: expose the canonicalize module and recipe-intent provenance type.</WCTX>
-// <CLOG>0.15.0: MINOR — expose the canonicalize module providing canonicalize_recipe and the RecipeIntent provenance type.
-// 0.14.0: MINOR — export signal expressions, typed shadows, style color sources, and visibility geometry.
-// 0.13.0: MINOR — export transition recipe-oracle track support types.
-// 0.12.0: MINOR — export ScrollFactor scene-element metadata and schema root.
-// 0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
-// 0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
-// 0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
-// 0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
-// 0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
-// 0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
-// 0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
-// 0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
-// 0.3.0: MINOR — export Value, ValueSpec, EffectInputSpec, and input schema roots.
-// 0.2.0: MINOR — export EffectDescriptor and descriptor capability DTOs/schema root.
-// 0.1.0: INIT — expose stable surface, scene, scope, write, sampler, diagnostic, and schema-root contract vocabulary.</CLOG>
+// <VERS>VERSION: 0.16.0</VERS>
+// <WCTX>Phase A of canonicalize completion: expose the new transition stipple/braille/match enums alongside the existing transition vocabulary.</WCTX>
+// <CLOG>0.16.0: MINOR — export TransitionStipplePattern, TransitionBrailleOrder, and TransitionMatchKind for the schema-declared track parameters.</CLOG>
 
 //! Stable v3.1 contract DTOs for tui-vfx.
 //!
@@ -137,18 +123,21 @@ pub mod cls_surface_diagnostic;
 pub mod cls_surface_diagnostic_code;
 pub mod cls_surface_metadata;
 pub mod cls_transition_blinds_orientation;
+pub mod cls_transition_braille_order;
 pub mod cls_transition_cascade_order;
 pub mod cls_transition_edge;
 pub mod cls_transition_focal;
 pub mod cls_transition_id;
 pub mod cls_transition_intent;
 pub mod cls_transition_interruption;
+pub mod cls_transition_match_kind;
 pub mod cls_transition_materialize_pattern;
 pub mod cls_transition_motion_path;
 pub mod cls_transition_motion_sampling;
 pub mod cls_transition_preset;
 pub mod cls_transition_reveal_direction;
 pub mod cls_transition_spec;
+pub mod cls_transition_stipple_pattern;
 pub mod cls_transition_subject_ref;
 pub mod cls_transition_subjects;
 pub mod cls_transition_text_cursor;
@@ -298,18 +287,21 @@ pub use cls_surface_diagnostic::SurfaceDiagnostic;
 pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
 pub use cls_surface_metadata::SurfaceMetadata;
 pub use cls_transition_blinds_orientation::TransitionBlindsOrientation;
+pub use cls_transition_braille_order::TransitionBrailleOrder;
 pub use cls_transition_cascade_order::TransitionCascadeOrder;
 pub use cls_transition_edge::TransitionEdge;
 pub use cls_transition_focal::TransitionFocal;
 pub use cls_transition_id::TransitionId;
 pub use cls_transition_intent::TransitionIntent;
 pub use cls_transition_interruption::TransitionInterruption;
+pub use cls_transition_match_kind::TransitionMatchKind;
 pub use cls_transition_materialize_pattern::TransitionMaterializePattern;
 pub use cls_transition_motion_path::TransitionMotionPath;
 pub use cls_transition_motion_sampling::TransitionMotionSampling;
 pub use cls_transition_preset::TransitionPreset;
 pub use cls_transition_reveal_direction::TransitionRevealDirection;
 pub use cls_transition_spec::TransitionSpec;
+pub use cls_transition_stipple_pattern::TransitionStipplePattern;
 pub use cls_transition_subject_ref::TransitionSubjectRef;
 pub use cls_transition_subjects::TransitionSubjects;
 pub use cls_transition_text_cursor::TransitionTextCursor;

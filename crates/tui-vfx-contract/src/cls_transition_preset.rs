@@ -1,10 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/cls_transition_preset.rs</FILE> - <DESC>Author-facing transition preset vocabulary</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Author shorthand canonicalize: cover the corpus-witnessed fade and blinds preset names.</WCTX>
-// <CLOG>0.2.0: MINOR — add fade and blinds preset variants for corpus coverage.
-// 0.1.0: INIT — add classic transition preset enum.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase A of canonicalize completion: add a compose intent variant so multi-track transitions carry author-meaningful labels rather than first-sub-preset aliases.</WCTX>
+// <CLOG>0.3.0: MINOR — add compose preset variant for compose-form (multi-track) transitions.</CLOG>
 
 /// Author-facing transition preset names preserved as non-executable intent metadata.
+///
+/// Each variant names a closed-vocabulary transition shape declared by the
+/// v3.1 author-side expansion table. The `compose` variant labels
+/// multi-track transitions written with the `compose: "<mode>"` author form;
+/// the executable structure (multiple tracks under one envelope) is already
+/// expressed by `TransitionSpec.tracks` regardless of intent.
 #[derive(
     Clone,
     Copy,
@@ -39,7 +44,9 @@ pub enum TransitionPreset {
     Stippled,
     /// Braille-pattern visibility reveal.
     Braille,
+    /// Multi-track composed transition; track list expresses the executable shape.
+    Compose,
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_transition_preset.rs</FILE> - <DESC>Author-facing transition preset vocabulary</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
