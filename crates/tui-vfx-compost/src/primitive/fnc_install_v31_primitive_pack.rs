@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
+// <VERS>VERSION: 0.12.0</VERS>
 // <WCTX>Phase 1 registry installation collects domain-directory primitive ports; codegen will later derive descriptor artifacts from this Rust SSOT.</WCTX>
-// <CLOG>0.11.0: MINOR — install sampler.distortion alongside existing primitive ports.
+// <CLOG>0.12.0: MINOR — install sampler.faultLine alongside existing primitive ports.
+// 0.11.0: MINOR — install sampler.distortion alongside existing primitive ports.
 // 0.10.0: MINOR — install sampler.sineWave alongside existing primitive ports.
 // 0.9.0: MINOR — install sampler.pendulum alongside existing primitive ports.
 // 0.8.0: MINOR — install sampler.bounce alongside existing primitive ports.
@@ -16,7 +17,8 @@
 use crate::filters::{FilterDim, FilterGreyscale, FilterInvert, FilterTint};
 use crate::masks::{MaskCheckers, MaskDissolve};
 use crate::samplers::{
-    SamplerBounce, SamplerDistortion, SamplerGravity, SamplerPendulum, SamplerSineWave,
+    SamplerBounce, SamplerDistortion, SamplerFaultLine, SamplerGravity, SamplerPendulum,
+    SamplerSineWave,
 };
 
 use super::{EffectRegistry, PrimitiveRegistryError};
@@ -33,6 +35,7 @@ pub fn install_v31_primitive_pack(
     registry.install_mask::<MaskDissolve>()?;
     registry.install_coordinate_sampler::<SamplerBounce>()?;
     registry.install_coordinate_sampler::<SamplerDistortion>()?;
+    registry.install_coordinate_sampler::<SamplerFaultLine>()?;
     registry.install_coordinate_sampler::<SamplerGravity>()?;
     registry.install_coordinate_sampler::<SamplerPendulum>()?;
     registry.install_coordinate_sampler::<SamplerSineWave>()?;
@@ -40,4 +43,4 @@ pub fn install_v31_primitive_pack(
 }
 
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>
