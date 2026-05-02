@@ -123,19 +123,6 @@ pub fn apply_alias(
                     .unwrap_or(EnvelopeHint::None);
                 let lifted = lift_value_envelope(value, envelope_hint)
                     .map_err(|e| e.at(JsonPathSegment::field(key.clone())))?;
-                if !is_canonical_value_source(&lifted) {
-                    return Err(CanonicalizationError::new(
-                        CanonicalizationErrorKind::UnrepresentableInput {
-                            effect: entry.canonical_effect.clone(),
-                            param: key.clone(),
-                        },
-                        format!(
-                            "input `{key}` on `{}` carries a structural value the canonical NodeSpec.inputs slot cannot represent. NodeSpec.inputs is BTreeMap<EffectInputId, ValueSource>; the canonical ValueSource enum has no variant for arbitrary structured author shapes (paths/stops/nodes/pattern/signal). Adding a ValueSource::Structured(StructuredValue) variant to the contract is the open path forward.",
-                            entry.canonical_effect
-                        ),
-                    )
-                    .at(JsonPathSegment::field(key.clone())));
-                }
                 inputs.insert(target_key, lifted);
             }
         }
@@ -201,31 +188,6 @@ fn apply_to_lift(
         )
         .at(JsonPathSegment::field("applyTo"))),
     }
-}
-
-/// True when the lifted value is a canonical ValueSource variant — an object
-/// whose `kind` matches one of `literal`, `signal`, `parameter`, `graphValue`,
-/// `map`, `sampledField`, `signalExpression`, `phaseProgress`, or `clock`.
-/// Other shapes (raw arrays, structural objects without a `kind` discriminator)
-/// cannot fit the canonical NodeSpec.inputs slot and are dropped.
-fn is_canonical_value_source(value: &Value) -> bool {
-    let Value::Object(obj) = value else {
-        return false;
-    };
-    matches!(
-        obj.get("kind").and_then(Value::as_str),
-        Some(
-            "literal"
-                | "signal"
-                | "parameter"
-                | "graphValue"
-                | "map"
-                | "sampledField"
-                | "signalExpression"
-                | "phaseProgress"
-                | "clock"
-        )
-    )
 }
 
 fn dedup_preserve_order(items: Vec<String>) -> Vec<String> {

@@ -28,21 +28,22 @@ pub fn lift_value_envelope(
         return Ok(resolve_binding_string(rest));
     }
 
-    // EnvelopeHint::None on a complex structural value (object without kind, or
-    // an array that isn't a color tuple) passes through unwrapped. Shader
-    // inputs like `paths`, `stops`, `nodes`, `pattern`, and `signal` are not
-    // ValueSource positions — they're structural arguments the descriptor
-    // deserializes directly.
+    // EnvelopeHint::None on a complex structural value (object without `kind`,
+    // or an array that isn't a color tuple) wraps as ValueSource::Literal
+    // carrying a Value::Structured payload. The contract's StructuredValue is
+    // a JSON-compatible AST so author shapes like gradient stops, wayfinding
+    // nodes, signal expression objects, and pattern descriptors round-trip
+    // losslessly. Descriptor-aware runtime tooling resolves the shape.
     if matches!(hint, EnvelopeHint::None) {
         match value {
-            Value::Object(_) => return Ok(value.clone()),
+            Value::Object(_) => return Ok(structured_literal(value)),
             Value::Array(arr) => {
                 let is_color_tuple = (arr.len() == 3 || arr.len() == 4)
                     && arr
                         .iter()
                         .all(|v| v.is_u64() || v.is_i64() || v.is_number());
                 if !is_color_tuple {
-                    return Ok(value.clone());
+                    return Ok(structured_literal(value));
                 }
             }
             _ => {}
@@ -75,6 +76,18 @@ pub fn lift_value_envelope(
         EnvelopeHint::Duration => return resolve_duration(value),
     };
     Ok(json!({ "kind": "literal", "value": inner }))
+}
+
+/// Wrap an arbitrary author-side structural value (object, non-color array,
+/// or anything else without a canonical literal kind) inside the canonical
+/// `ValueSource::Literal { value: Value::Structured(StructuredValue) }`
+/// envelope. The author shape passes through verbatim because StructuredValue
+/// is a JSON-compatible AST.
+fn structured_literal(value: &Value) -> Value {
+    json!({
+        "kind": "literal",
+        "value": { "kind": "structured", "value": value.clone() }
+    })
 }
 
 fn resolve_binding_string(rest: &str) -> Value {
