@@ -2,24 +2,21 @@
 // <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration starts the v3.1 primitive pack with filter.dim and shared color/channel helpers.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.2.0: ADD — prove filter.dim descriptor parity with the migration seed, pack installation, and v3.1 runtime color semantics.</CLOG>
+// <CLOG>0.2.0: ADD — prove filter.dim v3.1 descriptor shape, pack installation, and runtime color semantics without reading generated artifacts.</CLOG>
 
 use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
-
+use tui_vfx_compost::filters::{FilterDim, FilterDimInputs, dim_color};
 use tui_vfx_compost::primitive::{
     CellView, EffectPrimitive, EffectRegistry, EffectRuntimeContext, EffectRuntimeError,
-    EffectRuntimeKind, FilterDim, FilterDimInputs, FrameFilterRuntime, MaskRuntime, MaskVisibility,
-    NoInputs, NoOutputs, PrimitiveRegistryError, SourcePrimitive, SourceRuntime, SourceSurface,
-    dim_color, install_v31_primitive_pack,
+    EffectRuntimeKind, FrameFilterRuntime, MaskRuntime, MaskVisibility, NoInputs, NoOutputs,
+    PrimitiveRegistryError, SourcePrimitive, SourceRuntime, SourceSurface,
+    install_v31_primitive_pack,
 };
 use tui_vfx_contract::{
-    CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorPack, DescriptorPackId,
-    EffectCompletion, EffectDescriptor, EffectDomain, EffectId, EffectInputId, EffectLifecycle,
-    RoleSpace, RoleWritePolicyKind, ScopeKind, ScopeSupport, SourceDescriptor, SourceId,
-    SourceKind, SourceLifecycle, SourceOutputSize, SourceOutputSpec, SourceRolePolicy, Value,
-    WriteSupport,
+    CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorPackId, EffectCompletion,
+    EffectDescriptor, EffectDomain, EffectId, EffectInputId, EffectLifecycle, RoleSpace,
+    RoleWritePolicyKind, ScopeKind, ScopeSupport, SourceDescriptor, SourceId, SourceKind,
+    SourceLifecycle, SourceOutputSize, SourceOutputSpec, SourceRolePolicy, Value, WriteSupport,
 };
 use tui_vfx_types::{Cell, Color, RoleTag};
 
@@ -231,25 +228,7 @@ fn cell_view_panics_on_undeclared_write_in_debug_builds() {
 }
 
 #[test]
-fn filter_dim_descriptor_matches_current_migration_seed() {
-    let pack_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .expect("crate lives under repo/crates/tui-vfx-compost")
-        .join("descriptors/v3.1/packs/primitive.json");
-    let pack: DescriptorPack = serde_json::from_str(
-        &fs::read_to_string(pack_path).expect("read primitive descriptor seed"),
-    )
-    .expect("deserialize primitive descriptor seed");
-
-    assert_eq!(
-        FilterDim::descriptor(),
-        pack.effects[&EffectId::new("filter.dim")]
-    );
-}
-
-#[test]
-fn v31_primitive_pack_installs_filter_dim() {
+fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     let mut registry = EffectRegistry::new();
 
     install_v31_primitive_pack(&mut registry).expect("v3.1 primitive pack installs");
@@ -301,7 +280,7 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
     FilterDim::filter_cell(
         &FilterDimInputs {
             factor: 0.5,
-            channel_target: tui_vfx_compost::primitive::ChannelTarget::Foreground,
+            channel_target: tui_vfx_compost::filters::ChannelTarget::Foreground,
         },
         &mut view,
         &context,

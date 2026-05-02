@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-compost/src/primitive/cls_channel_target.rs</FILE> - <DESC>Shared foreground/background channel target primitive helper</DESC>
+// <FILE>crates/tui-vfx-compost/src/filters/cls_channel_target.rs</FILE> - <DESC>Shared foreground/background channel target primitive helper</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>Phase 0.5 commonality extraction: many primitives route effects to foreground, background, or both via canonical channelTarget.</WCTX>
 // <CLOG>0.1.0: INIT — add canonical channel target enum and descriptor allowed-values helpers.</CLOG>
@@ -43,5 +43,5 @@ impl ChannelTarget {
     }
 }
 
-// <FILE>crates/tui-vfx-compost/src/primitive/cls_channel_target.rs</FILE> - <DESC>Shared foreground/background channel target primitive helper</DESC>
+// <FILE>crates/tui-vfx-compost/src/filters/cls_channel_target.rs</FILE> - <DESC>Shared foreground/background channel target primitive helper</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
