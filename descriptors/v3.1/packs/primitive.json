@@ -1714,7 +1714,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "█"
+              "value": "\u2588"
             },
             "range": null,
             "allowedValues": [],
@@ -2362,7 +2362,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "▌"
+              "value": "\u258c"
             },
             "range": null,
             "allowedValues": [],
@@ -3366,7 +3366,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "•"
+              "value": "\u2022"
             },
             "range": null,
             "allowedValues": [],
@@ -3705,11 +3705,8 @@
           "displayName": "PeakEighths",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 1
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 0,
               "max": 999
@@ -3726,11 +3723,8 @@
           "displayName": "RestEighths",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 1
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 0,
               "max": 999
@@ -5601,15 +5595,12 @@
           "displayName": "Glisten",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
+            "kind": "boolean",
             "default": {
-              "kind": "number",
-              "value": 0.0
+              "kind": "boolean",
+              "value": false
             },
-            "range": {
-              "min": 0,
-              "max": 1
-            },
+            "range": null,
             "allowedValues": [],
             "unit": null,
             "semantic": null
@@ -9785,11 +9776,8 @@
           "displayName": "Radius",
           "description": "Accepted primitive field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 8.0
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 0,
               "max": 128
@@ -10297,11 +10285,8 @@
           "displayName": "Band Width",
           "description": null,
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 2.0
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 1,
               "max": 64
@@ -10359,11 +10344,8 @@
           "displayName": "Angle Deg",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 0.0
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 0,
               "max": 360
@@ -10380,15 +10362,9 @@
           "displayName": "Head",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 0.0
-            },
-            "range": {
-              "min": 0,
-              "max": 1
-            },
+            "kind": "color",
+            "default": null,
+            "range": null,
             "allowedValues": [],
             "unit": null,
             "semantic": null
@@ -10422,15 +10398,9 @@
           "displayName": "Tail",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 1.0
-            },
-            "range": {
-              "min": 0,
-              "max": 1
-            },
+            "kind": "color",
+            "default": null,
+            "range": null,
             "allowedValues": [],
             "unit": null,
             "semantic": null
@@ -11350,11 +11320,8 @@
           "displayName": "Radius",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
-            "kind": "number",
-            "default": {
-              "kind": "number",
-              "value": 2.0
-            },
+            "kind": "integer",
+            "default": null,
             "range": {
               "min": 0,
               "max": 128
@@ -14361,7 +14328,7 @@
           "displayName": "Num Shakes",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "integer",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -14391,7 +14358,7 @@
           "displayName": "Pause Duration",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "integer",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -14406,7 +14373,7 @@
           "displayName": "Shake Period",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "integer",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -15144,7 +15111,7 @@
           "displayName": "Acceleration",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -15174,7 +15141,7 @@
           "displayName": "Terminal Velocity",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -15365,7 +15332,7 @@
           "displayName": "Emits Hint",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "boolean",
+            "kind": "string",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -15498,7 +15465,7 @@
           "displayName": "Radius",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "number",
+            "kind": "integer",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -16369,7 +16336,7 @@
           "displayName": "Falloff Distance",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "number",
+            "kind": "integer",
             "default": null,
             "range": null,
             "allowedValues": [],
