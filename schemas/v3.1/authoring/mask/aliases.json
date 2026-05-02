@@ -1,0 +1,53 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "mask",
+  "description": "Mask-as-effect aliases (Q3 effect form). When { mask: '<name>', phase: 'dwell' | [...] } appears in an effects[] entry, it canonicalizes to a graph node with effect: 'mask.<canonical>'. The transition form ({ preset: '...' } in transitions) is handled by transition/expansion.json — this table is for the dwell / multi-phase case where the mask runs as an ongoing effect rather than a one-shot transition track.",
+
+  "aliases": [
+    {
+      "from": "iris",
+      "canonicalEffect": "mask.iris",
+      "paramMapping": {
+        "shape":    { "to": "shape",    "envelope": "literal-enum",   "default": "circle" },
+        "softEdge": { "to": "softEdge", "envelope": "literal-boolean", "default": false },
+        "progress": { "to": "progress", "envelope": "value-source" },
+        "phase":    { "to": "activePhases", "envelope": "phases-list" },
+        "scope":    { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "wipe",
+      "canonicalEffect": "mask.wipe",
+      "paramMapping": {
+        "direction": { "to": "direction", "envelope": "literal-enum",   "default": "leftToRight" },
+        "softEdge":  { "to": "softEdge",  "envelope": "literal-boolean", "default": false },
+        "progress":  { "to": "progress",  "envelope": "value-source" },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "blinds",
+      "canonicalEffect": "mask.blinds",
+      "paramMapping": {
+        "orientation": { "to": "orientation", "envelope": "literal-enum",    "default": "horizontal" },
+        "count":       { "to": "count",       "envelope": "literal-integer", "default": 4 },
+        "progress":    { "to": "progress",    "envelope": "value-source" },
+        "phase":       { "to": "activePhases", "envelope": "phases-list" },
+        "scope":       { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "dissolve",
+      "canonicalEffect": "mask.dissolve",
+      "paramMapping": {
+        "seed":      { "to": "seed",      "envelope": "literal-integer", "default": 0 },
+        "chunkSize": { "to": "chunkSize", "envelope": "literal-integer", "default": 1 },
+        "progress":  { "to": "progress",  "envelope": "value-source" },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    }
+  ]
+}

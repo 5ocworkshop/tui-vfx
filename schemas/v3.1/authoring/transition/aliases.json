@@ -1,0 +1,14 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "transition",
+  "description": "Transition-axis aliases. Most transitions reach canonical form via the expansion table (preset → tracks). This table covers the few cases where the author writes a transition without invoking a preset (e.g., a bare 'fade' shorthand or a direct track invocation).",
+
+  "aliases": [
+    {
+      "from": "fade",
+      "canonicalEffect": "transition.fade",
+      "notes": "Bare 'transitions: { enter: \"fade\" }' string shorthand canonicalizes to the fade preset with default params. Most authors should reach for the preset form instead."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "sampler",
+  "description": "Sampler aliases. Per-cell pipeline primitives — distinct from motion (Slot A) and route modifiers (Slot B). { sampler: '<name>', ... } in effects[] maps to a graph node with effect: 'sampler.<canonical>'. Slot-C dynamics (e.g., gravity-as-sampler) live here; same word in lifecycle.route is handled by the lifecycle canonicalizer.",
+
+  "aliases": [
+    {
+      "from": "gravity",
+      "canonicalEffect": "sampler.gravity",
+      "paramMapping": {
+        "axis":             { "to": "axis",             "envelope": "literal-enum",   "default": "y" },
+        "acceleration":     { "to": "acceleration",     "envelope": "literal-number" },
+        "terminalVelocity": { "to": "terminalVelocity", "envelope": "literal-number" },
+        "phase":            { "to": "activePhases",     "envelope": "phases-list" },
+        "scope":            { "to": "scope",            "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "ripple",
+      "canonicalEffect": "sampler.ripple",
+      "paramMapping": {
+        "frequency": { "to": "frequency", "envelope": "literal-number" },
+        "amplitude": { "to": "amplitude", "envelope": "literal-number" },
+        "speed":     { "to": "speed",     "envelope": "literal-number" },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "sine_wave",
+      "canonicalEffect": "sampler.sine_wave",
+      "paramMapping": {
+        "frequency": { "to": "frequency", "envelope": "literal-number" },
+        "amplitude": { "to": "amplitude", "envelope": "literal-number" },
+        "axis":      { "to": "axis",      "envelope": "literal-enum",   "default": "x" },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "radial_twist",
+      "canonicalEffect": "sampler.radial_twist",
+      "paramMapping": {
+        "center":   { "to": "center",   "envelope": "passthrough" },
+        "strength": { "to": "strength", "envelope": "literal-number" },
+        "falloff":  { "to": "falloff",  "envelope": "literal-number" },
+        "phase":    { "to": "activePhases", "envelope": "phases-list" },
+        "scope":    { "to": "scope",        "envelope": "scope-spec" }
+      }
+    }
+  ]
+}

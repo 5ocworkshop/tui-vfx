@@ -1,0 +1,155 @@
+{
+  "$schema": "../meta/expansion-table.schema.json",
+  "version": "0.1",
+  "axis": "transition",
+  "description": "Preset expansions for the transitions block. Each preset compiles to one or more canonical tracks plus a TransitionIntent::Preset wrapper. The five schema-faith presets (crossfade, push, morph, stippled, braille) depend on the canonical track kinds landing in tui-vfx-contract; the canonicalizer will refuse them with a 'pending contract primitive' message until that lands.",
+
+  "presets": [
+
+    {
+      "preset": "fade",
+      "kind": "transition",
+      "params": [
+        { "name": "duration", "type": "duration", "default": "300ms" },
+        { "name": "easing",   "type": "enum", "values": ["linear", "quadIn", "quadOut", "quadInOut", "cubicIn", "cubicOut", "cubicInOut"], "default": "quadInOut" }
+      ],
+      "tracks": [
+        { "kind": "opacity.fade", "from": 0.0, "to": 1.0 }
+      ]
+    },
+
+    {
+      "preset": "iris",
+      "kind": "transition",
+      "params": [
+        { "name": "shape",    "type": "enum", "values": ["circle", "diamond", "square"], "default": "circle" },
+        { "name": "softEdge", "type": "boolean", "default": false },
+        { "name": "duration", "type": "duration", "default": "500ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.iris" }
+      ],
+      "notes": "Shape and softEdge feed visibility.iris via shape={{shape}}, softEdge={{softEdge}}; canonicalizer wires those into the track param block."
+    },
+
+    {
+      "preset": "wipe",
+      "kind": "transition",
+      "params": [
+        { "name": "direction", "type": "enum", "values": ["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"], "default": "leftToRight" },
+        { "name": "softEdge",  "type": "boolean", "default": false },
+        { "name": "duration",  "type": "duration", "default": "400ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.wipe" }
+      ]
+    },
+
+    {
+      "preset": "dissolve",
+      "kind": "transition",
+      "params": [
+        { "name": "seed",      "type": "integer", "default": 0 },
+        { "name": "chunkSize", "type": "integer", "default": 1 },
+        { "name": "duration",  "type": "duration", "default": "800ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.dissolve" }
+      ]
+    },
+
+    {
+      "preset": "blinds",
+      "kind": "transition",
+      "params": [
+        { "name": "orientation", "type": "enum", "values": ["horizontal", "vertical"], "default": "horizontal" },
+        { "name": "count",       "type": "integer", "default": 4 },
+        { "name": "duration",    "type": "duration", "default": "600ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.blinds" }
+      ]
+    },
+
+    {
+      "preset": "stippled",
+      "kind": "transition",
+      "params": [
+        { "name": "pattern",  "type": "enum", "values": ["ordered", "bayer", "blueNoise"], "default": "ordered" },
+        { "name": "density",  "type": "number",   "default": 0.5 },
+        { "name": "seed",     "type": "integer",  "default": 0 },
+        { "name": "duration", "type": "duration", "default": "500ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.stippled" }
+      ],
+      "notes": "Schema-faith demonstrator. Awaits visibility.stippled track kind in tui-vfx-contract."
+    },
+
+    {
+      "preset": "braille",
+      "kind": "transition",
+      "params": [
+        { "name": "subcellOrder", "type": "enum", "values": ["raster", "morton", "spiral"], "default": "raster" },
+        { "name": "seed",         "type": "integer",  "default": 0 },
+        { "name": "duration",     "type": "duration", "default": "600ms" }
+      ],
+      "tracks": [
+        { "kind": "visibility.braille" }
+      ],
+      "notes": "Schema-faith demonstrator. Awaits visibility.braille track kind in tui-vfx-contract."
+    },
+
+    {
+      "preset": "crossfade",
+      "kind": "transition",
+      "params": [
+        { "name": "duration", "type": "duration", "default": "300ms" },
+        { "name": "easing",   "type": "enum", "values": ["linear", "quadOut", "cubicInOut"], "default": "linear" }
+      ],
+      "tracks": [
+        { "kind": "relation.crossfade", "from": "from", "to": "to" }
+      ],
+      "subjects": {
+        "from": { "kind": "previous" },
+        "to":   { "kind": "current"  }
+      },
+      "notes": "Schema-faith demonstrator. Two-subject relation transition; subjects default to previous/current scene per Q16."
+    },
+
+    {
+      "preset": "push",
+      "kind": "transition",
+      "params": [
+        { "name": "direction", "type": "enum", "values": ["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"], "default": "leftToRight" },
+        { "name": "duration",  "type": "duration", "default": "400ms" },
+        { "name": "easing",    "type": "enum", "values": ["linear", "quadOut", "cubicInOut"], "default": "quadOut" }
+      ],
+      "tracks": [
+        { "kind": "relation.push", "from": "from", "to": "to" }
+      ],
+      "subjects": {
+        "from": { "kind": "previous" },
+        "to":   { "kind": "current"  }
+      }
+    },
+
+    {
+      "preset": "morph",
+      "kind": "transition",
+      "params": [
+        { "name": "match",    "type": "enum", "values": ["glyph", "block", "outline"], "default": "glyph" },
+        { "name": "duration", "type": "duration", "default": "600ms" },
+        { "name": "easing",   "type": "enum", "values": ["linear", "cubicInOut"], "default": "cubicInOut" }
+      ],
+      "tracks": [
+        { "kind": "relation.morph", "from": "from", "to": "to" }
+      ],
+      "subjects": {
+        "from": { "kind": "previous" },
+        "to":   { "kind": "current"  }
+      }
+    }
+
+  ]
+}

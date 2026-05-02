@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tui-vfx.dev/schemas/v3.1/authoring/meta/alias-table.schema.json",
+  "title": "Authoring Alias Table",
+  "description": "Maps author-side spellings to canonical V3.1 effect identifiers and parameter envelopes. One alias-table file per axis (transition, filter, shader, sampler, mask, style). The canonicalize function consults this table when it encounters {<axis>: \"<from>\", ...} in the shorthand input. Adding rows here is a versionless change — it does not bump the V3.1 contract.",
+  "type": "object",
+  "required": ["version", "axis", "aliases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema reference for editor tooling. Optional.",
+      "type": "string"
+    },
+    "version": {
+      "description": "Alias-table format version. Bumps independently of the canonical schema.",
+      "const": "0.1"
+    },
+    "axis": {
+      "description": "Which authoring axis this table covers. The canonicalizer keys off this when routing shorthand.",
+      "type": "string",
+      "enum": ["transition", "filter", "shader", "sampler", "mask", "style"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "aliases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/aliasEntry" }
+    }
+  },
+  "$defs": {
+    "aliasEntry": {
+      "type": "object",
+      "required": ["from", "canonicalEffect"],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "description": "Author-side spelling. lowerCamelCase is canonical; the canonicalizer also accepts snake_case via case-insensitive lookup. Names must be unique within a table.",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*$"
+        },
+        "canonicalEffect": {
+          "description": "Canonical effect identifier as it appears in graph node 'effect' field (e.g., 'filter.dim', 'shader.focused_row_gradient', 'mask.iris').",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*\\.[a-z][a-zA-Z0-9_]*$"
+        },
+        "paramMapping": {
+          "description": "Maps author-side parameter names to canonical input field names with envelope hints. Parameters not listed here pass through with the same name and type-inferred envelope (see common/canonicalization-rules.json).",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/paramMapping" }
+        },
+        "defaultParams": {
+          "description": "Canonical-side input fields that always apply unless explicitly set on the author side. Values are pre-canonicalized (already in tagged-envelope form).",
+          "type": "object"
+        },
+        "scopeRules": {
+          "description": "Per-effect overrides for how author-side scope shorthand canonicalizes. Most aliases inherit the universal scope canonicalization from common/canonicalization-rules.json.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "description": "Canonical scope to use when the author omits 'scope' entirely.",
+              "type": "object"
+            }
+          }
+        },
+        "deprecated": {
+          "description": "Free-text note when this alias is being phased out. Canonicalize-time warnings reference this.",
+          "type": "string"
+        },
+        "since": {
+          "description": "Free-text note when this alias was added (for changelog / docs).",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "paramMapping": {
+      "type": "object",
+      "required": ["to"],
+      "additionalProperties": false,
+      "properties": {
+        "to": {
+          "description": "Canonical-side input field name.",
+          "type": "string"
+        },
+        "envelope": {
+          "description": "How the author-side value lifts into a canonical ValueSource. 'literal-*' wraps a bare scalar. 'value-source' accepts any of: bare scalar (lifts), $bind:<id> string (becomes Signal), or pre-formed ValueSource object. 'phases-list' accepts a single phase string or array. 'scope-spec' accepts shorthand scope shapes. 'asset-ref' accepts $asset:<id>. 'passthrough' copies the value unchanged (use sparingly).",
+          "type": "string",
+          "enum": [
+            "literal-integer",
+            "literal-number",
+            "literal-text",
+            "literal-color",
+            "literal-enum",
+            "literal-duration",
+            "literal-boolean",
+            "scope-spec",
+            "phases-list",
+            "value-source",
+            "asset-ref",
+            "passthrough"
+          ]
+        },
+        "default": {
+          "description": "Canonical-side default if neither author param nor defaultParams provides a value. Pre-canonicalized."
+        }
+      }
+    }
+  }
+}

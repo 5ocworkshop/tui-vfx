@@ -1,0 +1,103 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "filter",
+  "description": "Filter aliases. Author-side { filter: '<name>', ... } in an effects[] entry maps to a graph node with effect: 'filter.<canonical>'. Params not listed under paramMapping pass through with the same name and type-inferred envelope. Seed entries; expand with full corpus coverage as the canonicalize function lands.",
+
+  "aliases": [
+    {
+      "from": "dim",
+      "canonicalEffect": "filter.dim",
+      "paramMapping": {
+        "factor": { "to": "factor",       "envelope": "literal-number", "default": 0.5 },
+        "phase":  { "to": "activePhases", "envelope": "phases-list" },
+        "scope":  { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "applyTo is intentionally absent from paramMapping. filter.dim does not declare applyTo as a descriptor input, so author-side applyTo falls through to the writeChannels lift rule in common/canonicalization-rules.json (nodeFieldLifts)."
+    },
+    {
+      "from": "invert",
+      "canonicalEffect": "filter.invert",
+      "paramMapping": {
+        "phase": { "to": "activePhases", "envelope": "phases-list" },
+        "scope": { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "greyscale",
+      "canonicalEffect": "filter.greyscale",
+      "paramMapping": {
+        "strength": { "to": "strength",     "envelope": "literal-number", "default": 1.0 },
+        "phase":    { "to": "activePhases", "envelope": "phases-list" },
+        "scope":    { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "applyTo intentionally absent — falls through to writeChannels lift (see filter.dim notes)."
+    },
+    {
+      "from": "crt",
+      "canonicalEffect": "filter.crt",
+      "paramMapping": {
+        "scanlineStrength": { "to": "scanlineStrength", "envelope": "literal-number", "default": 0.4 },
+        "glow":             { "to": "glow",             "envelope": "literal-number", "default": 0.5 },
+        "phase":            { "to": "activePhases",     "envelope": "phases-list" },
+        "scope":            { "to": "scope",            "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "vignette",
+      "canonicalEffect": "filter.vignette",
+      "paramMapping": {
+        "strength": { "to": "strength", "envelope": "literal-number", "default": 0.5 },
+        "radius":   { "to": "radius",   "envelope": "literal-number", "default": 0.6 },
+        "phase":    { "to": "activePhases", "envelope": "phases-list" },
+        "scope":    { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "pattern_fill",
+      "canonicalEffect": "filter.pattern_fill",
+      "paramMapping": {
+        "pattern":   { "to": "pattern",   "envelope": "passthrough" },
+        "color":     { "to": "color",     "envelope": "literal-color" },
+        "onlyEmpty": { "to": "onlyEmpty", "envelope": "literal-boolean", "default": false },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "bracket_emphasis",
+      "canonicalEffect": "filter.bracket_emphasis",
+      "paramMapping": {
+        "left":     { "to": "left",     "envelope": "literal-text" },
+        "right":    { "to": "right",    "envelope": "literal-text" },
+        "color":    { "to": "color",    "envelope": "literal-color" },
+        "bgColor":  { "to": "bgColor",  "envelope": "literal-color" },
+        "progress": { "to": "progress", "envelope": "value-source", "default": 1.0 },
+        "phase":    { "to": "activePhases", "envelope": "phases-list" },
+        "scope":    { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "rigid_shake",
+      "canonicalEffect": "filter.rigid_shake",
+      "paramMapping": {
+        "amplitude": { "to": "amplitude", "envelope": "literal-number" },
+        "frequency": { "to": "frequency", "envelope": "literal-number" },
+        "axis":      { "to": "axis",      "envelope": "literal-enum",   "default": "both" },
+        "seed":      { "to": "seed",      "envelope": "literal-integer", "default": 0 },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "glyph_timeline",
+      "canonicalEffect": "filter.glyph_timeline",
+      "paramMapping": {
+        "trigger": { "to": "trigger", "envelope": "passthrough", "default": { "kind": "immediate" } },
+        "phase":   { "to": "activePhases", "envelope": "phases-list" },
+        "scope":   { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "Trigger is a polymorphic { kind: ... } discriminator with four variants (immediate, phase_offset, wavefront, poisson_burst). Passthrough — the author writes the canonical shape directly per the discriminator (Q9 / DECISIONS.md)."
+    }
+  ]
+}

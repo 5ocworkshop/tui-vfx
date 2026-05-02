@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tui-vfx.dev/schemas/v3.1/authoring/meta/canonicalization-rules.schema.json",
+  "title": "Universal Canonicalization Rules",
+  "description": "Lookup tables for transformations the canonicalize function applies across every axis: named-color resolution, phase aliases, scope shape map, and the value-envelope lifting catalog. Structural rules (parsing $bind:<id> strings, deep-merging extends chains) live in canonicalize code; this file holds the data those rules consult.",
+  "type": "object",
+  "required": ["version", "namedColors", "phases", "scopeShapeMap", "envelopes"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema reference for editor tooling. Optional.",
+      "type": "string"
+    },
+    "version": { "const": "0.1" },
+    "namedColors": {
+      "description": "Author-side color names mapped to canonical RGB tuples. Locked at the level of approval — additions are versionless table edits but must round-trip through corpus tests.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 4,
+        "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
+    "phases": {
+      "description": "Author-side phase aliases. 'all' is the only one that expands to a multi-element array; the rest are pass-through.",
+      "type": "object",
+      "required": ["all", "single"],
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "description": "Expansion of the 'all' shorthand.",
+          "type": "array",
+          "items": { "type": "string", "enum": ["enter", "dwell", "exit"] }
+        },
+        "single": {
+          "description": "Single-string phase forms accepted by the canonicalizer (string lifts to single-element array).",
+          "type": "array",
+          "items": { "type": "string", "enum": ["enter", "dwell", "exit"] }
+        }
+      }
+    },
+    "scopeShapeMap": {
+      "description": "Author-side scope shorthand shapes mapped to canonical ScopeSpec variants. Each entry documents the wire form, not a transformation rule directly — the canonicalizer pattern-matches on author shape and emits the canonical form.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["authorShape", "canonicalKind"],
+        "additionalProperties": false,
+        "properties": {
+          "authorShape": {
+            "description": "JSON shape the author writes (illustrative, not strict).",
+            "type": "string"
+          },
+          "canonicalKind": {
+            "description": "Resulting ScopeSpec discriminator value.",
+            "type": "string"
+          },
+          "notes": { "type": "string" },
+          "blockedOn": {
+            "description": "If the canonical destination depends on a pending schema gap, name it here. Canonicalizer treats blocked entries as parse errors with a clear message until the gap lands.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nodeFieldLifts": {
+      "description": "Structural lifts that move information OUT of an author-facing position into a sibling NodeSpec field. Example: '{ scope: { channel: \"foreground\" } }' lifts the channel out of scope and into the NodeSpec.writeChannels array. Documented here so the docs generator and canonicalize function agree on the surface; the structural transformation itself lives in canonicalize code.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["authorShape", "canonicalField"],
+        "additionalProperties": false,
+        "properties": {
+          "authorShape":    { "type": "string" },
+          "canonicalField": {
+            "description": "Canonical NodeSpec field the value lifts to (e.g., 'writeChannels').",
+            "type": "string"
+          },
+          "valueRule": {
+            "description": "How the author-side value translates to the canonical-side value.",
+            "type": "string"
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "shadowFieldRenames": {
+      "description": "Shadow-block author-side names mapped to canonical ShadowSpec field names + value renames. The shadow block is a non-trivial sub-tree; documenting renames separately keeps the alias tables clean.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["authorField", "canonicalField"],
+        "additionalProperties": false,
+        "properties": {
+          "authorField":    { "type": "string" },
+          "canonicalField": { "type": "string" },
+          "valueRenames": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "envelopes": {
+      "description": "The value-envelope-lifting catalog. Each entry names an author-side scalar shape and the canonical { kind, value } envelope it lifts into. Drives both the canonicalize function's type inference and the docs generator.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["authorForm", "canonicalKind"],
+        "additionalProperties": false,
+        "properties": {
+          "authorForm": { "type": "string" },
+          "canonicalKind": {
+            "type": "string",
+            "enum": ["integer", "number", "boolean", "text", "color", "duration", "enum"]
+          },
+          "examples": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "durationStringForms": {
+      "description": "Accepted duration string suffixes for canonicalization to milliseconds envelope.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["suffix", "unit"],
+        "additionalProperties": false,
+        "properties": {
+          "suffix": { "type": "string" },
+          "unit":   { "type": "string", "enum": ["milliseconds", "seconds", "minutes"] },
+          "example": { "type": "string" }
+        }
+      }
+    },
+    "sigils": {
+      "description": "String-form sigils the canonicalizer recognizes in input positions. Documented here so docs and validators agree on the surface.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sigil", "expansion"],
+        "additionalProperties": false,
+        "properties": {
+          "sigil":     { "type": "string" },
+          "expansion": { "type": "string" },
+          "notes":     { "type": "string" }
+        }
+      }
+    }
+  }
+}

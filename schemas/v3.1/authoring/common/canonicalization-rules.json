@@ -1,0 +1,161 @@
+{
+  "$schema": "../meta/canonicalization-rules.schema.json",
+  "version": "0.1",
+
+  "namedColors": {
+    "black":         [0,   0,   0],
+    "red":           [205, 49,  49],
+    "green":         [13,  188, 121],
+    "yellow":        [229, 229, 16],
+    "blue":          [36,  114, 200],
+    "magenta":       [188, 63,  188],
+    "cyan":          [17,  168, 205],
+    "white":         [229, 229, 229],
+
+    "light_black":   [102, 102, 102],
+    "light_red":     [241, 76,  76],
+    "light_green":   [35,  209, 139],
+    "light_yellow":  [245, 245, 67],
+    "light_blue":    [59,  142, 234],
+    "light_magenta": [214, 112, 214],
+    "light_cyan":    [41,  184, 219],
+    "light_white":   [229, 229, 229],
+
+    "light_gray":    [192, 192, 192],
+    "dark_gray":     [80,  80,  80],
+    "transparent":   [0,   0,   0,  0],
+    "reset":         [255, 255, 255]
+  },
+
+  "phases": {
+    "all":    ["enter", "dwell", "exit"],
+    "single": ["enter", "dwell", "exit"]
+  },
+
+  "scopeShapeMap": [
+    {
+      "authorShape": "{ \"role\": \"<RoleTag>\" }",
+      "canonicalKind": "role"
+    },
+    {
+      "authorShape": "{ \"content\": \"text\" | \"empty\" | \"any\" }",
+      "canonicalKind": "content",
+      "notes": "Direct passthrough; ScopeSpec::Content already exists. Watch the names if the canonical surface uses different discriminators."
+    },
+    {
+      "authorShape": "{ \"rect\": [x, y, w, h] }",
+      "canonicalKind": "rect",
+      "notes": "Tuple shorthand lifts to canonical Rect struct."
+    },
+    {
+      "authorShape": "{ \"cell\": [x, y] }",
+      "canonicalKind": "cell"
+    },
+    {
+      "authorShape": "{ \"rowRange\": [start, end] }",
+      "canonicalKind": "rowRange"
+    },
+    {
+      "authorShape": "{ \"columnRange\": [start, end] }",
+      "canonicalKind": "columnRange"
+    },
+    {
+      "authorShape": "{ \"rows\": [i, j, ...] }",
+      "canonicalKind": "rows",
+      "notes": "Non-contiguous row index set. Canonical: { kind: 'rows', indices: [...] }. Indices must be non-empty and unique (enforced by the contract schema)."
+    },
+    {
+      "authorShape": "{ \"columns\": [i, j, ...] }",
+      "canonicalKind": "columns",
+      "notes": "Non-contiguous column index set. Canonical: { kind: 'columns', indices: [...] }. Indices must be non-empty and unique."
+    },
+    {
+      "authorShape": "{ \"moduloRows\": { \"modulus\": M, \"remainder\": R } }",
+      "canonicalKind": "moduloRows"
+    },
+    {
+      "authorShape": "{ \"moduloColumns\": { \"modulus\": M, \"remainder\": R } }",
+      "canonicalKind": "moduloColumns"
+    },
+    {
+      "authorShape": "\"all\"",
+      "canonicalKind": "all",
+      "notes": "String shorthand for the trivial scope; canonicalizes to { kind: 'all' }."
+    },
+    {
+      "authorShape": "\"nonEmpty\" | \"outerBand\" | \"inner\"",
+      "canonicalKind": "(matching variant)",
+      "notes": "String shorthand for the structural scope variants."
+    }
+  ],
+
+  "nodeFieldLifts": [
+    {
+      "authorShape": "{ \"scope\": { \"channel\": \"foreground\" | \"background\" | \"glyph\" | \"modifiers\" | \"modifierAlpha\" | \"role\" } }",
+      "canonicalField": "writeChannels",
+      "valueRule": "Lift the channel value out of scope and emit NodeSpec.writeChannels: ['<channel>']. Remaining scope keys (if any) produce the canonical ScopeSpec; if scope had only the channel key, scope is omitted entirely (defaults to 'all').",
+      "notes": "Channel scoping is a NodeSpec-level write filter (Gap 1, Option B). Plural array because more than one channel can be selected. Empty array means 'no further restriction beyond the descriptor's declared writable channels.'"
+    },
+    {
+      "authorShape": "{ \"scope\": { \"channels\": [\"foreground\", \"background\"] } }",
+      "canonicalField": "writeChannels",
+      "valueRule": "Direct passthrough as the writeChannels array. Use this when the author wants more than one channel restricted.",
+      "notes": "Plural author shape parallels the canonical plural field."
+    },
+    {
+      "authorShape": "{ \"applyTo\": \"foreground\" | \"background\" | \"both\" }",
+      "canonicalField": "writeChannels",
+      "valueRule": "Legacy V2/V3 spelling. 'foreground' → ['foreground'], 'background' → ['background'], 'both' → [] (no restriction; descriptor's declared writable channels apply).",
+      "notes": "Descriptor-aware. The canonicalize function checks the named effect's descriptor: if it declares applyTo as one of its inputs, applyTo binds to that input; otherwise applyTo lifts to NodeSpec.writeChannels. This is why focused_row_gradient (which documents applyTo as a shader input) keeps applyTo as a per-effect input in shader/aliases.json, while dim/greyscale (which don't declare applyTo) let it fall through to this lift rule. Authors writing applyTo on an effect that declares it as an input always get the input binding, never the lift."
+    }
+  ],
+
+  "shadowFieldRenames": [
+    {
+      "authorField": "edgeCrossing",
+      "canonicalField": "edgeCrossingPolicy",
+      "valueRenames": {
+        "default":  "default",
+        "fade":     "fade",
+        "preserve": "preserve"
+      },
+      "notes": "Gap 3 closed. ShadowSpec.edgeCrossingPolicy is optional with three values. The author-side V2/V3 spelling 'edgeCrossing' canonicalizes to the longer field name; values pass through unchanged."
+    }
+  ],
+
+  "envelopes": [
+    { "authorForm": "JSON integer (e.g., 44)",      "canonicalKind": "integer", "examples": ["44", "0", "-3"] },
+    { "authorForm": "JSON number with fractional",  "canonicalKind": "number",  "examples": ["0.3", "8.0"] },
+    { "authorForm": "JSON true/false",              "canonicalKind": "boolean", "examples": ["true", "false"] },
+    { "authorForm": "JSON string (after sigil resolution)", "canonicalKind": "text", "examples": ["\"hello\""] },
+    { "authorForm": "[r, g, b] | [r, g, b, a]",     "canonicalKind": "color",   "examples": ["[255, 200, 50]", "[0, 0, 0, 96]"] },
+    { "authorForm": "\"#RRGGBB\" | \"#RRGGBBAA\"",  "canonicalKind": "color",   "examples": ["\"#ffffff\"", "\"#00000096\""] },
+    { "authorForm": "named color string",           "canonicalKind": "color",   "examples": ["\"white\"", "\"light_cyan\""] },
+    { "authorForm": "duration string",              "canonicalKind": "duration", "examples": ["\"300ms\"", "\"1s\"", "\"2m\""] },
+    { "authorForm": "string from a known enum set", "canonicalKind": "enum",    "examples": ["\"rounded\"", "\"foreground\""] }
+  ],
+
+  "durationStringForms": [
+    { "suffix": "ms", "unit": "milliseconds", "example": "300ms" },
+    { "suffix": "s",  "unit": "seconds",      "example": "1.5s"  },
+    { "suffix": "m",  "unit": "minutes",      "example": "2m"    }
+  ],
+
+  "sigils": [
+    {
+      "sigil": "$bind:<id>",
+      "expansion": "{ kind: 'signal', id: '<id>', fallback: <type-inferred default> }",
+      "notes": "Binding reference. Fallback resolves from the signal's default value at canonicalize time; the canonicalizer fails fast if the signal id is unresolved."
+    },
+    {
+      "sigil": "$bind:<id>?<fallback>",
+      "expansion": "{ kind: 'signal', id: '<id>', fallback: <fallback parsed by sibling envelope> }",
+      "notes": "Inline fallback override for the signal reference."
+    },
+    {
+      "sigil": "$asset:<id>",
+      "expansion": "{ kind: 'asset', id: '<id>' }",
+      "notes": "Asset reference (Q7). Object form { \"$asset\": \"<id>\", \"format\": \"<hint>\" } accepted when an explicit format is needed."
+    }
+  ]
+}

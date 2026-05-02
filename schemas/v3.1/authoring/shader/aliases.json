@@ -1,0 +1,87 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "shader",
+  "description": "Shader aliases. Author-side { shader: '<name>', ... } in an effects[] entry maps to a graph node with effect: 'shader.<canonical>'. Most shader params pass through with the same name; defaultParams covers params with frequently-omitted defaults. Seed entries; expand with full corpus coverage as the canonicalize function lands.",
+
+  "aliases": [
+    {
+      "from": "focused_row_gradient",
+      "canonicalEffect": "shader.focused_row_gradient",
+      "paramMapping": {
+        "selectedRow":     { "to": "selectedRow",     "envelope": "value-source" },
+        "falloffDistance": { "to": "falloffDistance", "envelope": "literal-integer", "default": 16 },
+        "brightColor":     { "to": "brightColor",     "envelope": "literal-color",   "default": [255, 255, 255] },
+        "dimColor":        { "to": "dimColor",        "envelope": "literal-color" },
+        "applyTo":         { "to": "applyTo",         "envelope": "literal-enum",    "default": "both" },
+        "phase":           { "to": "activePhases",    "envelope": "phases-list" },
+        "scope":           { "to": "scope",           "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "pulse",
+      "canonicalEffect": "shader.pulse",
+      "paramMapping": {
+        "frequency":  { "to": "frequency",  "envelope": "literal-number", "default": 1.0 },
+        "color":      { "to": "color",      "envelope": "literal-color" },
+        "pulseColor": { "to": "pulseColor", "envelope": "literal-color" },
+        "phase":      { "to": "activePhases", "envelope": "phases-list" },
+        "scope":      { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "trace_path",
+      "canonicalEffect": "shader.trace_path",
+      "paramMapping": {
+        "color":          { "to": "color",          "envelope": "literal-color" },
+        "speed":          { "to": "speed",          "envelope": "literal-number", "default": 1.0 },
+        "tailLength":     { "to": "tailLength",     "envelope": "literal-integer" },
+        "verticalWeight": { "to": "verticalWeight", "envelope": "literal-number" },
+        "junctionGlow":   { "to": "junctionGlow",   "envelope": "literal-number" },
+        "tailMode":       { "to": "tailMode",       "envelope": "literal-enum",    "default": "segment" },
+        "applyTo":        { "to": "applyTo",        "envelope": "literal-enum",    "default": "background" },
+        "paths":          { "to": "paths",          "envelope": "passthrough" },
+        "phase":          { "to": "activePhases",   "envelope": "phases-list" },
+        "scope":          { "to": "scope",          "envelope": "scope-spec" }
+      },
+      "notes": "Polyline geometry stays private (Q12). The 'paths' field passes through; canonicalizer does not reshape it."
+    },
+    {
+      "from": "border_sweep",
+      "canonicalEffect": "shader.border_sweep",
+      "paramMapping": {
+        "speed":  { "to": "speed",  "envelope": "literal-number", "default": 0.5 },
+        "length": { "to": "length", "envelope": "literal-integer" },
+        "color":  { "to": "color",  "envelope": "literal-color" },
+        "phase":  { "to": "activePhases", "envelope": "phases-list" },
+        "scope":  { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "scopeRules": {
+        "default": { "kind": "role", "value": "border" }
+      }
+    },
+    {
+      "from": "radar",
+      "canonicalEffect": "shader.radar",
+      "paramMapping": {
+        "color":      { "to": "color",      "envelope": "literal-color" },
+        "speed":      { "to": "speed",      "envelope": "literal-number" },
+        "tailLength": { "to": "tailLength", "envelope": "literal-number" },
+        "phase":      { "to": "activePhases", "envelope": "phases-list" },
+        "scope":      { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "wayfinding_node",
+      "canonicalEffect": "shader.wayfinding_node",
+      "paramMapping": {
+        "nodes":        { "to": "nodes",        "envelope": "passthrough" },
+        "currentIndex": { "to": "currentIndex", "envelope": "value-source" },
+        "color":        { "to": "color",        "envelope": "literal-color" },
+        "phase":        { "to": "activePhases", "envelope": "phases-list" },
+        "scope":        { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "Node-set geometry stays private (Q12). Distinct from trace_path's polyline shape."
+    }
+  ]
+}

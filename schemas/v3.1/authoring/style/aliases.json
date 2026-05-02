@@ -1,0 +1,40 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "style",
+  "description": "Style aliases. { style: '<name>', ... } in effects[] maps to a graph node with effect: 'style.<canonical>'. Style is the channel-modifying axis distinct from filter (full-cell), shader (geometric), and sampler (per-cell pipeline).",
+
+  "aliases": [
+    {
+      "from": "color_fade",
+      "canonicalEffect": "style.color_fade",
+      "paramMapping": {
+        "colorSpace": { "to": "colorSpace", "envelope": "literal-enum", "default": "rgb" },
+        "target":     { "to": "target",     "envelope": "literal-color" },
+        "phase":      { "to": "activePhases", "envelope": "phases-list" },
+        "scope":      { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "glitch",
+      "canonicalEffect": "style.glitch",
+      "paramMapping": {
+        "seed":      { "to": "seed",      "envelope": "literal-integer", "default": 0 },
+        "intensity": { "to": "intensity", "envelope": "literal-number",  "default": 0.5 },
+        "phase":     { "to": "activePhases", "envelope": "phases-list" },
+        "scope":     { "to": "scope",        "envelope": "scope-spec" }
+      }
+    },
+    {
+      "from": "glisten_band",
+      "canonicalEffect": "style.glisten_band",
+      "paramMapping": {
+        "color":  { "to": "color",  "envelope": "literal-color" },
+        "speed":  { "to": "speed",  "envelope": "literal-number" },
+        "width":  { "to": "width",  "envelope": "literal-integer" },
+        "phase":  { "to": "activePhases", "envelope": "phases-list" },
+        "scope":  { "to": "scope",        "envelope": "scope-spec" }
+      }
+    }
+  ]
+}

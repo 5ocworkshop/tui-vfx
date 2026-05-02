@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tui-vfx.dev/schemas/v3.1/authoring/meta/expansion-table.schema.json",
+  "title": "Preset Expansion Table",
+  "description": "Maps preset names (e.g., 'iris', 'crossfade', 'push') to the canonical track or graph-node structure they expand into. Used by the canonicalize function when it encounters { preset: \"<name>\", ... } inside a transitions block or effects entry. Adding presets here is a versionless change — it composes existing canonical primitives without contract changes.",
+  "type": "object",
+  "required": ["version", "axis", "presets"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema reference for editor tooling. Optional.",
+      "type": "string"
+    },
+    "version": { "const": "0.1" },
+    "axis": {
+      "type": "string",
+      "enum": ["transition", "filter", "mask", "style"]
+    },
+    "description": { "type": "string" },
+    "presets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/presetEntry" }
+    }
+  },
+  "$defs": {
+    "presetEntry": {
+      "type": "object",
+      "required": ["preset", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "preset": {
+          "description": "Author-side preset name. Becomes TransitionIntent::Preset { preset: '<name>' } in canonical output for kind=transition.",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*$"
+        },
+        "kind": {
+          "description": "transition: expands to canonical tracks plus TransitionSpec wrapping. effect-stack: expands to one or more graph nodes attached at the element pipeline.",
+          "type": "string",
+          "enum": ["transition", "effect-stack"]
+        },
+        "params": {
+          "description": "Author-side params this preset accepts. Type info drives envelope lifting and validation messages.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/paramSpec" }
+        },
+        "tracks": {
+          "description": "Canonical tracks emitted (kind=transition only). Templates may reference author params via {{paramName}} substitution.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/trackTemplate" }
+        },
+        "nodes": {
+          "description": "Canonical graph nodes emitted (kind=effect-stack only).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nodeTemplate" }
+        },
+        "subjects": {
+          "description": "Default TransitionSubjects. May be overridden at the canonical level. kind=transition only.",
+          "type": "object"
+        },
+        "interruption": {
+          "description": "Default interruption policy. kind=transition only.",
+          "type": "string",
+          "enum": ["snapToEndThenStartNext", "interruptible", "queue"]
+        },
+        "deprecated": { "type": "string" },
+        "since":      { "type": "string" },
+        "notes":      { "type": "string" }
+      }
+    },
+    "paramSpec": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["enum", "number", "integer", "boolean", "duration", "color", "text"]
+        },
+        "values": {
+          "description": "Allowed string values when type=enum.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "default": {
+          "description": "Default applied when author omits this param. Author-side form (not pre-canonicalized)."
+        },
+        "appliesTo": {
+          "description": "Names of tracks or nodes that consume this param (cross-references the templates below). Used by docs generators and validation.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "trackTemplate": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Canonical track kind (e.g., 'visibility.fade', 'opacity.fade', 'motion.translate', 'relation.push'). Must match a primitive the V3.1 contract knows.",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*\\.[a-z][a-zA-Z0-9_]*$"
+        },
+        "if": {
+          "description": "Optional gating: only emit this track when an author param matches the predicate. Example: { \"shape\": \"circle\" } emits only when author wrote shape=circle.",
+          "type": "object"
+        }
+      }
+    },
+    "nodeTemplate": {
+      "type": "object",
+      "required": ["effect"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "description": "Optional stable id for the emitted node; canonicalize will deduplicate or auto-suffix as needed.",
+          "type": "string"
+        },
+        "effect": {
+          "description": "Canonical effect identifier (e.g., 'shader.focused_row_gradient').",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9_]*\\.[a-z][a-zA-Z0-9_]*$"
+        },
+        "inputs": { "type": "object" },
+        "scope":  { "type": "object" },
+        "if":     { "type": "object" }
+      }
+    }
+  }
+}
