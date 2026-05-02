@@ -24,12 +24,17 @@ pub mod cls_canonicalization_error;
 pub mod cls_canonicalization_rules;
 pub mod cls_expansion_table;
 pub mod cls_recipe_intent;
+pub mod fnc_apply_alias;
 pub mod fnc_canonicalize_recipe;
 pub mod fnc_default_recipe;
 pub mod fnc_lift_card_to_source;
+pub mod fnc_lift_effects_to_nodes;
+pub mod fnc_lift_value_envelope;
 pub mod fnc_load_tables;
 pub mod fnc_resolve_color;
 pub mod fnc_resolve_duration;
+pub mod fnc_resolve_phases;
+pub mod fnc_resolve_scope;
 
 pub use cls_alias_table::{AliasEntry, AliasTable, ParamMapping};
 pub use cls_canonicalization_error::{

@@ -3,12 +3,10 @@
   "version": "3.1",
   "metadata": {
     "title": "Filter: Dim",
-    "description": "Dim filter at enter+dwell on all cells; foreground-only at exit.",
-    "authors": ["corpus"],
-    "tags": ["filter", "dim", "phase-differentiated"]
+    "description": null
   },
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": { "clockMode": "monotonic", "period": null },
     "phases": [
       { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
       { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
@@ -19,7 +17,7 @@
   "sourceDescriptors": {},
   "sources": {
     "mainCard": {
-      "source": "source.card",
+      "sourceDescriptor": "source.card",
       "inputs": {
         "message": { "kind": "literal", "value": { "kind": "text", "value": "Filter: Dim Effect" } },
         "width": { "kind": "literal", "value": { "kind": "integer", "value": 35 } },
@@ -35,26 +33,25 @@
     "id": "mainGraph",
     "version": "3.1",
     "nodes": {
-      "dimAll": {
-        "id": "dimAll",
+      "dim0": {
+        "id": "dim0",
         "effect": "filter.dim",
         "inputs": {
           "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.3 } }
         },
-        "scope": { "kind": "all" },
         "activePhases": ["enter", "dwell"]
       },
-      "dimFgExit": {
-        "id": "dimFgExit",
+      "dim1": {
+        "id": "dim1",
         "effect": "filter.dim",
         "inputs": {
           "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.5 } }
         },
-        "scope": { "kind": "channel", "value": "foreground" },
-        "activePhases": ["exit"]
+        "activePhases": ["exit"],
+        "writeChannels": ["foreground"]
       }
     },
-    "order": ["dimAll", "dimFgExit"]
+    "order": ["dim0", "dim1"]
   },
   "scenes": [
     {
@@ -67,8 +64,7 @@
           "layer": "primary",
           "zIndex": 0,
           "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
+          "sourceInstance": "mainCard",
           "clipPolicy": "clip",
           "cellWritePolicy": "writeCell",
           "roleWritePolicy": { "kind": "preserveDestination" }
@@ -76,5 +72,11 @@
       ]
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "descriptorPacks": [{ "id": "v3.1.primitive" }],
+  "intent": {
+    "aliasUsages": {
+      "dim0": { "axis": "filter", "from": "dim", "canonicalEffect": "filter.dim" },
+      "dim1": { "axis": "filter", "from": "dim", "canonicalEffect": "filter.dim" }
+    }
+  }
 }
