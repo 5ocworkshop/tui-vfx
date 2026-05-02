@@ -1,99 +1,250 @@
 {
-  "id": "signal-layered-keyframes",
-  "version": "3.1",
-  "metadata": {
-    "title": "Signal: Layered Keyframes Drift (add keyframes spatial_noise)",
-    "description": "Rigid-shake damping driven by add(keyframes, spatial_noise) — hand-authored curve plus noise floor.",
-    "authors": ["corpus"],
-    "tags": ["signal", "keyframes", "add", "spatial_noise"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 1800 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 9000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Pattern 5 - add keyframes noise" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 220, "g": 220, "b": 240, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 20, "g": 20, "b": 30, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
+    "nodes": {
+      "rigid_shake0": {
+        "activePhases": [
+          "dwell"
+        ],
+        "effect": "filter.rigid_shake",
+        "id": "rigid_shake0",
+        "inputs": {
+          "dampingScale": {
+            "fallback": null,
+            "id": "demoDrift",
+            "kind": "signal"
+          },
+          "numShakes": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 4
+            }
+          },
+          "pauseDuration": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.52
+            }
+          },
+          "shakePeriod": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.29
+            }
+          }
+        },
+        "outputs": {}
+      }
+    },
+    "order": [
+      "rigid_shake0"
+    ],
     "signals": {
       "demoDrift": {
+        "description": null,
+        "displayName": null,
         "id": "demoDrift",
-        "displayName": "Demo drift",
-        "description": "Damping multiplier driven by hand-authored curve plus noise floor.",
-        "value": {
-          "kind": "number",
-          "default": { "kind": "number", "value": 1.0 },
-          "range": null,
-          "allowedValues": [],
-          "unit": null,
-          "semantic": "damping"
-        },
         "previewLoopback": {
-          "kind": "numericSignal",
           "expression": {
-            "type": "add",
-            "a": { "type": "keyframes", "keyframes": [[0.0, 0.3], [0.4, 1.2], [0.7, 0.6], [1.0, 0.9]] },
-            "b": { "type": "spatial_noise", "seed": 42, "frequency": 1.0, "amplitude": 0.05 }
+            "a": {
+              "points": [
+                [
+                  0.0,
+                  0.3
+                ],
+                [
+                  0.4,
+                  1.2
+                ],
+                [
+                  0.7,
+                  0.6
+                ],
+                [
+                  1.0,
+                  0.9
+                ]
+              ],
+              "type": "keyframes"
+            },
+            "b": {
+              "amplitude": 0.05,
+              "frequency": 1.0,
+              "seed": 42.0,
+              "type": "spatial_noise"
+            },
+            "type": "add"
           },
-          "fallback": { "kind": "number", "value": 1.0 }
+          "fallback": null,
+          "kind": "signalExpression"
         },
-        "required": false
+        "required": false,
+        "value": {
+          "default": null,
+          "kind": "number",
+          "range": null,
+          "semantic": null,
+          "unit": null
+        }
       }
     },
-    "nodes": {
-      "shake": {
-        "id": "shake",
-        "effect": "filter.rigid_shake",
-        "inputs": {
-          "shakePeriod": { "kind": "literal", "value": { "kind": "number", "value": 0.29 } },
-          "numShakes": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
-          "pauseDuration": { "kind": "literal", "value": { "kind": "number", "value": 0.52 } },
-          "dampingScale": { "kind": "signal", "id": "demoDrift", "fallback": { "kind": "number", "value": 1.0 } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["dwell"]
+    "version": "3.1"
+  },
+  "id": "signal-layered-keyframes",
+  "intent": {
+    "aliasUsages": {
+      "rigid_shake0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.rigid_shake",
+        "from": "rigid_shake"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 1.8
       }
     },
-    "order": ["shake"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Signal: Layered Keyframes Drift"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 40,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 40
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 30,
+              "g": 20,
+              "r": 20
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 240,
+              "g": 220,
+              "r": 220
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Pattern 5 - add keyframes noise"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 40
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

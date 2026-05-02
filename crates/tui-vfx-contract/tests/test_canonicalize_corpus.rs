@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/tests/test_canonicalize_corpus.rs</FILE> - <DESC>Mass corpus harness over schemas/v3.1/authoring/corpus pairs</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 3 of canonicalize: iterate every corpus shorthand/canonical pair and report canonicalize and round-trip status.</WCTX>
-// <CLOG>0.1.0: INIT — driver harness; reports per-pair canonicalize success vs round-trip mismatch with full diffs at failure.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Add UPDATE_CORPUS=1 regen mode mirroring UPDATE_SCHEMAS=1 — write canonicalize output back to disk for pairs that drift.</WCTX>
+// <CLOG>0.2.0: MINOR — add UPDATE_CORPUS=1 mode that regenerates drifted canonical fixtures from canonicalize output.</CLOG>
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -153,9 +153,29 @@ fn corpus_round_trip_summary() {
         let canonical_path = canonical_dir.join(format!("{name}.json"));
         let canonical_str = std::fs::read_to_string(&canonical_path).unwrap_or_default();
 
+        let status = classify(name, &shorthand, &canonical_str, &templates);
+
+        // UPDATE_CORPUS=1 regen mode: when set, drifted/mismatching pairs are
+        // overwritten with pretty-printed canonicalize output so a single
+        // `git diff` review catches every change. Pairs that fail at
+        // canonicalize stay untouched — those are real bugs, not paperwork.
+        if std::env::var_os("UPDATE_CORPUS").is_some()
+            && matches!(
+                status,
+                PairStatus::CanonicalizeOkCanonicalDrifted | PairStatus::Mismatch
+            )
+            && let Ok(canonicalized) =
+                canonicalize_recipe_with_templates(shorthand.clone(), &templates)
+            && let Ok(value) = serde_json::to_value(&canonicalized)
+            && let Ok(pretty) = serde_json::to_string_pretty(&value)
+        {
+            std::fs::write(&canonical_path, format!("{pretty}\n"))
+                .unwrap_or_else(|e| panic!("UPDATE_CORPUS write failed for {name}: {e}"));
+        }
+
         results.push(PairResult {
             name: name.into(),
-            status: classify(name, &shorthand, &canonical_str, &templates),
+            status,
         });
     }
 

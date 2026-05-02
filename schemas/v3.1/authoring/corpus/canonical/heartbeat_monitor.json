@@ -1,89 +1,262 @@
 {
-  "id": "heartbeat-monitor",
-  "version": "3.1",
-  "metadata": {
-    "title": "Heartbeat Monitor",
-    "description": "Pulse shader on enter, glitch style effect on exit; CRT scanlines throughout.",
-    "authors": ["corpus"],
-    "tags": ["pulse", "glitch", "crt"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1200 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 7000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 850 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Service healthy\nuptime 99.98%" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 38 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "plain" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "pulseEnter": {
-        "id": "pulseEnter",
-        "effect": "shader.pulse",
-        "inputs": {
-          "frequency": { "kind": "literal", "value": { "kind": "number", "value": 2.8 } },
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
-      },
-      "crtFilter": {
-        "id": "crtFilter",
+      "crt0": {
+        "activePhases": [],
         "effect": "filter.crt",
+        "id": "crt0",
         "inputs": {
-          "scanlineStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.45 } },
-          "glow": { "kind": "literal", "value": { "kind": "number", "value": 0.5 } }
+          "glow": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.5
+            }
+          },
+          "scanlineStrength": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.45
+            }
+          }
         },
-        "scope": { "kind": "all" }
+        "outputs": {}
       },
-      "glitchExit": {
-        "id": "glitchExit",
+      "glitch0": {
+        "activePhases": [
+          "exit"
+        ],
         "effect": "style.glitch",
+        "id": "glitch0",
         "inputs": {
-          "seed": { "kind": "literal", "value": { "kind": "integer", "value": 88 } },
-          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.6 } }
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.6
+            }
+          },
+          "seed": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 88
+            }
+          }
         },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
+        "outputs": {}
+      },
+      "pulse0": {
+        "activePhases": [
+          "enter"
+        ],
+        "effect": "shader.pulse",
+        "id": "pulse0",
+        "inputs": {
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 229,
+                "g": 229,
+                "r": 229
+              }
+            }
+          },
+          "frequency": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 2.8
+            }
+          }
+        },
+        "outputs": {}
       }
     },
-    "order": ["pulseEnter", "crtFilter", "glitchExit"]
+    "order": [
+      "pulse0",
+      "crt0",
+      "glitch0"
+    ],
+    "version": "3.1"
+  },
+  "id": "heartbeat-monitor",
+  "intent": {
+    "aliasUsages": {
+      "crt0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.crt",
+        "from": "crt"
+      },
+      "glitch0": {
+        "axis": "style",
+        "canonicalEffect": "style.glitch",
+        "from": "glitch"
+      },
+      "pulse0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.pulse",
+        "from": "pulse"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Heartbeat Monitor"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 38,
-      "height": 4,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "placementRule": {
+            "anchor": "topCenter",
+            "kind": "anchor",
+            "offsetColumns": 0,
+            "offsetRows": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 4,
+      "id": "mainScene",
+      "width": 38
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 0,
+              "g": 0,
+              "r": 0
+            }
+          }
+        },
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "plain"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 219,
+              "g": 184,
+              "r": 41
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 4
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Service healthy\nuptime 99.98%"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 38
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

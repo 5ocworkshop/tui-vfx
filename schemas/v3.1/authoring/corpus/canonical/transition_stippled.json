@@ -1,78 +1,173 @@
 {
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
+  },
   "id": "transition-stippled",
-  "version": "3.1",
-  "metadata": {
-    "title": "Transition: Stippled (visibility.* — schema-faith demonstrator)",
-    "description": "Forward-looking: visibility.stippled reveals via stipple pattern. Single-subject (same shape as iris/dissolve/blinds).",
-    "authors": ["corpus"],
-    "tags": ["transition", "stippled", "visibility", "schema-faith"]
+  "intent": {
+    "presetUsages": {
+      "enterStippled": {
+        "consumedParams": [
+          "pattern",
+          "density",
+          "seed",
+          "duration"
+        ],
+        "preset": "stippled"
+      }
+    }
   },
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
     "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } }
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
     ]
   },
-  "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Stippled reveal — visibility.stippled" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
-    }
-  },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "transitions": {
-    "enterStippled": {
-      "id": "enterStippled",
-      "intent": { "kind": "preset", "preset": "stippled" },
-      "subjects": {
-        "to": { "kind": "scene", "id": "mainScene" }
-      },
-      "timing": {
-        "duration": { "kind": "milliseconds", "value": 500 },
-        "easing": { "kind": "named", "value": "linear" }
-      },
-      "activePhases": ["enter"],
-      "tracks": [
-        {
-          "kind": "visibility.stippled",
-          "subject": "to",
-          "pattern": "ordered",
-          "density": 0.5,
-          "seed": 42
-        }
-      ],
-      "interruption": "snapToEnd",
-      "reducedMotion": { "policy": "instant" }
-    }
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Transition: Stippled"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 40,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 40
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Stippled reveal — visibility.stippled"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 40
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterStippled": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterStippled",
+      "intent": {
+        "kind": "preset",
+        "preset": "stippled"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "milliseconds",
+          "value": 500
+        }
+      },
+      "tracks": [
+        {
+          "kind": "visibility.stippled",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

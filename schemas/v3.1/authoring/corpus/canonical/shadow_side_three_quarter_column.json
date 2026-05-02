@@ -1,72 +1,148 @@
 {
-  "id": "shadow-side-three-quarter-column",
-  "version": "3.1",
-  "metadata": {
-    "title": "Shadow: Three-quarter side column",
-    "description": "Sub-cell foreground block side shadow plus full-cell bottom band.",
-    "authors": ["corpus"],
-    "tags": ["shadow", "subcell", "optical-tuning"]
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
   },
+  "id": "shadow-side-three-quarter-column",
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
     "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1600 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 400 } } }
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
     ]
   },
-  "assets": {},
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Shadow: 3/4 Side Column"
+  },
+  "scenes": [
+    {
+      "elements": [
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "mainElement",
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 5,
+      "id": "mainScene",
+      "width": 34
+    }
+  ],
   "sourceDescriptors": {},
   "sources": {
     "mainCard": {
-      "source": "source.card",
+      "assets": {},
       "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "SHADOW: 3/4 Side Column" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 34 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 238, "g": 238, "b": 238, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 34, "g": 46, "b": 60, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 60,
+              "g": 46,
+              "r": 34
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 238,
+              "g": 238,
+              "r": 238
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 5
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "SHADOW: 3/4 Side Column"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 34
+          }
+        }
       },
-      "assets": {}
+      "sourceDescriptor": "source.card"
     }
   },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "scenes": [
-    {
-      "id": "mainScene",
-      "width": 40,
-      "height": 7,
-      "elements": [
-        {
-          "id": "mainElement",
-          "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 3, "y": 1 },
-          "source": "mainCard",
-          "surface": {
-            "shadow": {
-              "color": { "r": 0, "g": 0, "b": 0, "a": 175 },
-              "offsetX": 1,
-              "offsetY": 1,
-              "insetY": 1,
-              "insetYEnd": 1,
-              "falloffX": 2,
-              "falloffY": 1,
-              "sideCoverageEighths": 6,
-              "edges": ["right", "bottom"],
-              "softEdges": true,
-              "sourceRegion": "border",
-              "compositeMode": "glyphOverlay",
-              "style": { "kind": "solid" }
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        }
-      ]
-    }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "version": "3.1"
 }

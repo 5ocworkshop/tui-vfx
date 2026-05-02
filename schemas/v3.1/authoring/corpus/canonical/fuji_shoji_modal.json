@@ -1,102 +1,300 @@
 {
-  "id": "fuji-shoji-modal",
-  "version": "3.1",
-  "metadata": {
-    "title": "Fuji · Shoji (Modal Dialog)",
-    "description": "Combined-mask enter (wipe horizontal_center_out + iris box), single-mask exit (wipe horizontal_edges_in); paper-screen restraint.",
-    "authors": ["corpus"],
-    "tags": ["gt-design", "restrained", "fuji", "combined-mask", "iris-box"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Confirm\n\nSave changes to this workspace?" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 38, "g": 34, "b": 30, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 252, "g": 248, "b": 238, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "plain" } },
-        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Confirm" } },
-        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "center" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "wipeEnter": {
-        "id": "wipeEnter",
-        "effect": "mask.wipe",
-        "inputs": {
-          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "horizontalCenterOut" } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
-      },
-      "irisEnter": {
-        "id": "irisEnter",
-        "effect": "mask.iris",
-        "inputs": {
-          "shape": { "kind": "literal", "value": { "kind": "enum", "value": "box" } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
-      },
-      "wipeExit": {
-        "id": "wipeExit",
-        "effect": "mask.wipe",
-        "inputs": {
-          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "horizontalEdgesIn" } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
-      },
-      "highlighter": {
-        "id": "highlighter",
+      "highlighter0": {
+        "activePhases": [],
         "effect": "shader.highlighter",
+        "id": "highlighter0",
         "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 205, "g": 55, "b": 48, "a": 255 } } }
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 48,
+                "g": 55,
+                "r": 205
+              }
+            }
+          }
         },
-        "scope": { "kind": "all" }
+        "outputs": {}
       }
     },
-    "order": ["wipeEnter", "irisEnter", "wipeExit", "highlighter"]
+    "order": [
+      "highlighter0"
+    ],
+    "version": "3.1"
+  },
+  "id": "fuji-shoji-modal",
+  "intent": {
+    "aliasUsages": {
+      "highlighter0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.highlighter",
+        "from": "highlighter"
+      }
+    },
+    "presetUsages": {
+      "enterCompose": {
+        "consumedParams": [
+          "compose",
+          "tracks",
+          "duration",
+          "easing"
+        ],
+        "preset": "compose(wipe,iris)"
+      },
+      "exitWipe": {
+        "consumedParams": [
+          "direction",
+          "softEdge",
+          "duration",
+          "easing"
+        ],
+        "preset": "wipe"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Fuji · Shoji (Modal)"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 42,
-      "height": 9,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 9,
+      "id": "mainScene",
+      "width": 42
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 238,
+              "g": 248,
+              "r": 252
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "plain"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 30,
+              "g": 34,
+              "r": 38
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 9
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Confirm\n\nSave changes to this workspace?"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 42
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterCompose": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterCompose",
+      "intent": {
+        "alias": "compose",
+        "canonicalPreset": "wipe",
+        "kind": "alias"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "seconds",
+          "value": 1.0
+        },
+        "easing": {
+          "kind": "named",
+          "value": "outSine"
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.wipe",
+          "revealDirection": "horizontalCenterOut",
+          "subject": "to"
+        },
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.iris",
+          "shape": "box",
+          "subject": "to"
+        }
+      ]
+    },
+    "exitWipe": {
+      "activePhases": [
+        "exit"
+      ],
+      "id": "exitWipe",
+      "intent": {
+        "kind": "preset",
+        "preset": "wipe"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "milliseconds",
+          "value": 900
+        },
+        "easing": {
+          "kind": "named",
+          "value": "inOutSine"
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.wipe",
+          "revealDirection": "horizontalEdgesIn",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

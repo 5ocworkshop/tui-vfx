@@ -1,73 +1,194 @@
 {
-  "id": "style-fade-in-from-canvas",
-  "version": "3.1",
-  "metadata": {
-    "title": "Style: Fade In From Canvas",
-    "description": "Canvas-aware fade — content rises from a configured color rather than black.",
-    "authors": ["corpus"],
-    "tags": ["style", "fade-in", "canvas-aware"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Style: Fade In From Canvas\nContent emerges from canvas color" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 48 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 30, "g": 32, "b": 36, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 252, "g": 252, "b": 248, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
-    "nodes": {
-      "fadeIn": {
-        "id": "fadeIn",
-        "effect": "style.fadeIn",
-        "inputs": {
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } },
-          "easing": { "kind": "literal", "value": { "kind": "enum", "value": "quadOut" } },
-          "from": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "color", "color": { "r": 18, "g": 28, "b": 40, "a": 255 } } } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
+    "version": "3.1"
+  },
+  "id": "style-fade-in-from-canvas",
+  "intent": {
+    "presetUsages": {
+      "enterFade": {
+        "consumedParams": [
+          "easing"
+        ],
+        "preset": "fade"
       }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
     },
-    "order": ["fadeIn"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Style: Fade In From Canvas"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 48,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 48
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 248,
+              "g": 252,
+              "r": 252
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 36,
+              "g": 32,
+              "r": 30
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Style: Fade In From Canvas\nContent emerges from canvas color"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 48
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterFade": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterFade",
+      "intent": {
+        "kind": "preset",
+        "preset": "fade"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "easing": {
+          "kind": "named",
+          "value": "outQuad"
+        }
+      },
+      "tracks": [
+        {
+          "kind": "opacity.fade",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

@@ -1,78 +1,169 @@
 {
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
+  },
   "id": "transition-crossfade",
-  "version": "3.1",
-  "metadata": {
-    "title": "Transition: Crossfade (relation.* — schema-faith demonstrator)",
-    "description": "Forward-looking: relation.crossfade canonicalizes a between-surface blend. Two-subject — prior surface fades out as next fades in.",
-    "authors": ["corpus"],
-    "tags": ["transition", "crossfade", "relation", "schema-faith"]
+  "intent": {
+    "presetUsages": {
+      "enterCrossfade": {
+        "consumedParams": [
+          "duration"
+        ],
+        "preset": "crossfade"
+      }
+    }
   },
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
     "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 300 } } }
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
     ]
   },
-  "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Replaced — crossfade demonstrator" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 38 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
-    }
-  },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "transitions": {
-    "enterCrossfade": {
-      "id": "enterCrossfade",
-      "intent": { "kind": "preset", "preset": "crossfade" },
-      "subjects": {
-        "from": { "kind": "previous" },
-        "to": { "kind": "scene", "id": "mainScene" }
-      },
-      "timing": {
-        "duration": { "kind": "milliseconds", "value": 300 },
-        "easing": { "kind": "named", "value": "linear" }
-      },
-      "activePhases": ["enter"],
-      "tracks": [
-        {
-          "kind": "relation.crossfade",
-          "from": "from",
-          "to": "to",
-          "easing": { "kind": "named", "value": "linear" }
-        }
-      ],
-      "interruption": "snapToEnd",
-      "reducedMotion": { "policy": "instant" }
-    }
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Transition: Crossfade"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 38,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 38
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Replaced — crossfade demonstrator"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 38
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterCrossfade": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterCrossfade",
+      "intent": {
+        "kind": "preset",
+        "preset": "crossfade"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "milliseconds",
+          "value": 300
+        }
+      },
+      "tracks": [
+        {
+          "kind": "relation.crossfade"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

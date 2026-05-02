@@ -1,51 +1,165 @@
 {
-  "id": "wargames-shall-we-play",
-  "version": "3.1",
-  "metadata": {
-    "title": "WarGames - Shall We Play",
-    "description": "Child recipe inheriting from themes/wopr_green template; overrides confined to message and lifecycle.",
-    "authors": ["corpus"],
-    "tags": ["wargames", "extends", "template-inheritance"]
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
   },
-  "extends": "themes/wopr_green",
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1500 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } }
+  "id": "wargames-shall-we-play",
+  "intent": {
+    "extendsChain": [
+      {
+        "mergedKeys": [
+          "card"
+        ],
+        "path": "themes/wopr_green"
+      }
     ]
   },
-  "assets": {},
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "seconds",
+            "value": 1.5
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "seconds",
+              "value": 8.0
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "WarGames - Shall We Play"
+  },
+  "scenes": [
+    {
+      "elements": [
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "mainElement",
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 5,
+      "id": "mainScene",
+      "width": 40
+    }
+  ],
   "sourceDescriptors": {},
   "sources": {
     "mainCard": {
-      "source": "source.card",
+      "assets": {},
       "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "SHALL WE PLAY A GAME?" } }
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 0,
+              "g": 0,
+              "r": 0
+            }
+          }
+        },
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "double"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 80,
+              "g": 230,
+              "r": 0
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 5
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "SHALL WE PLAY A GAME?"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 40
+          }
+        }
       },
-      "assets": {}
+      "sourceDescriptor": "source.card"
     }
   },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "scenes": [
-    {
-      "id": "mainScene",
-      "width": 40,
-      "height": 3,
-      "elements": [
-        {
-          "id": "mainElement",
-          "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        }
-      ]
-    }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "version": "3.1"
 }

@@ -1,93 +1,201 @@
 {
-  "id": "coin-get",
-  "version": "3.1",
-  "metadata": {
-    "title": "Coin Get",
-    "description": "Bouncing coin notification with fg-only fade and reflective sheen on text region.",
-    "authors": ["corpus"],
-    "tags": ["transition", "bounce", "region-targeting", "spatial-shader"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1500 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 650 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "+500 GOLD" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 16 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 215, "b": 0, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 0, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "reflect": {
-        "id": "reflect",
+      "reflect0": {
+        "activePhases": [],
         "effect": "shader.reflect",
+        "id": "reflect0",
         "inputs": {
-          "speed": { "kind": "literal", "value": { "kind": "number", "value": 3.0 } },
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } }
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "white"
+            }
+          },
+          "speed": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 3.0
+            }
+          }
         },
-        "scope": { "kind": "content", "value": "text" }
+        "outputs": {},
+        "scope": {
+          "kind": "role",
+          "role": "Text"
+        }
       }
     },
-    "order": ["reflect"]
+    "order": [
+      "reflect0"
+    ],
+    "version": "3.1"
+  },
+  "id": "coin-get",
+  "intent": {
+    "aliasUsages": {
+      "reflect0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.reflect",
+        "from": "reflect"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "seconds",
+            "value": 1.0
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "seconds",
+              "value": 1.5
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 650
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Coin Get"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 16,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
           "placementRule": {
-            "kind": "anchor",
             "anchor": "bottomRight",
-            "offsetRows": 0,
-            "offsetColumns": 0
+            "kind": "anchor",
+            "offsetColumns": 0,
+            "offsetRows": 0
           },
-          "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 1000 },
-              "easing": { "kind": "named", "value": "quadOut" },
-              "route": { "kind": "bounce", "bounces": 4, "decay": 0.5 },
-              "from": { "kind": "offscreen", "direction": "fromTop", "marginCells": 1 },
-              "snap": { "kind": "round" }
-            },
-            "exit": {
-              "duration": { "kind": "milliseconds", "value": 650 },
-              "easing": { "kind": "named", "value": "quadIn" },
-              "route": { "kind": "linear" },
-              "to": { "kind": "offscreen", "direction": "fromBottom", "marginCells": 1 },
-              "snap": { "kind": "round" }
-            }
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
           },
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 16
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 0,
+              "g": 0,
+              "r": 0
+            }
+          }
+        },
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 0,
+              "g": 215,
+              "r": 255
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "+500 GOLD"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 16
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

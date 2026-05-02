@@ -1,116 +1,198 @@
 {
-  "id": "canada-flag",
-  "version": "3.1",
-  "metadata": {
-    "title": "Canadian Flag (Runtime Wave)",
-    "description": "Asset-bound waving Canadian braille flag — same architecture as Madeira but with 160x80 oversampled asset and tuned wave parameters.",
-    "authors": ["corpus"],
-    "tags": ["flag", "canada", "asset-bound", "procedural-source", "wave-binding"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
-    ]
-  },
   "assets": {
     "canadaFlagBase": {
-      "id": "canadaFlagBase",
-      "kind": { "kind": "brailleDotfield" },
+      "description": null,
       "format": "tui-vfx.braille_flag_asset.v1",
+      "id": "canadaFlagBase",
+      "kind": {
+        "kind": "brailleDotfield"
+      },
       "locator": {
         "kind": "path",
         "path": "/usr/projects/tui-vfx-recipes/recipes/canada_flag/assets/canada_flag_dots.json"
-      },
-      "description": "Canadian flag dotfield — red bands plus stylized maple leaf at 160x80 (2x oversampled)."
-    }
-  },
-  "sourceDescriptors": {},
-  "sources": {
-    "flagSource": {
-      "source": "source.procedural",
-      "inputs": {
-        "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 14 } },
-        "params": { "kind": "literal", "value": { "kind": "structured", "value": {
-          "layout": { "width_cells": 40, "flag_height_cells": 10, "overscan_rows": 2 },
-          "wave": {
-            "speed": { "binding": "wave_speed", "default": 1.0 },
-            "primary_cycles": 6.0,
-            "primary_rate": 2.4,
-            "secondary_cycles": 12.0,
-            "secondary_rate": 4.0,
-            "secondary_scale": 0.3,
-            "max_amplitude": 0.18
-          },
-          "asset": { "id": "canadaFlagBase", "format": "tui-vfx.braille_flag_asset.v1" }
-        } } }
-      },
-      "assets": {}
-    }
-  },
-  "graph": {
-    "id": "mainGraph",
-    "version": "3.1",
-    "signals": {
-      "wave_speed": {
-        "id": "wave_speed",
-        "displayName": "Wave speed",
-        "description": "Flag wave speed; host values win over preview loopback.",
-        "value": {
-          "kind": "number",
-          "default": null,
-          "range": { "min": 0.0, "max": 4.0 },
-          "allowedValues": [],
-          "unit": null,
-          "semantic": "waveSpeed"
-        },
-        "previewLoopback": {
-          "kind": "numericSignal",
-          "expression": { "type": "ramp", "start": 0.5, "end": 2.0, "duration": 4.0 },
-          "fallback": { "kind": "number", "value": 1.0 }
-        },
-        "required": false
       }
     }
   },
-  "scenes": [
+  "descriptorPacks": [
     {
-      "id": "mainScene",
-      "width": 40,
-      "height": 14,
-      "elements": [
-        {
-          "id": "canadaFlag",
-          "layer": "flag",
-          "zIndex": 1,
-          "placement": { "x": 0, "y": 0 },
-          "source": "flagSource",
-          "placementRule": {
-            "kind": "anchor",
-            "anchor": "center",
-            "offsetRows": 0,
-            "offsetColumns": 0
-          },
-          "pipeline": {
-            "graph": "mainGraph",
-            "timing": {
-              "enterMs": 667,
-              "exitMs": 500,
-              "enterEase": "quad_out",
-              "exitEase": "quad_in",
-              "enterOffsetMs": 200
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        }
-      ]
+      "id": "v3.1.primitive"
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "graph": {
+    "id": "mainGraph",
+    "signals": {
+      "wave_speed": {
+        "description": null,
+        "displayName": null,
+        "id": "wave_speed",
+        "previewLoopback": {
+          "duration": {
+            "kind": "seconds",
+            "value": 4.0
+          },
+          "end": 2.0,
+          "kind": "numericRamp",
+          "repeat": true,
+          "start": 0.5
+        },
+        "required": false,
+        "value": {
+          "default": null,
+          "kind": "number",
+          "range": {
+            "max": 4.0,
+            "min": 0.0
+          },
+          "semantic": null,
+          "unit": null
+        }
+      }
+    },
+    "version": "3.1"
+  },
+  "id": "canada-flag",
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Canadian Flag (Runtime Wave)"
+  },
+  "scenes": [
+    {
+      "elements": [
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "canadaFlag",
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": "667ms",
+              "easing": "quadOut",
+              "offset": "200ms"
+            },
+            "exit": {
+              "duration": "500ms",
+              "easing": "quadIn"
+            }
+          },
+          "placementRule": {
+            "anchor": "center",
+            "kind": "anchor",
+            "offsetColumns": 0,
+            "offsetRows": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "canadaFlag",
+          "zIndex": 0
+        }
+      ],
+      "height": 14,
+      "id": "mainScene",
+      "width": 40
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "canadaFlag": {
+      "assets": {},
+      "inputs": {
+        "descriptorId": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "braille_flag_field"
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 14
+          }
+        },
+        "params": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "asset": "$asset:canadaFlagBase",
+              "layout": {
+                "flag_height_cells": 10.0,
+                "overscan_rows": 2.0,
+                "width_cells": 40.0
+              },
+              "wave": {
+                "max_amplitude": 0.18,
+                "primary_cycles": 6.0,
+                "primary_rate": 2.4,
+                "secondary_cycles": 12.0,
+                "secondary_rate": 4.0,
+                "secondary_scale": 0.3,
+                "speed": "$bind:wave_speed"
+              }
+            }
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 40
+          }
+        }
+      },
+      "sourceDescriptor": "source.procedural"
+    }
+  },
+  "version": "3.1"
 }

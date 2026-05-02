@@ -1,128 +1,422 @@
 {
-  "id": "alarm-lighthouse",
-  "version": "3.1",
-  "metadata": {
-    "title": "Probe Validation: Alarm Lighthouse",
-    "description": "Radial mask bloom, KITT-scanner forward-wrap dwell filter, glow shader with quadratic falloff, pulse on text.",
-    "authors": ["corpus"],
-    "tags": ["alarm", "kitt_scanner", "glow", "radial-mask", "forward-wrap"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 2400 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1200 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 9000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 900 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "PANIC BEACON // HOLD" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 210, "g": 235, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 14, "g": 18, "b": 34, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "radialEnter": {
-        "id": "radialEnter",
-        "effect": "mask.radial",
-        "inputs": {
-          "origin": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "center" } } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
-      },
-      "kittDwell": {
-        "id": "kittDwell",
-        "effect": "filter.kitt_scanner",
-        "inputs": {
-          "boost": { "kind": "literal", "value": { "kind": "integer", "value": 135 } },
-          "bandWidth": { "kind": "literal", "value": { "kind": "number", "value": 0.28 } },
-          "bps": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
-          "progress": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
-          "motionMode": { "kind": "literal", "value": { "kind": "enum", "value": "forward_wrap" } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["dwell"]
-      },
-      "glowAlways": {
-        "id": "glowAlways",
-        "effect": "shader.glow",
-        "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 108, "b": 72, "a": 255 } } },
-          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-          "falloff": { "kind": "literal", "value": { "kind": "enum", "value": "quadratic" } },
-          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.75 } },
-          "pulseSpeed": { "kind": "literal", "value": { "kind": "number", "value": 0.7 } }
-        },
-        "scope": { "kind": "all" }
-      },
-      "pulseDwell": {
-        "id": "pulseDwell",
-        "effect": "shader.pulse",
-        "inputs": {
-          "frequency": { "kind": "literal", "value": { "kind": "number", "value": 1.2 } },
-          "pulseColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 118, "b": 84, "a": 255 } } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["dwell"]
-      },
-      "dimExit": {
-        "id": "dimExit",
+      "dim0": {
+        "activePhases": [
+          "exit"
+        ],
         "effect": "filter.dim",
+        "id": "dim0",
         "inputs": {
-          "factor": { "kind": "literal", "value": { "kind": "number", "value": 0.35 } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "both" } }
+          "factor": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.35
+            }
+          }
         },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
+        "outputs": {}
       },
-      "radialExit": {
-        "id": "radialExit",
-        "effect": "mask.radial",
+      "glow0": {
+        "activePhases": [],
+        "effect": "shader.glow",
+        "id": "glow0",
         "inputs": {
-          "origin": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "topRight" } } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": false } }
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 72,
+                "g": 108,
+                "r": 255
+              }
+            }
+          },
+          "falloff": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "quadratic"
+            }
+          },
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.75
+            }
+          },
+          "pulseSpeed": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.7
+            }
+          },
+          "radius": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 3
+            }
+          }
         },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
+        "outputs": {}
+      },
+      "kitt_scanner0": {
+        "activePhases": [
+          "dwell"
+        ],
+        "effect": "filter.kitt_scanner",
+        "id": "kitt_scanner0",
+        "inputs": {
+          "bandWidth": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.28
+            }
+          },
+          "boost": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 135
+            }
+          },
+          "bps": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.0
+            }
+          },
+          "motionMode": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "forwardWrap"
+            }
+          },
+          "progress": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.0
+            }
+          }
+        },
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
+      },
+      "pulse0": {
+        "activePhases": [
+          "dwell"
+        ],
+        "effect": "shader.pulse",
+        "id": "pulse0",
+        "inputs": {
+          "frequency": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.2
+            }
+          },
+          "pulseColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 84,
+                "g": 118,
+                "r": 255
+              }
+            }
+          }
+        },
+        "outputs": {}
       }
     },
-    "order": ["radialEnter", "kittDwell", "glowAlways", "pulseDwell", "dimExit", "radialExit"]
+    "order": [
+      "kitt_scanner0",
+      "glow0",
+      "pulse0",
+      "dim0"
+    ],
+    "version": "3.1"
+  },
+  "id": "alarm-lighthouse",
+  "intent": {
+    "aliasUsages": {
+      "dim0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.dim",
+        "from": "dim"
+      },
+      "glow0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.glow",
+        "from": "glow"
+      },
+      "kitt_scanner0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.kitt_scanner",
+        "from": "kitt_scanner"
+      },
+      "pulse0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.pulse",
+        "from": "pulse"
+      }
+    },
+    "presetUsages": {
+      "enterRadial": {
+        "consumedParams": [
+          "softEdge",
+          "duration"
+        ],
+        "preset": "radial"
+      },
+      "exitRadial": {
+        "consumedParams": [
+          "softEdge",
+          "duration"
+        ],
+        "preset": "radial"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 2.4
+      }
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Alarm Lighthouse"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 44,
-      "height": 7,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 7,
+      "id": "mainScene",
+      "width": 44
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 34,
+              "g": 18,
+              "r": 14
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 255,
+              "g": 235,
+              "r": 210
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 7
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "PANIC BEACON // HOLD"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 44
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterRadial": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterRadial",
+      "intent": {
+        "alias": "radial",
+        "canonicalPreset": "iris",
+        "kind": "alias"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "seconds",
+          "value": 1.2
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.iris",
+          "shape": "circle",
+          "subject": "to"
+        }
+      ]
+    },
+    "exitRadial": {
+      "activePhases": [
+        "exit"
+      ],
+      "id": "exitRadial",
+      "intent": {
+        "alias": "radial",
+        "canonicalPreset": "iris",
+        "kind": "alias"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "milliseconds",
+          "value": 900
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "kind": "hard"
+          },
+          "kind": "visibility.iris",
+          "shape": "circle",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

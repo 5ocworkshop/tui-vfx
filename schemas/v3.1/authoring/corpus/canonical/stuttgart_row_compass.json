@@ -1,94 +1,316 @@
 {
-  "id": "stuttgart-row-compass",
-  "version": "3.1",
-  "metadata": {
-    "title": "Stuttgart · Row Compass (subtle-light)",
-    "description": "Row-list focus with focused_row_gradient + wayfinding_node nodes shader marking left-edge spine.",
-    "authors": ["corpus"],
-    "tags": ["subtle-light", "wayfinding_node", "row-focus", "navigation"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 3600 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 360 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6400 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 280 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Drive mode: Comfort\nDrive mode: Sport\nDrive mode: Track\nDrive mode: Ice" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 236, "g": 237, "b": 238, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 24, "g": 26, "b": 30, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
-        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": " Mode Stack " } },
-        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "rowGradient": {
-        "id": "rowGradient",
+      "focused_row_gradient0": {
+        "activePhases": [],
         "effect": "shader.focused_row_gradient",
+        "id": "focused_row_gradient0",
         "inputs": {
-          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 90, "g": 58, "b": 50, "a": 255 } } },
-          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 24, "g": 26, "b": 30, "a": 255 } } },
-          "selectedRow": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
-          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+          "applyTo": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum",
+              "value": "background"
+            }
+          },
+          "brightColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 50,
+                "g": 58,
+                "r": 90
+              }
+            }
+          },
+          "dimColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 30,
+                "g": 26,
+                "r": 24
+              }
+            }
+          },
+          "falloffDistance": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 2
+            }
+          },
+          "selectedRow": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 2
+            }
+          }
         },
-        "scope": { "kind": "channel", "value": "background" }
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
       },
-      "spine": {
-        "id": "spine",
+      "wayfinding_node0": {
+        "activePhases": [],
         "effect": "shader.wayfinding_node",
+        "id": "wayfinding_node0",
         "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 208, "g": 90, "b": 70, "a": 255 } } },
-          "nodes": { "kind": "literal", "value": { "kind": "structured", "value": [
-            { "x": 3, "y": 2 }, { "x": 3, "y": 3 }, { "x": 3, "y": 4 }, { "x": 3, "y": 5 }
-          ] } },
-          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 2 } },
-          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.22 } },
-          "currentIndex": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
-          "previousStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.28 } },
-          "futureStrength": { "kind": "literal", "value": { "kind": "number", "value": 0.08 } },
-          "pulseSpeed": { "kind": "literal", "value": { "kind": "number", "value": 0.3 } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 70,
+                "g": 90,
+                "r": 208
+              }
+            }
+          },
+          "currentIndex": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 1
+            }
+          },
+          "futureStrength": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.08
+            }
+          },
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.22
+            }
+          },
+          "nodes": {
+            "kind": "literal",
+            "value": {
+              "kind": "structured",
+              "value": [
+                [
+                  3.0,
+                  2.0
+                ],
+                [
+                  3.0,
+                  3.0
+                ],
+                [
+                  3.0,
+                  4.0
+                ],
+                [
+                  3.0,
+                  5.0
+                ]
+              ]
+            }
+          },
+          "previousStrength": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.28
+            }
+          },
+          "pulseSpeed": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.3
+            }
+          },
+          "radius": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 2
+            }
+          }
         },
-        "scope": { "kind": "channel", "value": "background" }
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
       }
     },
-    "order": ["rowGradient", "spine"]
+    "order": [
+      "focused_row_gradient0",
+      "wayfinding_node0"
+    ],
+    "version": "3.1"
+  },
+  "id": "stuttgart-row-compass",
+  "intent": {
+    "aliasUsages": {
+      "focused_row_gradient0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.focused_row_gradient",
+        "from": "focused_row_gradient"
+      },
+      "wayfinding_node0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.wayfinding_node",
+        "from": "wayfinding_node"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 3.6
+      }
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Stuttgart · Row Compass"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 42,
-      "height": 8,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 8,
+      "id": "mainScene",
+      "width": 42
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 30,
+              "g": 26,
+              "r": 24
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 238,
+              "g": 237,
+              "r": 236
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 8
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Drive mode: Comfort\nDrive mode: Sport\nDrive mode: Track\nDrive mode: Ice"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 42
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

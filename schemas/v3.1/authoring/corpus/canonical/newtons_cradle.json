@@ -1,136 +1,275 @@
 {
-  "id": "newtons-cradle",
-  "version": "3.1",
-  "metadata": {
-    "title": "Newton's Cradle (5.5-suggestions)",
-    "description": "Composed motion route (arc + pendulum dynamics) on two end-balls; right ball lags 1100ms via follow.lagMs for half-cycle phase offset.",
-    "authors": ["corpus"],
-    "tags": ["physics", "composed-route", "pendulum-dynamics", "follow-lag", "multi-layer"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 2200 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2200 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8800 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "frameSource": {
-      "source": "source.text",
-      "inputs": {
-        "text": { "kind": "literal", "value": { "kind": "text", "value": "╔══════════════════════════════╗\n║                              ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║       ●   ●   ●              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n╚══════════════════════════════╝" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 32 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 14 } }
-      },
-      "assets": {}
-    },
-    "ballSource": {
-      "source": "source.text",
-      "inputs": {
-        "text": { "kind": "literal", "value": { "kind": "text", "value": "●" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
-      },
-      "assets": {}
-    }
-  },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "scenes": [
+  "descriptorPacks": [
     {
-      "id": "mainScene",
-      "width": 32,
-      "height": 14,
-      "elements": [
-        {
-          "id": "frame",
-          "layer": "frame",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "frameSource",
-          "surface": {
-            "baseStyle": {
-              "foreground": { "type": "rgb", "r": 200, "g": 215, "b": 232 },
-              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 }
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        },
-        {
-          "id": "ballLeft",
-          "layer": "ballLeft",
-          "zIndex": 10,
-          "placement": { "x": 3, "y": 7 },
-          "source": "ballSource",
-          "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 2200 },
-              "easing": { "kind": "named", "value": "linear" },
-              "route": {
-                "kind": "composed",
-                "route": { "kind": "arc", "bulge": 2.0 },
-                "dynamics": [
-                  { "kind": "pendulum", "amplitude": 3.0, "oscillations": 1.0, "damping": 0.0 }
-                ]
-              },
-              "from": { "kind": "absolute", "x": 3, "y": 7 },
-              "to": { "kind": "absolute", "x": 3, "y": 7 },
-              "phaseOffsetMs": 0,
-              "snap": { "kind": "round" }
-            }
-          },
-          "surface": {
-            "baseStyle": {
-              "foreground": { "type": "rgb", "r": 240, "g": 220, "b": 160 },
-              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 },
-              "addedModifiers": ["bold"]
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "skipTransparentEmpty",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        },
-        {
-          "id": "ballRight",
-          "layer": "ballRight",
-          "zIndex": 10,
-          "placement": { "x": 19, "y": 7 },
-          "source": "ballSource",
-          "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 2200 },
-              "easing": { "kind": "named", "value": "linear" },
-              "route": {
-                "kind": "composed",
-                "route": { "kind": "arc", "bulge": 2.0 },
-                "dynamics": [
-                  { "kind": "pendulum", "amplitude": 3.0, "oscillations": 1.0, "damping": 0.0 }
-                ]
-              },
-              "from": { "kind": "absolute", "x": 19, "y": 7 },
-              "to": { "kind": "absolute", "x": 19, "y": 7 },
-              "phaseOffsetMs": 0,
-              "follow": { "mode": "maintainOffset", "lagMs": 1100 },
-              "snap": { "kind": "round" }
-            }
-          },
-          "surface": {
-            "baseStyle": {
-              "foreground": { "type": "rgb", "r": 240, "g": 220, "b": 160 },
-              "background": { "type": "rgb", "r": 14, "g": 18, "b": 26 },
-              "addedModifiers": ["bold"]
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "skipTransparentEmpty",
-          "roleWritePolicy": { "kind": "preserveDestination" }
-        }
-      ]
+      "id": "v3.1.primitive"
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
+  },
+  "id": "newtons-cradle",
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 2.2
+      }
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Newton's Cradle"
+  },
+  "scenes": [
+    {
+      "elements": [
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "frame",
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "frame",
+          "zIndex": 0
+        },
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "ballLeft",
+          "layer": "primary",
+          "placement": {
+            "x": 3,
+            "y": 7
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": "2.2s",
+              "route": {
+                "composed": {
+                  "dynamics": [
+                    {
+                      "pendulum": {
+                        "amplitude": 3.0,
+                        "damping": 0.0,
+                        "oscillations": 1.0
+                      }
+                    }
+                  ],
+                  "route": {
+                    "arc": {
+                      "bulge": 2.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "ballLeft",
+          "zIndex": 0
+        },
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "ballRight",
+          "layer": "primary",
+          "placement": {
+            "x": 19,
+            "y": 7
+          },
+          "placementMotion": {
+            "enter": {
+              "duration": "2.2s",
+              "follow": {
+                "lag": "1100ms"
+              },
+              "route": {
+                "composed": {
+                  "dynamics": [
+                    {
+                      "pendulum": {
+                        "amplitude": 3.0,
+                        "damping": 0.0,
+                        "oscillations": 1.0
+                      }
+                    }
+                  ],
+                  "route": {
+                    "arc": {
+                      "bulge": 2.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "ballRight",
+          "zIndex": 0
+        }
+      ],
+      "height": 14,
+      "id": "mainScene",
+      "width": 32
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "ballLeft": {
+      "assets": {},
+      "inputs": {
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 160,
+              "g": 220,
+              "r": 240
+            }
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "●"
+          }
+        }
+      },
+      "sourceDescriptor": "source.text"
+    },
+    "ballRight": {
+      "assets": {},
+      "inputs": {
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 160,
+              "g": 220,
+              "r": 240
+            }
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "●"
+          }
+        }
+      },
+      "sourceDescriptor": "source.text"
+    },
+    "frame": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 26,
+              "g": 18,
+              "r": 14
+            }
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 232,
+              "g": 215,
+              "r": 200
+            }
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "╔══════════════════════════════╗\n║                              ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║   │   │   │   │   │          ║\n║       ●   ●   ●              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n║                              ║\n╚══════════════════════════════╝"
+          }
+        }
+      },
+      "sourceDescriptor": "source.text"
+    }
+  },
+  "version": "3.1"
 }

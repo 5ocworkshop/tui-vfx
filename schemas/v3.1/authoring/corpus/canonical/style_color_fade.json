@@ -1,82 +1,226 @@
 {
-  "id": "style-color-fade",
-  "version": "3.1",
-  "metadata": {
-    "title": "Style: Color Fade (phase-differentiated color spaces)",
-    "description": "RGB-space fade on enter to warm orange; HSL-space fade on exit to dark indigo.",
-    "authors": ["corpus"],
-    "tags": ["style", "color-fade", "color-space"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 3000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Style: Color Fade" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 39 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 20, "b": 80, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "fadeRgb": {
-        "id": "fadeRgb",
+      "color_fade0": {
+        "activePhases": [
+          "enter"
+        ],
         "effect": "style.color_fade",
+        "id": "color_fade0",
         "inputs": {
-          "colorSpace": { "kind": "literal", "value": { "kind": "enum", "value": "rgb" } },
-          "target": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 200, "b": 50, "a": 255 } } }
+          "colorSpace": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum",
+              "value": "rgb"
+            }
+          },
+          "target": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 50,
+                "g": 200,
+                "r": 255
+              }
+            }
+          }
         },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
+        "outputs": {}
       },
-      "fadeHsl": {
-        "id": "fadeHsl",
+      "color_fade1": {
+        "activePhases": [
+          "exit"
+        ],
         "effect": "style.color_fade",
+        "id": "color_fade1",
         "inputs": {
-          "colorSpace": { "kind": "literal", "value": { "kind": "enum", "value": "hsl" } },
-          "target": { "kind": "literal", "value": { "kind": "color", "value": { "r": 50, "g": 50, "b": 100, "a": 255 } } }
+          "colorSpace": {
+            "kind": "literal",
+            "value": {
+              "kind": "enum",
+              "value": "hsl"
+            }
+          },
+          "target": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 100,
+                "g": 50,
+                "r": 50
+              }
+            }
+          }
         },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
+        "outputs": {}
       }
     },
-    "order": ["fadeRgb", "fadeHsl"]
+    "order": [
+      "color_fade0",
+      "color_fade1"
+    ],
+    "version": "3.1"
+  },
+  "id": "style-color-fade",
+  "intent": {
+    "aliasUsages": {
+      "color_fade0": {
+        "axis": "style",
+        "canonicalEffect": "style.color_fade",
+        "from": "color_fade"
+      },
+      "color_fade1": {
+        "axis": "style",
+        "canonicalEffect": "style.color_fade",
+        "from": "color_fade"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Style: Color Fade"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 39,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 39
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 80,
+              "g": 20,
+              "r": 60
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 229,
+              "g": 229,
+              "r": 229
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Style: Color Fade"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 39
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

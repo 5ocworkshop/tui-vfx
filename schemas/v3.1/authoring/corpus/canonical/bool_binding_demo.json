@@ -1,85 +1,181 @@
 {
-  "id": "event-driven-dwell-bool",
-  "version": "3.1",
-  "metadata": {
-    "title": "Event-Driven Dwell — Bool Binding",
-    "description": "Dwell phase exits when user_dismissed becomes true; falls back to 5s.",
-    "authors": ["corpus"],
-    "tags": ["binding", "dwell", "event-driven"]
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "signals": {
+      "userDismissed": {
+        "description": null,
+        "displayName": null,
+        "id": "userDismissed",
+        "required": false,
+        "value": {
+          "default": {
+            "kind": "boolean",
+            "value": false
+          },
+          "kind": "boolean",
+          "range": null,
+          "semantic": null,
+          "unit": null
+        }
+      }
+    },
+    "version": "3.1"
   },
+  "id": "event-driven-dwell-bool",
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
     "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1500 } } },
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "seconds",
+            "value": 1.5
+          },
+          "kind": "fixed"
+        }
+      },
       {
         "phase": "dwell",
         "timing": {
           "kind": "dwell",
           "policy": {
-            "kind": "untilTruthy",
-            "binding": "userDismissed",
-            "fallback": { "kind": "milliseconds", "value": 5000 }
+            "kind": "until",
+            "maxDuration": {
+              "kind": "seconds",
+              "value": 5.0
+            },
+            "trigger": {
+              "action": "advancePhase",
+              "condition": {
+                "predicate": {
+                  "kind": "isTrue"
+                },
+                "predicateSource": {
+                  "fallback": null,
+                  "id": "userDismissed",
+                  "kind": "signal"
+                }
+              },
+              "latch": "untilPhaseReset",
+              "reset": "phaseStart"
+            }
           }
         }
       },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 800 } } }
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 800
+          },
+          "kind": "fixed"
+        }
+      }
     ]
   },
-  "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Event-Driven Dwell\nWaits for user_dismissed=true" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 238, "g": 238, "b": 238, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 28, "g": 36, "b": 44, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
-    }
-  },
-  "graph": {
-    "id": "mainGraph",
-    "version": "3.1",
-    "signals": {
-      "userDismissed": {
-        "id": "userDismissed",
-        "displayName": "User dismissed",
-        "description": "Set true to advance dwell to exit.",
-        "value": {
-          "kind": "boolean",
-          "default": { "kind": "boolean", "value": false },
-          "range": null,
-          "allowedValues": [],
-          "unit": null,
-          "semantic": "dismiss"
-        },
-        "previewLoopback": { "kind": "literal", "value": { "kind": "boolean", "value": false } },
-        "required": false
-      }
-    }
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Event-Driven Dwell — Bool Binding"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 44,
-      "height": 5,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 5,
+      "id": "mainScene",
+      "width": 44
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 44,
+              "g": 36,
+              "r": 28
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 238,
+              "g": 238,
+              "r": 238
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 5
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Event-Driven Dwell\nWaits for user_dismissed=true"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 44
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

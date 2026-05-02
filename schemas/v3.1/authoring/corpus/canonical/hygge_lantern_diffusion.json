@@ -1,110 +1,383 @@
 {
-  "id": "hygge-lantern-diffusion",
-  "version": "3.1",
-  "metadata": {
-    "title": "Hygge Lantern Diffusion (subtle light study)",
-    "description": "Subcell_light dwell filter, breath-mode diffusion shader, concealed_light shader scoped to background; multi-scope style stack.",
-    "authors": ["corpus"],
-    "tags": ["light", "diffusion", "subcell", "atmospheric", "multi-scope"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 4600 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 460 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 7200 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 340 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Quiet hours\nLamp mode active" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 46 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 236, "g": 226, "b": 208, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 54, "g": 44, "b": 38, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
-        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": " Hygge " } },
-        "borderTitleAlignment": { "kind": "literal", "value": { "kind": "enum", "value": "left" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "subcellLight": {
-        "id": "subcellLight",
-        "effect": "filter.subcell_light",
-        "inputs": {
-          "litColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 242, "g": 222, "b": 196, "a": 255 } } },
-          "unlitColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 54, "g": 44, "b": 38, "a": 255 } } },
-          "renderMode": { "kind": "literal", "value": { "kind": "enum", "value": "braille" } },
-          "sampleFrom": { "kind": "literal", "value": { "kind": "enum", "value": "background" } },
-          "threshold": { "kind": "literal", "value": { "kind": "number", "value": 0.05 } },
-          "temporalDitherHz": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
-          "onlyBlank": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["dwell"]
-      },
-      "diffusionBg": {
-        "id": "diffusionBg",
-        "effect": "shader.diffusion",
-        "inputs": {
-          "source": { "kind": "literal", "value": { "kind": "enum", "value": "topLeft" } },
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 242, "g": 222, "b": 196, "a": 255 } } },
-          "radius": { "kind": "literal", "value": { "kind": "integer", "value": 9 } },
-          "softness": { "kind": "literal", "value": { "kind": "number", "value": 0.88 } },
-          "edgeFirmness": { "kind": "literal", "value": { "kind": "number", "value": 0.22 } },
-          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.22 } },
-          "mode": { "kind": "literal", "value": { "kind": "enum", "value": "breath" } },
-          "driftSpeed": { "kind": "literal", "value": { "kind": "number", "value": 0.32 } },
-          "driftAmount": { "kind": "literal", "value": { "kind": "number", "value": 0.05 } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
-        },
-        "scope": { "kind": "channel", "value": "background" }
-      },
-      "concealedLightBg": {
-        "id": "concealedLightBg",
+      "concealed_light0": {
+        "activePhases": [],
         "effect": "shader.concealed_light",
+        "id": "concealed_light0",
         "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 236, "g": 210, "b": 176, "a": 255 } } },
-          "source": { "kind": "literal", "value": { "kind": "enum", "value": "top" } },
-          "spread": { "kind": "literal", "value": { "kind": "number", "value": 5.0 } },
-          "edgeWidth": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
-          "sourceCutoff": { "kind": "literal", "value": { "kind": "number", "value": 0.18 } },
-          "intensity": { "kind": "literal", "value": { "kind": "number", "value": 0.12 } },
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 176,
+                "g": 210,
+                "r": 236
+              }
+            }
+          },
+          "edgeWidth": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 1
+            }
+          },
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.12
+            }
+          },
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "top"
+            }
+          },
+          "sourceCutoff": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.18
+            }
+          },
+          "spread": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 5.0
+            }
+          }
         },
-        "scope": { "kind": "channel", "value": "background" }
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
+      },
+      "diffusion0": {
+        "activePhases": [],
+        "effect": "shader.diffusion",
+        "id": "diffusion0",
+        "inputs": {
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 196,
+                "g": 222,
+                "r": 242
+              }
+            }
+          },
+          "driftAmount": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.05
+            }
+          },
+          "driftSpeed": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.32
+            }
+          },
+          "edgeFirmness": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.22
+            }
+          },
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.22
+            }
+          },
+          "mode": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "breath"
+            }
+          },
+          "radius": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 9
+            }
+          },
+          "softness": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.88
+            }
+          },
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "topLeft"
+            }
+          }
+        },
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
+      },
+      "subcell_light0": {
+        "activePhases": [
+          "dwell"
+        ],
+        "effect": "filter.subcell_light",
+        "id": "subcell_light0",
+        "inputs": {
+          "litColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 196,
+                "g": 222,
+                "r": 242
+              }
+            }
+          },
+          "onlyBlank": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          "renderMode": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "braille"
+            }
+          },
+          "sampleFrom": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "background"
+            }
+          },
+          "temporalDitherHz": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.0
+            }
+          },
+          "threshold": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.05
+            }
+          },
+          "unlitColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 38,
+                "g": 44,
+                "r": 54
+              }
+            }
+          }
+        },
+        "outputs": {}
       }
     },
-    "order": ["subcellLight", "diffusionBg", "concealedLightBg"]
+    "order": [
+      "subcell_light0",
+      "diffusion0",
+      "concealed_light0"
+    ],
+    "version": "3.1"
+  },
+  "id": "hygge-lantern-diffusion",
+  "intent": {
+    "aliasUsages": {
+      "concealed_light0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.concealed_light",
+        "from": "concealed_light"
+      },
+      "diffusion0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.diffusion",
+        "from": "diffusion"
+      },
+      "subcell_light0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.subcell_light",
+        "from": "subcell_light"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 4.6
+      }
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Hygge Lantern Diffusion"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 46,
-      "height": 7,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 7,
+      "id": "mainScene",
+      "width": 46
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 38,
+              "g": 44,
+              "r": 54
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 208,
+              "g": 226,
+              "r": 236
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 7
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Quiet hours\nLamp mode active"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 46
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

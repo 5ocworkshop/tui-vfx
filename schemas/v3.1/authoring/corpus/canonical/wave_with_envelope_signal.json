@@ -1,100 +1,253 @@
 {
-  "id": "signal-wave-envelope",
-  "version": "3.1",
-  "metadata": {
-    "title": "Signal: Wave with envelope (multiply sine adsr)",
-    "description": "Pill-button progress driven by multiply(sine, adsr) — envelope-shaped oscillator.",
-    "authors": ["corpus"],
-    "tags": ["signal", "multiply", "sine", "adsr"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 8000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Pattern 2 - sine x adsr" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 36 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 220, "g": 240, "b": 230, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 26, "b": 24, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
+    "nodes": {
+      "pill_button0": {
+        "activePhases": [
+          "dwell"
+        ],
+        "effect": "filter.pill_button",
+        "id": "pill_button0",
+        "inputs": {
+          "bgColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 24,
+                "g": 26,
+                "r": 18
+              }
+            }
+          },
+          "buttonColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 160,
+                "g": 200,
+                "r": 90
+              }
+            }
+          },
+          "edgeWidth": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 3
+            }
+          },
+          "glisten": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          "progress": {
+            "fallback": null,
+            "id": "demoAmplitude",
+            "kind": "signal"
+          }
+        },
+        "outputs": {}
+      }
+    },
+    "order": [
+      "pill_button0"
+    ],
     "signals": {
       "demoAmplitude": {
+        "description": null,
+        "displayName": null,
         "id": "demoAmplitude",
-        "displayName": "Demo amplitude",
-        "description": "Pill-button fill, modulated by sine x adsr.",
-        "value": {
-          "kind": "number",
-          "default": { "kind": "number", "value": 0.0 },
-          "range": { "min": 0.0, "max": 1.0 },
-          "allowedValues": [],
-          "unit": null,
-          "semantic": "amplitude"
-        },
         "previewLoopback": {
-          "kind": "numericSignal",
           "expression": {
-            "type": "multiply",
-            "a": { "type": "sine", "frequency": 4.0, "amplitude": 0.5, "offset": 0.5, "phase": 0.0 },
-            "b": { "type": "adsr", "attack": 0.2, "decay": 0.1, "sustain": 0.7, "release": 0.3, "peak": 1.0 }
+            "a": {
+              "amplitude": 0.5,
+              "frequency": 4.0,
+              "offset": 0.5,
+              "type": "sine"
+            },
+            "b": {
+              "attack": 0.2,
+              "decay": 0.1,
+              "release": 0.3,
+              "sustain": 0.7,
+              "type": "adsr"
+            },
+            "type": "multiply"
           },
-          "fallback": { "kind": "number", "value": 0.0 }
+          "fallback": null,
+          "kind": "signalExpression"
         },
-        "required": false
+        "required": false,
+        "value": {
+          "default": null,
+          "kind": "number",
+          "range": {
+            "max": 1.0,
+            "min": 0.0
+          },
+          "semantic": null,
+          "unit": null
+        }
       }
     },
-    "nodes": {
-      "pill": {
-        "id": "pill",
-        "effect": "filter.pill_button",
-        "inputs": {
-          "buttonColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 90, "g": 200, "b": 160, "a": 255 } } },
-          "bgColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 18, "g": 26, "b": 24, "a": 255 } } },
-          "edgeWidth": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-          "glisten": { "kind": "literal", "value": { "kind": "boolean", "value": true } },
-          "progress": { "kind": "signal", "id": "demoAmplitude", "fallback": { "kind": "number", "value": 0.0 } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["dwell"]
+    "version": "3.1"
+  },
+  "id": "signal-wave-envelope",
+  "intent": {
+    "aliasUsages": {
+      "pill_button0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.pill_button",
+        "from": "pill_button"
       }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
     },
-    "order": ["pill"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Signal: Wave with envelope"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 36,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 36
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 24,
+              "g": 26,
+              "r": 18
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 230,
+              "g": 240,
+              "r": 220
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Pattern 2 - sine x adsr"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 36
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

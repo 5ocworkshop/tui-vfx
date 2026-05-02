@@ -1,71 +1,187 @@
 {
-  "id": "sampler-radial-twist",
-  "version": "3.1",
-  "metadata": {
-    "title": "Sampler: Radial Twist",
-    "description": "RadialTwist sampler — text moves through center-weighted vortex over transparent bg.",
-    "authors": ["corpus"],
-    "tags": ["sampler", "radial_twist", "vortex"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "looping", "period": { "kind": "milliseconds", "value": 2200 } },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Radial Twist\nText follows a vortex\nBasic text-only path" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 44 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 11 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 225, "g": 245, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 0, "b": 0, "a": 0 } } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "twist": {
-        "id": "twist",
+      "radial_twist0": {
+        "activePhases": [],
         "effect": "sampler.radial_twist",
+        "id": "radial_twist0",
         "inputs": {
-          "twist": { "kind": "literal", "value": { "kind": "number", "value": 1.6 } },
-          "center": { "kind": "literal", "value": { "kind": "enum", "value": "center" } },
-          "radiusFloor": { "kind": "literal", "value": { "kind": "number", "value": 0.08 } }
+          "center": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "center"
+            }
+          },
+          "radiusFloor": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.08
+            }
+          },
+          "twist": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.6
+            }
+          }
         },
-        "scope": { "kind": "all" }
+        "outputs": {}
       }
     },
-    "order": ["twist"]
+    "order": [
+      "radial_twist0"
+    ],
+    "version": "3.1"
+  },
+  "id": "sampler-radial-twist",
+  "intent": {
+    "aliasUsages": {
+      "radial_twist0": {
+        "axis": "sampler",
+        "canonicalEffect": "sampler.radial_twist",
+        "from": "radial_twist"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "looping",
+      "period": {
+        "kind": "seconds",
+        "value": 2.2
+      }
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Sampler: Radial Twist"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 44,
-      "height": 11,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 11,
+      "id": "mainScene",
+      "width": 44
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 0,
+              "b": 0,
+              "g": 0,
+              "r": 0
+            }
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 255,
+              "g": 245,
+              "r": 225
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 11
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Radial Twist\nText follows a vortex\nBasic text-only path"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 44
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

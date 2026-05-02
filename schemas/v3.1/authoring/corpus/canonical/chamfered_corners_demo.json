@@ -1,81 +1,202 @@
 {
-  "id": "chamfered-corners",
-  "version": "3.1",
-  "metadata": {
-    "title": "Chamfered Corners Demo",
-    "description": "Custom border frame with diagonal triangle blocks for cut-corner appearance.",
-    "authors": ["corpus"],
-    "tags": ["border-frame", "custom-glyphs"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 500 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 350 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Corners clipped" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 24 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 70, "g": 130, "b": 180, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 20, "g": 30, "b": 50, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "custom" } },
-        "borderFrame": { "kind": "literal", "value": { "kind": "structured", "value": {
-          "topLeft": "◢", "topRight": "◣", "bottomLeft": "◥", "bottomRight": "◤",
-          "top": "▀", "bottom": "▄", "left": "█", "right": "█"
-        }}}
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
-    "nodes": {
-      "wipeEnter": {
-        "id": "wipeEnter",
-        "effect": "mask.wipe",
-        "inputs": {
-          "direction": { "kind": "literal", "value": { "kind": "enum", "value": "leftToRight" } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
+    "version": "3.1"
+  },
+  "id": "chamfered-corners",
+  "intent": {
+    "presetUsages": {
+      "enterWipe": {
+        "consumedParams": [
+          "direction",
+          "duration"
+        ],
+        "preset": "wipe"
       }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
     },
-    "order": ["wipeEnter"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Chamfered Corners Demo"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 80,
-      "height": 24,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 56, "y": 0 },
-          "source": "mainCard",
-          "placementRule": {
-            "kind": "anchor",
-            "anchor": "topRight",
-            "offsetRows": 0,
-            "offsetColumns": 0
+          "placement": {
+            "x": 0,
+            "y": 0
           },
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placementRule": {
+            "anchor": "topRight",
+            "kind": "anchor",
+            "offsetColumns": 0,
+            "offsetRows": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 4,
+      "id": "mainScene",
+      "width": 24
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 50,
+              "g": 30,
+              "r": 20
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "custom"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 180,
+              "g": 130,
+              "r": 70
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 4
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Corners clipped"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 24
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterWipe": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterWipe",
+      "intent": {
+        "kind": "preset",
+        "preset": "wipe"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "milliseconds",
+          "value": 500
+        }
+      },
+      "tracks": [
+        {
+          "kind": "visibility.wipe",
+          "revealDirection": "leftToRight",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

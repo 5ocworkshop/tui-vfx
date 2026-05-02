@@ -1,173 +1,323 @@
 {
-  "id": "scene-layer-full-stack",
-  "version": "3.1",
-  "metadata": {
-    "title": "Scene: layer full stack",
-    "description": "Card layer with shadow + channel-scoped pipeline + binding-driven phase offset; sibling label layer follows with lag.",
-    "authors": ["corpus"],
-    "tags": ["scene", "shadow", "channel-scope", "sibling-motion", "binding"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "cardSource": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "STACK" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 18 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 4 } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 22, "g": 30, "b": 38, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
-    },
-    "labelText": {
-      "source": "source.text",
-      "inputs": {
-        "text": { "kind": "literal", "value": { "kind": "text", "value": "FOLLOW" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 7 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
+    "nodes": {
+      "card_dim0": {
+        "activePhases": [],
+        "effect": "filter.dim",
+        "id": "card_dim0",
+        "inputs": {},
+        "outputs": {},
+        "writeChannels": [
+          "background"
+        ]
+      },
+      "card_invert0": {
+        "activePhases": [],
+        "effect": "filter.invert",
+        "id": "card_invert0",
+        "inputs": {},
+        "outputs": {},
+        "writeChannels": [
+          "foreground"
+        ]
+      }
+    },
+    "order": [
+      "card_invert0",
+      "card_dim0"
+    ],
     "signals": {
       "cardPhaseOffsetMs": {
+        "description": null,
+        "displayName": null,
         "id": "cardPhaseOffsetMs",
-        "displayName": "Card phase offset (ms)",
-        "description": "Runtime offset for the card layer's enter motion.",
-        "value": {
-          "kind": "number",
-          "default": { "kind": "number", "value": 0.0 },
-          "range": { "min": 0.0, "max": 2000.0 },
-          "allowedValues": [],
-          "unit": null,
-          "semantic": "phaseOffsetMs"
-        },
         "previewLoopback": {
-          "kind": "numericSignal",
-          "expression": { "type": "ramp", "start": 0.0, "end": 2000.0, "duration": 5.0 },
-          "fallback": { "kind": "number", "value": 0.0 }
+          "duration": {
+            "kind": "seconds",
+            "value": 5.0
+          },
+          "end": 2000.0,
+          "kind": "numericRamp",
+          "repeat": true,
+          "start": 0.0
         },
-        "required": false
+        "required": false,
+        "value": {
+          "default": null,
+          "kind": "number",
+          "range": {
+            "max": 2000.0,
+            "min": 0.0
+          },
+          "semantic": null,
+          "unit": null
+        }
       }
     },
-    "nodes": {
-      "invertFg": {
-        "id": "invertFg",
-        "effect": "filter.invert",
-        "inputs": {},
-        "scope": { "kind": "channel", "value": "foreground" }
+    "version": "3.1"
+  },
+  "id": "scene-layer-full-stack",
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
       },
-      "dimBg": {
-        "id": "dimBg",
-        "effect": "filter.dim",
-        "inputs": {},
-        "scope": { "kind": "channel", "value": "background" }
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
       }
-    },
-    "order": ["invertFg", "dimBg"]
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Scene: layer full stack"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 40,
-      "height": 12,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": {
+            "graph": "mainGraph",
+            "topology": {
+              "children": [
+                {
+                  "kind": "node",
+                  "node": "card_invert0"
+                },
+                {
+                  "kind": "node",
+                  "node": "card_dim0"
+                }
+              ],
+              "kind": "sequence"
+            }
+          },
           "id": "card",
-          "layer": "card",
-          "zIndex": 0,
-          "placement": { "x": 11, "y": 4 },
-          "source": "cardSource",
-          "placementRule": {
-            "kind": "anchor",
-            "anchor": "center",
-            "offsetRows": 0,
-            "offsetColumns": 0
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
           },
           "placementMotion": {
             "enter": {
-              "duration": { "kind": "milliseconds", "value": 900 },
-              "easing": { "kind": "named", "value": "quadOut" },
-              "route": { "kind": "linear" },
-              "from": { "kind": "offscreen", "direction": "fromRight" },
-              "to": { "kind": "anchor", "anchor": "center" },
-              "phaseOffset": {
-                "kind": "signal",
-                "id": "cardPhaseOffsetMs",
-                "fallback": { "kind": "number", "value": 0.0 }
-              },
-              "snap": { "kind": "round" }
+              "duration": "900ms",
+              "easing": "quadOut",
+              "from": "right",
+              "phaseOffset": "$bind:cardPhaseOffsetMs"
             }
           },
-          "pipeline": { "graph": "mainGraph" },
+          "placementRule": {
+            "anchor": "center",
+            "kind": "anchor",
+            "offsetColumns": 0,
+            "offsetRows": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "card",
           "surface": {
-            "baseStyle": {
-              "foreground": { "type": "rgb", "r": 228, "g": 232, "b": 236 },
-              "background": { "type": "rgb", "r": 22, "g": 30, "b": 38 }
-            },
             "shadow": {
-              "color": { "r": 0, "g": 0, "b": 0, "a": 150 },
-              "offsetX": 2,
-              "offsetY": 1,
-              "edges": ["right", "bottom"],
+              "blendMode": "sourceOver",
+              "compositeMode": "under",
+              "edges": [
+                "right",
+                "bottom"
+              ],
+              "offset": {
+                "x": 2,
+                "y": 1
+              },
+              "shadowColor": {
+                "a": 150,
+                "b": 0,
+                "g": 0,
+                "r": 0
+              },
               "softEdges": true,
-              "sourceRegion": "border",
-              "compositeMode": "glyphOverlay",
-              "style": { "kind": "solid" }
+              "sourceRegion": {
+                "kind": "role",
+                "role": "Border"
+              }
             }
           },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "zIndex": 0
         },
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "label",
-          "layer": "label",
-          "zIndex": 1,
-          "placement": { "x": 13, "y": 9 },
-          "source": "labelText",
-          "placementRule": {
-            "kind": "anchor",
-            "anchor": "topLeft",
-            "offsetRows": 1,
-            "offsetColumns": 2,
-            "siblingLayer": "card"
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
           },
           "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 1000 },
-              "easing": { "kind": "named", "value": "linear" },
-              "route": { "kind": "linear" },
-              "follow": { "siblingLayer": "card", "targetAnchor": "bottomLeft", "lagMs": 180 },
-              "snap": { "kind": "round" }
+            "follow": {
+              "anchor": "bottomLeft",
+              "lag": "180ms",
+              "sibling": "card"
             }
           },
-          "surface": {
-            "baseStyle": {
-              "foreground": { "type": "rgb", "r": 255, "g": 176, "b": 120 },
-              "background": { "type": "rgb", "r": 18, "g": 26, "b": 34 },
-              "addedModifiers": ["bold"]
-            }
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
           },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "skipTransparentEmpty",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "sourceInstance": "label",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 12,
+      "id": "mainScene",
+      "width": 40
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "card": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 38,
+              "g": 30,
+              "r": 22
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 236,
+              "g": 232,
+              "r": 228
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 4
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "STACK"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 18
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    },
+    "label": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 34,
+              "g": 26,
+              "r": 18
+            }
+          }
+        },
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 120,
+              "g": 176,
+              "r": 255
+            }
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "FOLLOW"
+          }
+        }
+      },
+      "sourceDescriptor": "source.text"
+    }
+  },
+  "version": "3.1"
 }

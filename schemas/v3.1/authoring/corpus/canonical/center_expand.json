@@ -1,69 +1,218 @@
 {
+  "assets": {},
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
+    }
+  ],
+  "graph": {
+    "id": "mainGraph",
+    "version": "3.1"
+  },
   "id": "center-expand",
-  "version": "3.1",
-  "metadata": {
-    "title": "Center Expand",
-    "description": "Card scales up from center on enter, scales down on exit, with cross-fade.",
-    "authors": ["corpus"],
-    "tags": ["transition", "rect_scale", "fade"]
+  "intent": {
+    "presetUsages": {
+      "enterFade": {
+        "preset": "fade"
+      },
+      "exitFade": {
+        "preset": "fade"
+      }
+    }
   },
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
     "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 550 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 650 } } }
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 550
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 650
+          },
+          "kind": "fixed"
+        }
+      }
     ]
   },
-  "assets": {},
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Center Expand"
+  },
+  "scenes": [
+    {
+      "elements": [
+        {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
+          "id": "mainElement",
+          "layer": "primary",
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 5,
+      "id": "mainScene",
+      "width": 42
+    }
+  ],
   "sourceDescriptors": {},
   "sources": {
     "mainCard": {
-      "source": "source.card",
+      "assets": {},
       "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Center expand/collapse" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 42 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 12, "g": 14, "b": 20, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 20,
+              "g": 14,
+              "r": 12
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 229,
+              "g": 229,
+              "r": 229
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 5
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Center expand/collapse"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 42
+          }
+        }
       },
-      "assets": {}
+      "sourceDescriptor": "source.card"
     }
   },
-  "graph": { "id": "mainGraph", "version": "3.1" },
-  "scenes": [
-    {
-      "id": "mainScene",
-      "width": 42,
-      "height": 5,
-      "elements": [
+  "transitions": {
+    "enterFade": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterFade",
+      "intent": {
+        "kind": "preset",
+        "preset": "fade"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {},
+      "tracks": [
         {
-          "id": "mainElement",
-          "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 550 },
-              "easing": { "kind": "named", "value": "quadOut" },
-              "rectScale": { "origin": "center", "minWidth": 3, "minHeight": 1 },
-              "snap": { "kind": "round" }
-            },
-            "exit": {
-              "duration": { "kind": "milliseconds", "value": 650 },
-              "easing": { "kind": "named", "value": "quadIn" },
-              "rectScale": { "origin": "center", "minWidth": 3, "minHeight": 1 },
-              "snap": { "kind": "round" }
-            }
-          },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "kind": "opacity.fade",
+          "subject": "to"
+        }
+      ]
+    },
+    "exitFade": {
+      "activePhases": [
+        "exit"
+      ],
+      "id": "exitFade",
+      "intent": {
+        "kind": "preset",
+        "preset": "fade"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {},
+      "tracks": [
+        {
+          "kind": "opacity.fade",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }

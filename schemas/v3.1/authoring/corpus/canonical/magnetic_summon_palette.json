@@ -1,140 +1,360 @@
 {
-  "id": "magnetic-summon-palette",
-  "version": "3.1",
-  "metadata": {
-    "title": "Magnetic Summon Command Palette",
-    "description": "Carrier-orbit entrance + typewriter cursor wake + I/O-chained highlighter + focused row gradient.",
-    "authors": ["corpus"],
-    "tags": ["palette", "cursor-wake", "io-chain", "carrier-orbit"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 360 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 6000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 200 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "❯ open recent project_______________\n  recent: tui-vfx-recipes\n  recent: tui-vfx\n  recent: gt-design" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 56 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
-        "borderTitle": { "kind": "literal", "value": { "kind": "text", "value": "Command Palette" } },
-        "contentEffect": { "kind": "literal", "value": { "kind": "structured", "value": {
-          "type": "typewriter",
-          "speed_variance": 0.08,
-          "cursor": {
-            "character": "▌",
-            "wake": { "mode": "tint", "decay_seconds": 0.6, "max_cells": 6, "gap_cells": 1, "curve": 1.0, "tint": { "type": "rgb", "r": 180, "g": 210, "b": 240 } }
-          }
-        } } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
+    "nodes": {
+      "border_sweep0": {
+        "activePhases": [],
+        "effect": "shader.border_sweep",
+        "id": "border_sweep0",
+        "inputs": {
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 255,
+                "g": 220,
+                "r": 180
+              }
+            }
+          },
+          "length": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 8
+            }
+          },
+          "speed": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 1.4
+            }
+          }
+        },
+        "outputs": {},
+        "scope": {
+          "kind": "role",
+          "role": "Border"
+        }
+      },
+      "focused_row_gradient0": {
+        "activePhases": [],
+        "effect": "shader.focused_row_gradient",
+        "id": "focused_row_gradient0",
+        "inputs": {
+          "brightColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 240,
+                "g": 175,
+                "r": 110
+              }
+            }
+          },
+          "dimColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 30,
+                "g": 18,
+                "r": 14
+              }
+            }
+          },
+          "falloffDistance": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 3
+            }
+          },
+          "selectedRow": {
+            "fallback": null,
+            "id": "selectedRow",
+            "kind": "signal"
+          }
+        },
+        "outputs": {},
+        "scope": {
+          "end": 8,
+          "kind": "rowRange",
+          "start": 1
+        }
+      },
+      "highlighter0": {
+        "activePhases": [],
+        "effect": "shader.highlighter",
+        "id": "highlighter0",
+        "inputs": {
+          "blendStrength": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "$hint:reveal_field"
+            }
+          },
+          "color": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 150,
+                "g": 232,
+                "r": 255
+              }
+            }
+          }
+        },
+        "outputs": {},
+        "scope": {
+          "kind": "role",
+          "role": "Text"
+        }
+      },
+      "spatial_signal0": {
+        "activePhases": [],
+        "effect": "sampler.spatial_signal",
+        "id": "spatial_signal0",
+        "inputs": {
+          "emitsHint": {
+            "kind": "literal",
+            "value": {
+              "kind": "text",
+              "value": "reveal_field"
+            }
+          },
+          "signal": {
+            "kind": "literal",
+            "value": {
+              "kind": "structured",
+              "value": {
+                "type": "sample_norm_x"
+              }
+            }
+          }
+        },
+        "outputs": {}
+      }
+    },
+    "order": [
+      "spatial_signal0",
+      "focused_row_gradient0",
+      "highlighter0",
+      "border_sweep0"
+    ],
     "signals": {
       "selectedRow": {
+        "description": null,
+        "displayName": null,
         "id": "selectedRow",
-        "displayName": "Selected row",
-        "value": { "kind": "number", "default": { "kind": "number", "value": 2.0 }, "range": { "min": 0.0, "max": 8.0 }, "allowedValues": [], "unit": null, "semantic": "selectionIndex" },
-        "previewLoopback": { "kind": "numericSignal", "expression": { "type": "ramp", "start": 0.0, "end": 8.0, "duration": 5.0 }, "fallback": { "kind": "number", "value": 2.0 } },
-        "required": false
+        "previewLoopback": {
+          "duration": {
+            "kind": "seconds",
+            "value": 5.0
+          },
+          "end": 8.0,
+          "kind": "numericRamp",
+          "repeat": true,
+          "start": 0.0
+        },
+        "required": false,
+        "value": {
+          "default": {
+            "kind": "number",
+            "value": 2.0
+          },
+          "kind": "number",
+          "range": {
+            "max": 8.0,
+            "min": 0.0
+          },
+          "semantic": null,
+          "unit": null
+        }
       }
     },
-    "nodes": {
-      "revealField": {
-        "id": "revealField",
-        "effect": "sampler.spatial_signal",
-        "inputs": {
-          "signal": { "kind": "literal", "value": { "kind": "structured", "value": { "type": "sample_norm_x" } } }
-        },
-        "outputs": {
-          "reveal_field": { "id": "reveal_field", "outputSource": { "kind": "scalar" } }
-        },
-        "scope": { "kind": "all" }
+    "version": "3.1"
+  },
+  "id": "magnetic-summon-palette",
+  "intent": {
+    "aliasUsages": {
+      "border_sweep0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.border_sweep",
+        "from": "border_sweep"
       },
-      "rowGradient": {
-        "id": "rowGradient",
-        "effect": "shader.focused_row_gradient",
-        "inputs": {
-          "brightColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 110, "g": 175, "b": 240, "a": 255 } } },
-          "dimColor": { "kind": "literal", "value": { "kind": "color", "value": { "r": 14, "g": 18, "b": 30, "a": 255 } } },
-          "selectedRow": { "kind": "signal", "id": "selectedRow", "fallback": { "kind": "number", "value": 2.0 } },
-          "falloffDistance": { "kind": "literal", "value": { "kind": "integer", "value": 3 } }
-        },
-        "scope": { "kind": "rowRange", "start": 1, "end": 8 }
+      "focused_row_gradient0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.focused_row_gradient",
+        "from": "focused_row_gradient"
       },
-      "highlighter": {
-        "id": "highlighter",
-        "effect": "shader.highlighter",
-        "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 232, "b": 150, "a": 255 } } },
-          "blendStrength": { "kind": "graphValue", "id": "reveal_field", "fallback": { "kind": "number", "value": 0.0 } }
-        },
-        "scope": { "kind": "content", "value": "text" }
+      "highlighter0": {
+        "axis": "shader",
+        "canonicalEffect": "shader.highlighter",
+        "from": "highlighter"
       },
-      "borderSweep": {
-        "id": "borderSweep",
-        "effect": "shader.border_sweep",
-        "inputs": {
-          "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 180, "g": 220, "b": 255, "a": 255 } } },
-          "length": { "kind": "literal", "value": { "kind": "integer", "value": 8 } },
-          "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.4 } }
-        },
-        "scope": { "kind": "border" }
+      "spatial_signal0": {
+        "axis": "sampler",
+        "canonicalEffect": "sampler.spatial_signal",
+        "from": "spatial_signal"
       }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
     },
-    "order": ["revealField", "rowGradient", "highlighter", "borderSweep"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 360
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "seconds",
+              "value": 6.0
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 200
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Magnetic Summon Command Palette"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 56,
-      "height": 8,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "placementMotion": {
-            "enter": {
-              "duration": { "kind": "milliseconds", "value": 360 },
-              "easing": { "kind": "named", "value": "quadOut" },
-              "route": { "kind": "carrierOrbit", "rotations": 0.5, "radius": 3.0, "direction": 1.0 },
-              "from": { "kind": "offscreen", "direction": "fromTop" },
-              "to": { "kind": "anchor", "anchor": "center" },
-              "snap": { "kind": "round" }
-            }
+          "placement": {
+            "x": 0,
+            "y": 0
           },
-          "surface": {
-            "shadow": {
-              "color": { "r": 0, "g": 0, "b": 0, "a": 160 },
-              "offsetX": 3, "offsetY": 2,
-              "edges": ["right", "bottom"],
-              "softEdges": true,
-              "sourceRegion": "border",
-              "compositeMode": "glyphOverlay",
-              "style": { "kind": "gradient", "layers": 3 }
-            }
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
           },
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 8,
+      "id": "mainScene",
+      "width": 56
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 30,
+              "g": 18,
+              "r": 14
+            }
+          }
+        },
+        "bold": {
+          "kind": "literal",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 250,
+              "g": 238,
+              "r": 230
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 8
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "❯ open recent project_______________\n  recent: tui-vfx-recipes\n  recent: tui-vfx\n  recent: gt-design"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 56
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }

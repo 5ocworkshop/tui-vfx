@@ -1,95 +1,176 @@
 {
-  "id": "content-glyph-particles-base-spray",
-  "version": "3.1",
-  "metadata": {
-    "title": "Content: Glyph Particles Base Spray",
-    "description": "Glyph emitters spawn transient particles at +1 cell offset, converge back onto source cells.",
-    "authors": ["corpus"],
-    "tags": ["content", "glyph-emitters", "particles"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1500 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 3500 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 600 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "SPARK" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 16 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 230, "g": 244, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 5, "g": 10, "b": 20, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } },
-        "glyphEmitters": { "kind": "literal", "value": { "kind": "structured", "value": [
-          {
-            "origin": { "type": "authored" },
-            "spawn_count": 1,
-            "glyph_palette": ["*", "+", "·"],
-            "color_palette": [
-              { "r": 80, "g": 220, "b": 255, "a": 255 },
-              { "r": 170, "g": 255, "b": 230, "a": 255 }
-            ],
-            "motion": {
-              "enter": {
-                "duration_ms": 800,
-                "easing": "sine_in_out",
-                "from": { "type": "authored_offset", "dx": 1, "dy": 0 },
-                "to": { "type": "authored" },
-                "stagger": { "type": "by_index", "stride_ms": 45 },
-                "affect": "non_empty"
-              }
-            },
-            "lifetime_ms": 900,
-            "on_complete": "despawn",
-            "concurrency": { "type": "all" },
-            "seed": 11
-          }
-        ] } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
     "nodes": {
-      "invertText": {
-        "id": "invertText",
+      "invert0": {
+        "activePhases": [],
         "effect": "filter.invert",
-        "inputs": {
-          "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "foreground" } }
+        "id": "invert0",
+        "inputs": {},
+        "outputs": {},
+        "scope": {
+          "kind": "role",
+          "role": "Text"
         },
-        "scope": { "kind": "content", "value": "text" }
+        "writeChannels": [
+          "foreground"
+        ]
       }
     },
-    "order": ["invertText"]
+    "order": [
+      "invert0"
+    ],
+    "version": "3.1"
+  },
+  "id": "content-glyph-particles-base-spray",
+  "intent": {
+    "aliasUsages": {
+      "invert0": {
+        "axis": "filter",
+        "canonicalEffect": "filter.invert",
+        "from": "invert"
+      }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
+    },
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Content: Glyph Particles Base Spray"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 16,
-      "height": 3,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
         }
-      ]
+      ],
+      "height": 3,
+      "id": "mainScene",
+      "width": 16
     }
   ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 20,
+              "g": 10,
+              "r": 5
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 255,
+              "g": 244,
+              "r": 230
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 3
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "SPARK"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 16
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "version": "3.1"
 }
