@@ -28,7 +28,7 @@ pub enum RippleCenter {
 }
 
 impl RippleCenter {
-    fn as_structured_value(self) -> StructuredValue {
+    pub(crate) fn as_structured_value(self) -> StructuredValue {
         match self {
             Self::Center => StructuredValue::Object(BTreeMap::from([(
                 "kind".to_string(),
@@ -45,7 +45,7 @@ impl RippleCenter {
         }
     }
 
-    fn coordinate(self, width: u16, height: u16) -> (f32, f32) {
+    pub(crate) fn coordinate(self, width: u16, height: u16) -> (f32, f32) {
         match self {
             Self::Center => (width as f32 / 2.0, height as f32 / 2.0),
             Self::Cell { x, y } => (x as f32, y as f32),
