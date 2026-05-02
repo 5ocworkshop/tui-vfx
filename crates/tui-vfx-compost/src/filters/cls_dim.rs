@@ -1,6 +1,6 @@
-// <FILE>crates/tui-vfx-compost/src/primitive/filters/cls_dim.rs</FILE> - <DESC>Rust-owned v3.1 filter.dim primitive declaration and runtime</DESC>
+// <FILE>crates/tui-vfx-compost/src/filters/cls_dim.rs</FILE> - <DESC>Rust-owned v3.1 filter.dim primitive declaration and runtime</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 first port: derive filter.dim truth from contract descriptor shape, legacy dim semantics, and current primitive.json seed while avoiding legacy imports.</WCTX>
+// <WCTX>Phase 1 first port: derive filter.dim truth from v3.1 contract descriptor shape and legacy dim semantics while avoiding legacy imports and generated descriptor artifacts.</WCTX>
 // <CLOG>0.1.0: INIT — add filter.dim descriptor and FrameFilterRuntime using shared channel-target and dim-color helpers.</CLOG>
 
 use std::collections::BTreeMap;
@@ -12,9 +12,10 @@ use tui_vfx_contract::{
     ValueSpec, WriteSupport,
 };
 
+use crate::filters::{ChannelTarget, dim_color};
 use crate::primitive::{
-    CellView, ChannelTarget, EffectPrimitive, EffectRuntimeContext, EffectRuntimeError,
-    FrameFilterRuntime, NoOutputs, PrimitiveInputs, PrimitiveOutputs, dim_color,
+    CellView, EffectPrimitive, EffectRuntimeContext, EffectRuntimeError, FrameFilterRuntime,
+    NoOutputs, PrimitiveInputs, PrimitiveOutputs,
 };
 
 /// Runtime input bundle for `filter.dim`.
@@ -161,5 +162,5 @@ fn all_cell_channels() -> Vec<CellChannel> {
     ]
 }
 
-// <FILE>crates/tui-vfx-compost/src/primitive/filters/cls_dim.rs</FILE> - <DESC>Rust-owned v3.1 filter.dim primitive declaration and runtime</DESC>
+// <FILE>crates/tui-vfx-compost/src/filters/cls_dim.rs</FILE> - <DESC>Rust-owned v3.1 filter.dim primitive declaration and runtime</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

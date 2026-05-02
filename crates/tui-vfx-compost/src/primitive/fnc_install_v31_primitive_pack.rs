@@ -3,7 +3,9 @@
 // <WCTX>Phase 1 introduces the registry installation entrypoint; bootstrap carry-forward will merge unported descriptors during codegen.</WCTX>
 // <CLOG>0.1.0: INIT — install the first Rust-owned primitive, filter.dim.</CLOG>
 
-use super::{EffectRegistry, FilterDim, PrimitiveRegistryError};
+use crate::filters::FilterDim;
+
+use super::{EffectRegistry, PrimitiveRegistryError};
 
 /// Install Rust-owned v3.1 primitive descriptors and runtimes into the registry.
 pub fn install_v31_primitive_pack(
