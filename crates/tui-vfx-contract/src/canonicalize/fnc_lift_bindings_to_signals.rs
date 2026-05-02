@@ -283,7 +283,24 @@ fn build_loopback(raw: &Value) -> Result<Value, CanonicalizationError> {
         Value::Number(n) => {
             Ok(json!({ "kind": "numericStatic", "value": n.as_f64().unwrap_or(0.0) }))
         }
-        Value::Object(_) => Ok(raw.clone()),
+        Value::Object(obj) => {
+            // Already-canonical PreviewLoopbackSpec passes through; otherwise
+            // wrap the author-side `type:`-tagged signal expression
+            // (perlin/keyframes/spatial_noise/adsr/clamp/add/multiply) as the
+            // lossless `signalExpression` escape hatch the contract provides
+            // for non-canonical authoring vocabularies.
+            if obj.get("kind").and_then(Value::as_str).is_some_and(|k| {
+                k.starts_with("numeric") || k == "literal" || k == "signalExpression"
+            }) {
+                Ok(raw.clone())
+            } else {
+                Ok(json!({
+                    "kind": "signalExpression",
+                    "expression": raw.clone(),
+                    "fallback": Value::Null,
+                }))
+            }
+        }
         _ => Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnexpectedJsonShape {
                 expected: "loopback object or numeric literal".into(),
