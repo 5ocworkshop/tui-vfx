@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>VERSION: 0.13.0</VERS>
+// <VERS>VERSION: 0.14.0</VERS>
 // <WCTX>Phase 1 registry installation collects domain-directory primitive ports; codegen will later derive descriptor artifacts from this Rust SSOT.</WCTX>
-// <CLOG>0.13.0: MINOR — install sampler.ripple alongside existing primitive ports.
+// <CLOG>0.14.0: MINOR — install sampler.shredder alongside existing primitive ports.
+// 0.13.0: MINOR — install sampler.ripple alongside existing primitive ports.
 // 0.12.0: MINOR — install sampler.faultLine alongside existing primitive ports.
 // 0.11.0: MINOR — install sampler.distortion alongside existing primitive ports.
 // 0.10.0: MINOR — install sampler.sineWave alongside existing primitive ports.
@@ -19,7 +20,7 @@ use crate::filters::{FilterDim, FilterGreyscale, FilterInvert, FilterTint};
 use crate::masks::{MaskCheckers, MaskDissolve};
 use crate::samplers::{
     SamplerBounce, SamplerDistortion, SamplerFaultLine, SamplerGravity, SamplerPendulum,
-    SamplerRipple, SamplerSineWave,
+    SamplerRipple, SamplerShredder, SamplerSineWave,
 };
 
 use super::{EffectRegistry, PrimitiveRegistryError};
@@ -40,9 +41,10 @@ pub fn install_v31_primitive_pack(
     registry.install_coordinate_sampler::<SamplerGravity>()?;
     registry.install_coordinate_sampler::<SamplerPendulum>()?;
     registry.install_coordinate_sampler::<SamplerRipple>()?;
+    registry.install_coordinate_sampler::<SamplerShredder>()?;
     registry.install_coordinate_sampler::<SamplerSineWave>()?;
     Ok(())
 }
 
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>END OF VERSION: 0.13.0</VERS>
+// <VERS>END OF VERSION: 0.14.0</VERS>
