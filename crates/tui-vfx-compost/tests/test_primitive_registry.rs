@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.16.0</VERS>
+// <VERS>VERSION: 0.17.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.16.0: ADD — prove sampler.radialTwist installs through the primitive pack.
+// <CLOG>0.17.0: ADD — prove sampler.crtJitter installs through the primitive pack.
+// 0.16.0: ADD — prove sampler.radialTwist installs through the primitive pack.
 // 0.15.0: ADD — prove sampler.shredder installs through the primitive pack.
 // 0.14.0: ADD — prove sampler.ripple installs through the primitive pack.
 // 0.13.0: ADD — prove sampler.faultLine installs through the primitive pack.
@@ -354,6 +355,22 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     );
     assert!(registry.has_runtime(&bounce_id, EffectRuntimeKind::CoordinateSampler));
 
+    let crt_jitter_id = EffectId::new("sampler.crtJitter");
+    let crt_jitter_descriptor = registry
+        .effect(&crt_jitter_id)
+        .expect("sampler.crtJitter descriptor is registered");
+    assert_eq!(
+        crt_jitter_descriptor.domain,
+        EffectDomain::CoordinateSampler
+    );
+    assert_eq!(
+        crt_jitter_descriptor.inputs[&EffectInputId::new("seed")]
+            .value
+            .default,
+        Some(Value::Integer(42))
+    );
+    assert!(registry.has_runtime(&crt_jitter_id, EffectRuntimeKind::CoordinateSampler));
+
     let distortion_id = EffectId::new("sampler.distortion");
     let distortion_descriptor = registry
         .effect(&distortion_id)
@@ -515,4 +532,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.16.0</VERS>
+// <VERS>END OF VERSION: 0.17.0</VERS>

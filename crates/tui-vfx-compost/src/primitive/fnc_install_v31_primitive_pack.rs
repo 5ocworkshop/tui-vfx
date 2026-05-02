@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>VERSION: 0.15.0</VERS>
+// <VERS>VERSION: 0.16.0</VERS>
 // <WCTX>Phase 1 registry installation collects domain-directory primitive ports; codegen will later derive descriptor artifacts from this Rust SSOT.</WCTX>
-// <CLOG>0.15.0: MINOR — install sampler.radialTwist alongside existing primitive ports.
+// <CLOG>0.16.0: MINOR — install sampler.crtJitter alongside existing primitive ports.
+// 0.15.0: MINOR — install sampler.radialTwist alongside existing primitive ports.
 // 0.14.0: MINOR — install sampler.shredder alongside existing primitive ports.
 // 0.13.0: MINOR — install sampler.ripple alongside existing primitive ports.
 // 0.12.0: MINOR — install sampler.faultLine alongside existing primitive ports.
@@ -20,8 +21,8 @@
 use crate::filters::{FilterDim, FilterGreyscale, FilterInvert, FilterTint};
 use crate::masks::{MaskCheckers, MaskDissolve};
 use crate::samplers::{
-    SamplerBounce, SamplerDistortion, SamplerFaultLine, SamplerGravity, SamplerPendulum,
-    SamplerRadialTwist, SamplerRipple, SamplerShredder, SamplerSineWave,
+    SamplerBounce, SamplerCrtJitter, SamplerDistortion, SamplerFaultLine, SamplerGravity,
+    SamplerPendulum, SamplerRadialTwist, SamplerRipple, SamplerShredder, SamplerSineWave,
 };
 
 use super::{EffectRegistry, PrimitiveRegistryError};
@@ -37,6 +38,7 @@ pub fn install_v31_primitive_pack(
     registry.install_mask::<MaskCheckers>()?;
     registry.install_mask::<MaskDissolve>()?;
     registry.install_coordinate_sampler::<SamplerBounce>()?;
+    registry.install_coordinate_sampler::<SamplerCrtJitter>()?;
     registry.install_coordinate_sampler::<SamplerDistortion>()?;
     registry.install_coordinate_sampler::<SamplerFaultLine>()?;
     registry.install_coordinate_sampler::<SamplerGravity>()?;
@@ -49,4 +51,4 @@ pub fn install_v31_primitive_pack(
 }
 
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>END OF VERSION: 0.15.0</VERS>
+// <VERS>END OF VERSION: 0.16.0</VERS>
