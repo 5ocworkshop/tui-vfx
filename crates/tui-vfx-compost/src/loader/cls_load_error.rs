@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Load errors describe canonical v3.1 acceptance failures for currently supported substrate behavior.</WCTX>
-// <CLOG>0.7.0: MINOR — add batched substrate rejection diagnostics.</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Add a Canonicalize variant so the loader can absorb authoring shorthand canonicalize failures alongside contract validation diagnostics.</WCTX>
+// <CLOG>0.8.0: MINOR — add Canonicalize variant absorbing CanonicalizationError so authoring shorthand can flow through the load entry point.</CLOG>
 
 use std::error::Error;
 use std::fmt;
@@ -20,6 +20,12 @@ pub enum LoadError {
     /// The canonical contract validator rejected the recipe.
     Contract {
         /// Debug-formatted contract validation error.
+        message: String,
+    },
+
+    /// Authoring-shorthand canonicalization failed before load-time validation could run.
+    Canonicalize {
+        /// Display-formatted canonicalization error including the JSON-path stack.
         message: String,
     },
 
@@ -131,6 +137,9 @@ impl fmt::Display for LoadError {
             Self::Contract { message } => {
                 write!(formatter, "contract validation failed: {message}")
             }
+            Self::Canonicalize { message } => {
+                write!(formatter, "canonicalization failed: {message}")
+            }
             Self::UnsupportedSourceInput {
                 source_id,
                 input,
@@ -210,6 +219,14 @@ impl From<tui_vfx_contract::DescriptorValidationError> for LoadError {
     fn from(value: tui_vfx_contract::DescriptorValidationError) -> Self {
         Self::Contract {
             message: format!("{value:?}"),
+        }
+    }
+}
+
+impl From<tui_vfx_contract::canonicalize::CanonicalizationError> for LoadError {
+    fn from(value: tui_vfx_contract::canonicalize::CanonicalizationError) -> Self {
+        Self::Canonicalize {
+            message: format!("{value}"),
         }
     }
 }
