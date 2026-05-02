@@ -34,6 +34,17 @@
       "description": "Stable canonical recipe identifier.",
       "$ref": "#/$defs/RecipeId"
     },
+    "intent": {
+      "description": "Provenance recorded by the authoring shorthand canonicalize pass.\n\n`None` for recipes authored directly in canonical form. Persisted alongside\nthe canonical document for diagnostics, theme tooling, and corpus analysis;\nthe runtime ignores it.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RecipeIntent"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "lifecycle": {
       "description": "Optional recipe-level lifecycle semantics for enter, dwell, and exit.",
       "anyOf": [
@@ -118,6 +129,30 @@
     "scenes"
   ],
   "$defs": {
+    "AliasUsage": {
+      "description": "Record of one alias being applied during effect-axis canonicalization.",
+      "type": "object",
+      "properties": {
+        "axis": {
+          "description": "Author-facing axis: `filter`, `shader`, `sampler`, `style`, `mask`.",
+          "type": "string"
+        },
+        "canonicalEffect": {
+          "description": "Canonical effect identifier emitted (e.g., `filter.dim`).",
+          "type": "string"
+        },
+        "from": {
+          "description": "Author-side spelling that matched.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "axis",
+        "from",
+        "canonicalEffect"
+      ]
+    },
     "AssetFormat": {
       "description": "Stable asset format identifier, such as `tui-vfx.braille_flag_asset.v1`.",
       "type": "string"
@@ -1157,6 +1192,27 @@
         "y"
       ]
     },
+    "ExtendsChainEntry": {
+      "description": "One step in a resolved `extends:` chain.",
+      "type": "object",
+      "properties": {
+        "mergedKeys": {
+          "description": "Top-level keys contributed by this template after deep-merge.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "description": "Path of the template, as written in the parent's `extends:` field.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ]
+    },
     "GradientSpec": {
       "description": "Canonical gradient value for descriptor inputs.",
       "type": "object",
@@ -1844,6 +1900,27 @@
         }
       ]
     },
+    "PresetUsage": {
+      "description": "Record of one preset being applied during transition-block canonicalization.",
+      "type": "object",
+      "properties": {
+        "consumedParams": {
+          "description": "Names of author-side params consumed by the expansion. Values are not\ncaptured here — they live in the canonical tracks the preset emitted.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preset": {
+          "description": "Preset name authored.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "preset"
+      ]
+    },
     "PreviewLoopbackSpec": {
       "description": "Preview/demo value provider for a host signal.\n\nA preview loopback is not trigger semantics and does not replace a host\nsignal. Hosts still win when they provide a runtime value. The loopback\nexists so deterministic players, documentation generators, and migration\nvalidators can replay a recipe without silently dropping authored demo\nbindings.",
       "oneOf": [
@@ -2111,6 +2188,34 @@
       "description": "Stable canonical recipe document identifier.",
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "RecipeIntent": {
+      "description": "Provenance metadata recorded by canonicalization.\n\nParallels [`TransitionIntent`] at the recipe level. `None` for input\nalready in canonical form. Persisted alongside the canonical document\nfor diagnostics, theme tooling, and corpus analysis — the runtime\nignores it.\n\n[`TransitionIntent`]: crate::TransitionIntent",
+      "type": "object",
+      "properties": {
+        "aliasUsages": {
+          "description": "Per-node alias usages keyed by the canonical node id.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/AliasUsage"
+          }
+        },
+        "extendsChain": {
+          "description": "Templates resolved by the `extends:` chain, in order from most-derived to root.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExtendsChainEntry"
+          }
+        },
+        "presetUsages": {
+          "description": "Per-transition preset usages keyed by the canonical transition id.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PresetUsage"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "RecipeMetadata": {
       "description": "Human-facing metadata for a canonical recipe document.",
@@ -4824,6 +4929,11 @@
           "const": "crossfade"
         },
         {
+          "description": "Opacity-only reveal between alpha 0 and 1.",
+          "type": "string",
+          "const": "fade"
+        },
+        {
           "description": "Directional coverage reveal.",
           "type": "string",
           "const": "wipe"
@@ -4832,6 +4942,11 @@
           "description": "Aperture reveal around a focal point.",
           "type": "string",
           "const": "iris"
+        },
+        {
+          "description": "Banded slat reveal across the surface.",
+          "type": "string",
+          "const": "blinds"
         },
         {
           "description": "Coordinated from/to surface displacement.",

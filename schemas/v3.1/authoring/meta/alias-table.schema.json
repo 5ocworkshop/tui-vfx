@@ -64,6 +64,10 @@
             }
           }
         },
+        "applyToIsInput": {
+          "description": "When true, author-side 'applyTo' on this effect binds to a per-effect input named 'applyTo' instead of lifting to NodeSpec.writeChannels. Set this on aliases whose descriptors declare applyTo as a real input (e.g., shader.focused_row_gradient where applyTo selects which channel the shader's computed color targets internally). Default behavior (flag absent or false) is the universal lift rule from common/canonicalization-rules.json.",
+          "type": "boolean"
+        },
         "deprecated": {
           "description": "Free-text note when this alias is being phased out. Canonicalize-time warnings reference this.",
           "type": "string"

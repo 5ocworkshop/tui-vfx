@@ -251,6 +251,7 @@ fn valid_recipe() -> RecipeDocument {
             height: 5,
             elements: vec![scene_element()],
         }],
+        intent: None,
     }
 }
 

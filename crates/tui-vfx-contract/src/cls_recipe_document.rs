@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_document.rs</FILE> - <DESC>Canonical v3.1 recipe document root DTO</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>New kernel Phase J2: allow canonical recipes to reference external descriptor packs.</WCTX>
-// <CLOG>0.3.0: MINOR — add descriptor pack refs and catalog-aware validation.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Authoring shorthand canonicalize: attach optional recipe-level provenance metadata.</WCTX>
+// <CLOG>0.4.0: MINOR — add optional intent field carrying canonicalize-time provenance (extends chain, alias usages, preset usages).
+// 0.3.0: MINOR — add descriptor pack refs and catalog-aware validation.
 // 0.2.0: MINOR — add optional recipe-level lifecycle contract.
 // 0.1.0: INIT — add recipe document root and delegate cross-document validation.</CLOG>
 
@@ -10,7 +11,7 @@ use std::collections::BTreeMap;
 use crate::{
     AssetId, AssetSpec, DescriptorCatalog, DescriptorPackRef, DescriptorValidationError, GraphSpec,
     LifecycleSpec, RecipeId, RecipeMetadata, RecipeScene, SourceDescriptor, SourceId,
-    SourceInstanceId, SourceSpec, TransitionId, TransitionSpec,
+    SourceInstanceId, SourceSpec, TransitionId, TransitionSpec, canonicalize::RecipeIntent,
     fnc_validate_recipe_with_catalog::validate_recipe_with_catalog,
     orc_validate_recipe_document::validate_recipe_document,
 };
@@ -47,6 +48,13 @@ pub struct RecipeDocument {
     pub graph: GraphSpec,
     /// Scene declarations referencing source-produced surfaces and optional element graph bindings.
     pub scenes: Vec<RecipeScene>,
+    /// Provenance recorded by the authoring shorthand canonicalize pass.
+    ///
+    /// `None` for recipes authored directly in canonical form. Persisted alongside
+    /// the canonical document for diagnostics, theme tooling, and corpus analysis;
+    /// the runtime ignores it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent: Option<RecipeIntent>,
 }
 
 impl RecipeDocument {
@@ -97,4 +105,4 @@ fn add_key_pattern(schema: &mut schemars::Schema, description_prefix: &str, patt
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_document.rs</FILE> - <DESC>Canonical v3.1 recipe document root DTO</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

@@ -3,12 +3,10 @@
   "version": "3.1",
   "metadata": {
     "title": "Baseline (no effects)",
-    "description": "Minimal recipe — single card, no effects.",
-    "authors": ["corpus"],
-    "tags": ["baseline"]
+    "description": null
   },
   "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
+    "clock": { "clockMode": "monotonic", "period": null },
     "phases": [
       { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } },
       { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } } },
@@ -19,7 +17,7 @@
   "sourceDescriptors": {},
   "sources": {
     "mainCard": {
-      "source": "source.card",
+      "sourceDescriptor": "source.card",
       "inputs": {
         "message": { "kind": "literal", "value": { "kind": "text", "value": "BASELINE TEST" } },
         "width": { "kind": "literal", "value": { "kind": "integer", "value": 35 } },
@@ -43,7 +41,7 @@
           "layer": "primary",
           "zIndex": 0,
           "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
+          "sourceInstance": "mainCard",
           "clipPolicy": "clip",
           "cellWritePolicy": "writeCell",
           "roleWritePolicy": { "kind": "preserveDestination" }

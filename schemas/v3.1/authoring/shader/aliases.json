@@ -8,6 +8,7 @@
     {
       "from": "focused_row_gradient",
       "canonicalEffect": "shader.focused_row_gradient",
+      "applyToIsInput": true,
       "paramMapping": {
         "selectedRow":     { "to": "selectedRow",     "envelope": "value-source" },
         "falloffDistance": { "to": "falloffDistance", "envelope": "literal-integer", "default": 16 },
@@ -16,7 +17,8 @@
         "applyTo":         { "to": "applyTo",         "envelope": "literal-enum",    "default": "both" },
         "phase":           { "to": "activePhases",    "envelope": "phases-list" },
         "scope":           { "to": "scope",           "envelope": "scope-spec" }
-      }
+      },
+      "notes": "applyToIsInput: descriptor declares applyTo as a per-effect input that selects which channel the computed gradient color targets. Confirmed against corpus canonical/btop_focused_row_live_list.json."
     },
     {
       "from": "pulse",

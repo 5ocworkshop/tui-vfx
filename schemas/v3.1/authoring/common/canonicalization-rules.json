@@ -106,7 +106,7 @@
       "authorShape": "{ \"applyTo\": \"foreground\" | \"background\" | \"both\" }",
       "canonicalField": "writeChannels",
       "valueRule": "Legacy V2/V3 spelling. 'foreground' → ['foreground'], 'background' → ['background'], 'both' → [] (no restriction; descriptor's declared writable channels apply).",
-      "notes": "Descriptor-aware. The canonicalize function checks the named effect's descriptor: if it declares applyTo as one of its inputs, applyTo binds to that input; otherwise applyTo lifts to NodeSpec.writeChannels. This is why focused_row_gradient (which documents applyTo as a shader input) keeps applyTo as a per-effect input in shader/aliases.json, while dim/greyscale (which don't declare applyTo) let it fall through to this lift rule. Authors writing applyTo on an effect that declares it as an input always get the input binding, never the lift."
+      "notes": "Default behavior. Override per-alias by setting applyToIsInput: true on the alias entry — that flag tells the canonicalize function to treat applyTo as a per-effect input binding instead of lifting it. shader.focused_row_gradient is the witnessed example: its descriptor declares applyTo as an input that selects which channel the computed gradient color targets. Effects without the flag let applyTo fall through to this lift rule."
     }
   ],
 

@@ -1734,6 +1734,11 @@
           "const": "crossfade"
         },
         {
+          "description": "Opacity-only reveal between alpha 0 and 1.",
+          "type": "string",
+          "const": "fade"
+        },
+        {
           "description": "Directional coverage reveal.",
           "type": "string",
           "const": "wipe"
@@ -1742,6 +1747,11 @@
           "description": "Aperture reveal around a focal point.",
           "type": "string",
           "const": "iris"
+        },
+        {
+          "description": "Banded slat reveal across the surface.",
+          "type": "string",
+          "const": "blinds"
         },
         {
           "description": "Coordinated from/to surface displacement.",

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.14.0</VERS>
-// <WCTX>v3.1 pre-release scene vocabulary: expose typed scroll-factor reservation.</WCTX>
-// <CLOG>0.14.0: MINOR — export signal expressions, typed shadows, style color sources, and visibility geometry.
+// <VERS>VERSION: 0.15.0</VERS>
+// <WCTX>Authoring shorthand canonicalize: expose the canonicalize module and recipe-intent provenance type.</WCTX>
+// <CLOG>0.15.0: MINOR — expose the canonicalize module providing canonicalize_recipe and the RecipeIntent provenance type.
+// 0.14.0: MINOR — export signal expressions, typed shadows, style color sources, and visibility geometry.
 // 0.13.0: MINOR — export transition recipe-oracle track support types.
 // 0.12.0: MINOR — export ScrollFactor scene-element metadata and schema root.
 // 0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
@@ -178,6 +179,8 @@ pub mod orc_validate_graph_spec;
 pub mod orc_validate_recipe_document;
 pub mod orc_validate_source_spec;
 pub mod tr_coordinate_sampler;
+
+pub mod canonicalize;
 
 pub use cls_apply_outcome::ApplyOutcome;
 pub use cls_asset_format::AssetFormat;
@@ -356,4 +359,4 @@ pub mod schema_roots {
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.14.0</VERS>
+// <VERS>END OF VERSION: 0.15.0</VERS>

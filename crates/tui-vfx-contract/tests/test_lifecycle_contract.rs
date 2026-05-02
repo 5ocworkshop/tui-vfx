@@ -260,6 +260,7 @@ fn recipe_document_can_include_lifecycle() {
         sources: BTreeMap::new(),
         graph,
         scenes: vec![],
+        intent: None,
     };
 
     assert!(recipe.validate().is_ok());

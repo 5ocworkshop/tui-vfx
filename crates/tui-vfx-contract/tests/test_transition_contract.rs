@@ -425,6 +425,7 @@ fn recipe_with_transitions(transitions: Vec<TransitionSpec>) -> RecipeDocument {
             topology: None,
         },
         scenes: vec![],
+        intent: None,
     }
 }
 
