@@ -22,27 +22,28 @@
       "preset": "iris",
       "kind": "transition",
       "params": [
-        { "name": "shape",    "type": "enum", "values": ["circle", "diamond", "square"], "default": "circle" },
+        { "name": "shape",    "type": "enum", "values": ["circle", "diamond", "box", "square", "rect"], "default": "circle" },
         { "name": "softEdge", "type": "boolean", "default": false },
         { "name": "duration", "type": "duration", "default": "500ms" }
       ],
       "tracks": [
         { "kind": "visibility.iris" }
       ],
-      "notes": "Shape and softEdge feed visibility.iris via shape={{shape}}, softEdge={{softEdge}}; canonicalizer wires those into the track param block."
+      "notes": "Shape and softEdge feed visibility.iris via shape={{shape}}, softEdge={{softEdge}}; canonicalizer wires those into the track param block. The canonical VisibilityIrisShape enum has only circle/diamond/box; the author-side `square` and `rect` aliases collapse onto `box` because the canonical aperture is an axis-aligned rectangle in either case."
     },
 
     {
       "preset": "wipe",
       "kind": "transition",
       "params": [
-        { "name": "direction", "type": "enum", "values": ["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"], "default": "leftToRight" },
+        { "name": "direction", "type": "enum", "values": ["leftToRight", "rightToLeft", "topToBottom", "bottomToTop", "horizontalCenterOut", "horizontalEdgesIn", "verticalCenterOut", "verticalEdgesIn", "angle"], "default": "leftToRight" },
         { "name": "softEdge",  "type": "boolean", "default": false },
         { "name": "duration",  "type": "duration", "default": "400ms" }
       ],
       "tracks": [
         { "kind": "visibility.wipe" }
-      ]
+      ],
+      "notes": "Cardinal directions cover the four edge-anchored sweeps; the four symmetric variants drive two-sided reveals expanding from or collapsing toward the centerline; `angle` opts into a numeric angleDegrees source for diagonal/custom wipes."
     },
 
     {
