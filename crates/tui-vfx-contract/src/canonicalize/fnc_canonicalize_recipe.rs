@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_canonicalize_recipe.rs</FILE> - <DESC>Top-level canonicalize orchestrator</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase 2 of canonicalize: lift effects[] into graph nodes and record alias-usage provenance.</WCTX>
-// <CLOG>0.2.0: MINOR — add effects-to-nodes pass plus RecipeIntent.alias_usages population.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase 2b of canonicalize: lift the transitions block plus preset expansions and record PresetUsage provenance.</WCTX>
+// <CLOG>0.3.0: MINOR — sequence transition lifting and merge PresetUsage into RecipeIntent.preset_usages.
+// 0.2.0: MINOR — add effects-to-nodes pass plus RecipeIntent.alias_usages population.
 // 0.1.0: INIT — sequence card-lift and defaults; deserialize via serde_json::from_value; defer descriptor validation to the loader.</CLOG>
 
 use serde_json::Value;
@@ -13,6 +14,7 @@ use super::cls_recipe_intent::RecipeIntent;
 use super::fnc_default_recipe::apply_recipe_defaults;
 use super::fnc_lift_card_to_source::lift_card_to_source;
 use super::fnc_lift_effects_to_nodes::lift_effects_to_nodes;
+use super::fnc_lift_transitions::lift_transitions;
 
 /// Translate authoring shorthand into a canonical [`RecipeDocument`].
 ///
@@ -30,6 +32,7 @@ pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, Canonicalizat
 
     lift_card_to_source(&mut tree)?;
     let alias_usages = lift_effects_to_nodes(&mut tree)?;
+    let preset_usages = lift_transitions(&mut tree)?;
     apply_recipe_defaults(&mut tree)?;
 
     let mut recipe: RecipeDocument = serde_json::from_value(tree).map_err(|e| {
@@ -41,9 +44,10 @@ pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, Canonicalizat
         )
     })?;
 
-    if !alias_usages.is_empty() {
+    if !alias_usages.is_empty() || !preset_usages.is_empty() {
         let intent = recipe.intent.get_or_insert_with(RecipeIntent::default);
         intent.alias_usages.extend(alias_usages);
+        intent.preset_usages.extend(preset_usages);
     }
 
     Ok(recipe)

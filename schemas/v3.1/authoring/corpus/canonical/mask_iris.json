@@ -1,82 +1,248 @@
 {
-  "id": "mask-iris",
-  "version": "3.1",
-  "metadata": {
-    "title": "Mask: Iris",
-    "description": "Circle iris on enter, diamond iris on exit.",
-    "authors": ["corpus"],
-    "tags": ["mask", "iris", "transition-eligible"]
-  },
-  "lifecycle": {
-    "clock": { "mode": "monotonic", "period": null },
-    "phases": [
-      { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 2000 } } },
-      { "phase": "dwell", "timing": { "kind": "dwell", "policy": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 4000 } } } },
-      { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 1000 } } }
-    ]
-  },
   "assets": {},
-  "sourceDescriptors": {},
-  "sources": {
-    "mainCard": {
-      "source": "source.card",
-      "inputs": {
-        "message": { "kind": "literal", "value": { "kind": "text", "value": "Mask: Iris Effect" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 35 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 5 } },
-        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } } },
-        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 60, "g": 30, "b": 10, "a": 255 } } },
-        "borderStyle": { "kind": "literal", "value": { "kind": "enum", "value": "rounded" } }
-      },
-      "assets": {}
+  "descriptorPacks": [
+    {
+      "id": "v3.1.primitive"
     }
-  },
+  ],
   "graph": {
     "id": "mainGraph",
-    "version": "3.1",
-    "nodes": {
-      "irisEnter": {
-        "id": "irisEnter",
-        "effect": "mask.iris",
-        "inputs": {
-          "shape": { "kind": "literal", "value": { "kind": "enum", "value": "circle" } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["enter"]
+    "version": "3.1"
+  },
+  "id": "mask-iris",
+  "intent": {
+    "presetUsages": {
+      "enterIris": {
+        "consumedParams": [
+          "shape",
+          "softEdge",
+          "duration"
+        ],
+        "preset": "iris"
       },
-      "irisExit": {
-        "id": "irisExit",
-        "effect": "mask.iris",
-        "inputs": {
-          "shape": { "kind": "literal", "value": { "kind": "enum", "value": "diamond" } },
-          "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
-        },
-        "scope": { "kind": "all" },
-        "activePhases": ["exit"]
+      "exitIris": {
+        "consumedParams": [
+          "shape",
+          "softEdge",
+          "duration"
+        ],
+        "preset": "iris"
       }
+    }
+  },
+  "lifecycle": {
+    "clock": {
+      "clockMode": "monotonic",
+      "period": null
     },
-    "order": ["irisEnter", "irisExit"]
+    "phases": [
+      {
+        "phase": "enter",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      },
+      {
+        "phase": "dwell",
+        "timing": {
+          "kind": "dwell",
+          "policy": {
+            "duration": {
+              "kind": "milliseconds",
+              "value": 5000
+            },
+            "kind": "fixed"
+          }
+        }
+      },
+      {
+        "phase": "exit",
+        "timing": {
+          "duration": {
+            "kind": "milliseconds",
+            "value": 1000
+          },
+          "kind": "fixed"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "authors": [],
+    "description": null,
+    "expectedVisual": null,
+    "tags": [],
+    "title": "Mask: Iris Effect"
   },
   "scenes": [
     {
-      "id": "mainScene",
-      "width": 35,
-      "height": 5,
       "elements": [
         {
+          "cellWritePolicy": "writeCell",
+          "clipPolicy": "clip",
+          "graphBinding": null,
           "id": "mainElement",
           "layer": "primary",
-          "zIndex": 0,
-          "placement": { "x": 0, "y": 0 },
-          "source": "mainCard",
-          "pipeline": { "graph": "mainGraph" },
-          "clipPolicy": "clip",
-          "cellWritePolicy": "writeCell",
-          "roleWritePolicy": { "kind": "preserveDestination" }
+          "placement": {
+            "x": 0,
+            "y": 0
+          },
+          "roleWritePolicy": {
+            "kind": "preserveDestination"
+          },
+          "sourceInstance": "mainCard",
+          "zIndex": 0
+        }
+      ],
+      "height": 5,
+      "id": "mainScene",
+      "width": 35
+    }
+  ],
+  "sourceDescriptors": {},
+  "sources": {
+    "mainCard": {
+      "assets": {},
+      "inputs": {
+        "background": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 10,
+              "g": 30,
+              "r": 60
+            }
+          }
+        },
+        "borderStyle": {
+          "kind": "literal",
+          "value": {
+            "kind": "enum",
+            "value": "rounded"
+          }
+        },
+        "foreground": {
+          "kind": "literal",
+          "value": {
+            "kind": "color",
+            "value": {
+              "a": 255,
+              "b": 229,
+              "g": 229,
+              "r": 229
+            }
+          }
+        },
+        "height": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 5
+          }
+        },
+        "message": {
+          "kind": "literal",
+          "value": {
+            "kind": "text",
+            "value": "Mask: Iris Effect"
+          }
+        },
+        "width": {
+          "kind": "literal",
+          "value": {
+            "kind": "integer",
+            "value": 35
+          }
+        }
+      },
+      "sourceDescriptor": "source.card"
+    }
+  },
+  "transitions": {
+    "enterIris": {
+      "activePhases": [
+        "enter"
+      ],
+      "id": "enterIris",
+      "intent": {
+        "kind": "preset",
+        "preset": "iris"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "seconds",
+          "value": 2.0
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.iris",
+          "shape": "circle",
+          "subject": "to"
+        }
+      ]
+    },
+    "exitIris": {
+      "activePhases": [
+        "exit"
+      ],
+      "id": "exitIris",
+      "intent": {
+        "kind": "preset",
+        "preset": "iris"
+      },
+      "interruption": "snapToEndThenStartNext",
+      "reducedMotion": {
+        "policy": "instant"
+      },
+      "subjects": {
+        "from": {
+          "kind": "empty"
+        },
+        "to": {
+          "kind": "empty"
+        }
+      },
+      "timing": {
+        "duration": {
+          "kind": "seconds",
+          "value": 1.0
+        }
+      },
+      "tracks": [
+        {
+          "edge": {
+            "featherCells": 1,
+            "kind": "soft"
+          },
+          "kind": "visibility.iris",
+          "shape": "diamond",
+          "subject": "to"
         }
       ]
     }
-  ],
-  "descriptorPacks": [{ "id": "v3.1.primitive" }]
+  },
+  "version": "3.1"
 }
