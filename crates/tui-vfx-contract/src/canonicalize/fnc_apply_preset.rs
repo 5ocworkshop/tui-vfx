@@ -108,7 +108,14 @@ fn build_iris_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    let shape = consume_string(author, "shape", consumed).unwrap_or_else(|| "circle".into());
+    let shape = match consume_string(author, "shape", consumed).as_deref() {
+        Some("diamond") => "diamond",
+        // VisibilityIrisShape only supports `circle` and `diamond`. Other
+        // author-side shapes (`box`, `square`) fall back to circle; the
+        // original is recorded in PresetUsage.consumed_params.
+        _ => "circle",
+    }
+    .to_string();
     let mut track = json!({
         "kind": "visibility.iris",
         "subject": "to",
@@ -140,13 +147,15 @@ fn build_wipe_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    let direction =
-        consume_string(author, "direction", consumed).unwrap_or_else(|| "leftToRight".into());
     let mut track = json!({
         "kind": "visibility.wipe",
         "subject": "to",
-        "revealDirection": direction,
     });
+    if let Some(direction) = consume_string(author, "direction", consumed)
+        && let Some(canonical) = canonical_reveal_direction(&direction)
+    {
+        track["revealDirection"] = Value::String(canonical.into());
+    }
     if let Some(soft) = author.get("softEdge").and_then(Value::as_bool) {
         consumed.push("softEdge".into());
         if soft {
@@ -154,6 +163,22 @@ fn build_wipe_track(
         }
     }
     Ok(track)
+}
+
+fn canonical_reveal_direction(author: &str) -> Option<&'static str> {
+    Some(match author {
+        "leftToRight" => "leftToRight",
+        "rightToLeft" => "rightToLeft",
+        "topToBottom" => "topToBottom",
+        "bottomToTop" => "bottomToTop",
+        // Author-side composite spellings the canonical enum doesn't have.
+        // Map them to the closest cardinal direction; the original is recorded
+        // in PresetUsage.consumed_params for diagnostics.
+        "horizontalCenterOut" | "horizontalEdgesIn" => "leftToRight",
+        "verticalCenterOut" | "verticalEdgesIn" => "topToBottom",
+        "angle" => "angle",
+        _ => return None,
+    })
 }
 
 fn build_dissolve_track(
@@ -294,6 +319,13 @@ fn travel_direction_from_reveal(reveal: &str) -> &'static str {
     }
 }
 
+pub(super) fn build_compose_timing(
+    author: &Map<String, Value>,
+    consumed: &mut Vec<String>,
+) -> Result<Value, CanonicalizationError> {
+    build_timing(author, consumed)
+}
+
 fn build_timing(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
@@ -349,7 +381,7 @@ mod tests {
         );
         assert_eq!(
             spec["timing"]["duration"],
-            json!({ "kind": "seconds", "value": 2 })
+            json!({ "kind": "seconds", "value": 2.0 })
         );
         assert!(usage.consumed_params.contains(&"shape".into()));
         assert!(usage.consumed_params.contains(&"softEdge".into()));

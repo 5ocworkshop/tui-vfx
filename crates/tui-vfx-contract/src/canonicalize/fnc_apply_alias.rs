@@ -123,6 +123,15 @@ pub fn apply_alias(
                     .unwrap_or(EnvelopeHint::None);
                 let lifted = lift_value_envelope(value, envelope_hint)
                     .map_err(|e| e.at(JsonPathSegment::field(key.clone())))?;
+                // NodeSpec.inputs is BTreeMap<EffectInputId, ValueSource>. The
+                // canonical schema rejects entries whose lifted shape isn't a
+                // tagged ValueSource variant (paths/stops/nodes/pattern/signal
+                // structural inputs that pass through unwrapped). Skip those —
+                // descriptor-defined structural inputs need a contract-level
+                // mechanism that does not yet exist.
+                if !is_canonical_value_source(&lifted) {
+                    continue;
+                }
                 inputs.insert(target_key, lifted);
             }
         }
@@ -188,6 +197,31 @@ fn apply_to_lift(
         )
         .at(JsonPathSegment::field("applyTo"))),
     }
+}
+
+/// True when the lifted value is a canonical ValueSource variant — an object
+/// whose `kind` matches one of `literal`, `signal`, `parameter`, `graphValue`,
+/// `map`, `sampledField`, `signalExpression`, `phaseProgress`, or `clock`.
+/// Other shapes (raw arrays, structural objects without a `kind` discriminator)
+/// cannot fit the canonical NodeSpec.inputs slot and are dropped.
+fn is_canonical_value_source(value: &Value) -> bool {
+    let Value::Object(obj) = value else {
+        return false;
+    };
+    matches!(
+        obj.get("kind").and_then(Value::as_str),
+        Some(
+            "literal"
+                | "signal"
+                | "parameter"
+                | "graphValue"
+                | "map"
+                | "sampledField"
+                | "signalExpression"
+                | "phaseProgress"
+                | "clock"
+        )
+    )
 }
 
 fn dedup_preserve_order(items: Vec<String>) -> Vec<String> {

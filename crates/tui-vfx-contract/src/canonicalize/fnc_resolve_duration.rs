@@ -26,6 +26,8 @@ pub fn resolve_duration(value: &Value) -> Result<Value, CanonicalizationError> {
 
 fn parse_duration_str(raw: &str) -> Result<Value, CanonicalizationError> {
     let trimmed = raw.trim();
+    // Note: the canonical DurationSpec enum only has Milliseconds and Seconds;
+    // author-side `m` (minutes) gets converted to milliseconds.
     let (number_part, kind) = if let Some(rest) = trimmed.strip_suffix("ms") {
         (rest, "milliseconds")
     } else if let Some(rest) = trimmed.strip_suffix('s') {
@@ -44,20 +46,17 @@ fn parse_duration_str(raw: &str) -> Result<Value, CanonicalizationError> {
             format!("duration {raw} numeric portion did not parse"),
         )
     })?;
-    if parsed.fract() == 0.0 && parsed.is_finite() {
-        Ok(json!({ "kind": kind, "value": parsed as i64 }))
-    } else {
-        // Promote fractional non-millisecond durations to milliseconds for integer storage.
-        match kind {
-            "milliseconds" => Ok(json!({ "kind": kind, "value": parsed.round() as i64 })),
-            "seconds" => {
-                Ok(json!({ "kind": "milliseconds", "value": (parsed * 1000.0).round() as i64 }))
-            }
-            "minutes" => {
-                Ok(json!({ "kind": "milliseconds", "value": (parsed * 60_000.0).round() as i64 }))
-            }
-            _ => unreachable!(),
-        }
+    // The canonical DurationSpec enum has only Milliseconds (u64) and Seconds
+    // (f64). Author-side `m` (minutes) gets promoted to milliseconds since the
+    // contract has no Minutes variant.
+    match kind {
+        "milliseconds" => Ok(json!({ "kind": "milliseconds", "value": parsed.round() as u64 })),
+        "seconds" => Ok(json!({ "kind": "seconds", "value": parsed })),
+        "minutes" => Ok(json!({
+            "kind": "milliseconds",
+            "value": (parsed * 60_000.0).round() as u64,
+        })),
+        _ => unreachable!("kind already validated"),
     }
 }
 
@@ -74,26 +73,26 @@ mod tests {
     }
 
     #[test]
-    fn seconds_integer() {
+    fn seconds_integer_emits_seconds_f64() {
         assert_eq!(
             resolve_duration(&json!("2s")).unwrap(),
-            json!({ "kind": "seconds", "value": 2 })
+            json!({ "kind": "seconds", "value": 2.0 })
         );
     }
 
     #[test]
-    fn fractional_seconds_promote_to_milliseconds() {
+    fn fractional_seconds_stay_seconds() {
         assert_eq!(
             resolve_duration(&json!("1.5s")).unwrap(),
-            json!({ "kind": "milliseconds", "value": 1500 })
+            json!({ "kind": "seconds", "value": 1.5 })
         );
     }
 
     #[test]
-    fn minutes_integer() {
+    fn minutes_promote_to_milliseconds() {
         assert_eq!(
             resolve_duration(&json!("2m")).unwrap(),
-            json!({ "kind": "minutes", "value": 2 })
+            json!({ "kind": "milliseconds", "value": 120000 })
         );
     }
 

@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn duration_hint_emits_structural_duration_spec() {
         let out = lift_value_envelope(&json!("300ms"), EnvelopeHint::Duration).unwrap();
-        assert_eq!(out, json!({ "kind": "milliseconds", "value": 300 }));
+        assert_eq!(out, json!({ "kind": "milliseconds", "value": 300_u64 }));
     }
 }
 

@@ -162,7 +162,14 @@ fn scope_from_pair(key: &str, value: &Value) -> Result<Value, CanonicalizationEr
                     "scope.cell tuple must have 2 elements",
                 ));
             }
-            Ok(json!({ "kind": "cell", "x": arr[0], "y": arr[1] }))
+            // ScopeSpec::Cell stores x/y as ValueSource (not raw integers) so
+            // runtime-selected cells can use bindings or sampled fields.
+            // Wrap raw integer literals in the ValueSource::Literal envelope.
+            Ok(json!({
+                "kind": "cell",
+                "x": coord_value_source(&arr[0])?,
+                "y": coord_value_source(&arr[1])?,
+            }))
         }
         "rowRange" => {
             let (start, end) = pair_tuple(value, "rowRange")?;
@@ -232,6 +239,28 @@ fn pascalize_role(value: &Value) -> Result<Value, CanonicalizationError> {
         None => String::new(),
     };
     Ok(Value::String(normalized))
+}
+
+fn coord_value_source(value: &Value) -> Result<Value, CanonicalizationError> {
+    match value {
+        Value::Number(n) => {
+            let inner = if let Some(i) = n.as_i64() {
+                json!({ "kind": "integer", "value": i })
+            } else {
+                json!({ "kind": "number", "value": n.as_f64().unwrap_or(0.0) })
+            };
+            Ok(json!({ "kind": "literal", "value": inner }))
+        }
+        Value::Object(_) => Ok(value.clone()),
+        Value::String(s) if s.starts_with("$bind:") => {
+            let id = s.trim_start_matches("$bind:");
+            Ok(json!({ "kind": "signal", "id": id }))
+        }
+        _ => Err(CanonicalizationError::new(
+            CanonicalizationErrorKind::InvalidScopeShape,
+            "scope.cell coordinates must be integers or canonical ValueSource objects",
+        )),
+    }
 }
 
 fn pair_tuple(value: &Value, key: &str) -> Result<(Value, Value), CanonicalizationError> {
@@ -340,11 +369,15 @@ mod tests {
     }
 
     #[test]
-    fn cell_tuple() {
+    fn cell_tuple_wraps_coordinates_as_value_source() {
         let resolved = resolve_scope(&json!({ "cell": [3, 7] })).unwrap();
         assert_eq!(
             resolved.scope,
-            Some(json!({ "kind": "cell", "x": 3, "y": 7 }))
+            Some(json!({
+                "kind": "cell",
+                "x": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+                "y": { "kind": "literal", "value": { "kind": "integer", "value": 7 } }
+            }))
         );
     }
 

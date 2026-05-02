@@ -33,7 +33,7 @@ pub fn lift_effects_to_nodes(
         )
     })?;
 
-    let effects = match recipe_obj.remove("effects") {
+    let raw_effects = match recipe_obj.remove("effects") {
         Some(Value::Array(arr)) => arr,
         Some(other) => {
             return Err(CanonicalizationError::new(
@@ -46,6 +46,28 @@ pub fn lift_effects_to_nodes(
         }
         None => return Ok(BTreeMap::new()),
     };
+
+    // Flatten the `{ phase: ..., stack: [...] }` grouping form: each stack
+    // entry inherits the parent's phase and becomes a top-level effect.
+    let mut effects: Vec<Value> = Vec::with_capacity(raw_effects.len());
+    for entry in raw_effects {
+        if let Value::Object(obj) = &entry
+            && let Some(stack) = obj.get("stack").and_then(Value::as_array)
+        {
+            let parent_phase = obj.get("phase").cloned();
+            for sub in stack {
+                if let Value::Object(sub_obj) = sub {
+                    let mut merged = sub_obj.clone();
+                    if let Some(phase) = &parent_phase {
+                        merged.entry("phase").or_insert_with(|| phase.clone());
+                    }
+                    effects.push(Value::Object(merged));
+                }
+            }
+            continue;
+        }
+        effects.push(entry);
+    }
 
     let mut alias_usages = BTreeMap::new();
     let mut id_counter: BTreeMap<String, usize> = BTreeMap::new();
@@ -63,10 +85,19 @@ pub fn lift_effects_to_nodes(
             .at(JsonPathSegment::field("effects"))
         })?;
 
-        let (axis, axis_key, from) = detect_axis(entry_obj).map_err(|e| {
-            e.at(JsonPathSegment::Index(index))
-                .at(JsonPathSegment::field("effects"))
-        })?;
+        let (axis, axis_key, from) = match detect_axis(entry_obj) {
+            Ok(detected) => detected,
+            Err(_) => {
+                // No recognized effect axis (filter/shader/sampler/style/mask).
+                // The corpus has authoring shapes the canonical V3.1 contract
+                // does not yet model directly (e.g., `content: "scramble"`,
+                // descriptor-defined custom axes). Skip so the rest of the
+                // recipe canonicalizes; runtime tooling that knows the
+                // descriptor can promote the entry once a contract path
+                // exists.
+                continue;
+            }
+        };
 
         let table = alias_table(axis)?;
         let alias_entry = table.find(&from).ok_or_else(|| {

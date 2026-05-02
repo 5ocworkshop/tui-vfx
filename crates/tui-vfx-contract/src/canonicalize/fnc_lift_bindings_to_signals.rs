@@ -375,7 +375,7 @@ mod tests {
         assert_eq!(loopback["end"], 4.0);
         assert_eq!(
             loopback["duration"],
-            json!({ "kind": "seconds", "value": 4 })
+            json!({ "kind": "seconds", "value": 4.0 })
         );
         assert_eq!(loopback["repeat"], true);
     }

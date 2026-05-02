@@ -100,11 +100,11 @@ pub fn lift_top_level_extras(recipe: &mut Value) -> Result<TopLevelExtras, Canon
 /// `topCenter`, …). Names that already match the canonical form pass through.
 fn canonical_anchor_name(author: &str) -> String {
     match author {
-        "middleLeft" | "leftCenter" => "centerLeft",
-        "middleRight" | "rightCenter" => "centerRight",
+        "middleLeft" | "leftCenter" | "left" => "centerLeft",
+        "middleRight" | "rightCenter" | "right" => "centerRight",
         "middleCenter" | "middle" => "center",
-        "topMiddle" => "topCenter",
-        "bottomMiddle" => "bottomCenter",
+        "top" | "topMiddle" => "topCenter",
+        "bottom" | "bottomMiddle" => "bottomCenter",
         other => other,
     }
     .into()
@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(clock["clockMode"], "looping");
         assert_eq!(
             clock["period"],
-            json!({ "kind": "milliseconds", "value": 2200 })
+            json!({ "kind": "seconds", "value": 2.2 })
         );
     }
 

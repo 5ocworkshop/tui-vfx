@@ -80,6 +80,21 @@ pub fn lift_transitions(
             }
         };
 
+        // Multi-track form: { compose: "all", tracks: [{preset: ..., ...}, ...] }
+        if entry_obj.contains_key("tracks") && entry_obj.contains_key("compose") {
+            let transition_id = format!("{phase_key}Compose");
+            let (spec, usage) =
+                apply_compose_transition(&phase_key, &entry_obj, transition_id.clone()).map_err(
+                    |e| {
+                        e.at(JsonPathSegment::field(phase_key.clone()))
+                            .at(JsonPathSegment::field("transitions"))
+                    },
+                )?;
+            canonical_transitions.insert(transition_id.clone(), spec);
+            preset_usages.insert(transition_id, usage);
+            continue;
+        }
+
         let preset = entry_obj
             .get("preset")
             .and_then(Value::as_str)
@@ -109,6 +124,99 @@ pub fn lift_transitions(
         recipe_obj.insert("transitions".into(), Value::Object(canonical_transitions));
     }
     Ok(preset_usages)
+}
+
+/// Build a single canonical TransitionSpec from a multi-track compose-form
+/// transition entry. Iterates `tracks: [{preset: ..., ...}, ...]`, runs each
+/// sub-entry through `apply_preset`, and merges the resulting tracks under one
+/// transition. Records the compose mode in `PresetUsage.consumed_params`.
+fn apply_compose_transition(
+    phase_key: &str,
+    entry: &Map<String, Value>,
+    transition_id: String,
+) -> Result<(Value, super::cls_recipe_intent::PresetUsage), CanonicalizationError> {
+    let tracks_raw = entry
+        .get("tracks")
+        .and_then(Value::as_array)
+        .ok_or_else(|| {
+            CanonicalizationError::new(
+                CanonicalizationErrorKind::UnexpectedJsonShape {
+                    expected: "tracks: [{preset, ...}, ...]".into(),
+                },
+                "compose transition must declare `tracks` array",
+            )
+        })?;
+
+    let mut all_tracks = Vec::new();
+    let mut consumed: Vec<String> = vec!["compose".into(), "tracks".into()];
+    let mut sub_presets: Vec<String> = Vec::new();
+
+    for sub in tracks_raw {
+        let sub_obj = sub.as_object().ok_or_else(|| {
+            CanonicalizationError::new(
+                CanonicalizationErrorKind::UnexpectedJsonShape {
+                    expected: "object".into(),
+                },
+                "compose tracks entry must be an object with `preset`",
+            )
+        })?;
+        let sub_preset = sub_obj
+            .get("preset")
+            .and_then(Value::as_str)
+            .ok_or_else(|| {
+                CanonicalizationError::new(
+                    CanonicalizationErrorKind::MissingRequired {
+                        field: "preset".into(),
+                    },
+                    "compose tracks entry must declare `preset`",
+                )
+            })?;
+        sub_presets.push(sub_preset.into());
+        let sub_id = format!("{transition_id}_{sub_preset}");
+        let (sub_spec, _) = apply_preset(sub_preset, phase_key, sub_obj, sub_id)?;
+        if let Some(track) = sub_spec.pointer("/tracks/0") {
+            all_tracks.push(track.clone());
+        }
+    }
+
+    // Build the merged TransitionSpec borrowing timing/intent from the parent
+    // entry. Author-side compose blocks describe a single coordinated
+    // transition; alias-style intent records both the compose name and the
+    // sub-presets it expanded to.
+    use serde_json::json;
+    let mut spec = Map::new();
+    spec.insert("id".into(), Value::String(transition_id.clone()));
+    spec.insert(
+        "intent".into(),
+        json!({
+            "kind": "alias",
+            "alias": "compose",
+            "canonicalPreset": sub_presets.first().cloned().unwrap_or_else(|| "fade".into()),
+        }),
+    );
+    spec.insert(
+        "subjects".into(),
+        json!({ "from": { "kind": "empty" }, "to": { "kind": "empty" } }),
+    );
+    spec.insert(
+        "timing".into(),
+        super::fnc_apply_preset::build_compose_timing(entry, &mut consumed)?,
+    );
+    spec.insert("activePhases".into(), json!([phase_key]));
+    spec.insert("tracks".into(), Value::Array(all_tracks));
+    spec.insert(
+        "interruption".into(),
+        Value::String("snapToEndThenStartNext".into()),
+    );
+    spec.insert("reducedMotion".into(), json!({ "policy": "instant" }));
+
+    Ok((
+        Value::Object(spec),
+        super::cls_recipe_intent::PresetUsage {
+            preset: format!("compose({})", sub_presets.join(",")),
+            consumed_params: consumed,
+        },
+    ))
 }
 
 fn capitalize_first(s: &str) -> String {
