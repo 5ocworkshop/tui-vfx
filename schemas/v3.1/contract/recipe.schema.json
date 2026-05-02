@@ -4999,6 +4999,26 @@
           "const": "bottomToTop"
         },
         {
+          "description": "Symmetric horizontal reveal expanding outward from the vertical centerline.",
+          "type": "string",
+          "const": "horizontalCenterOut"
+        },
+        {
+          "description": "Symmetric horizontal reveal collapsing inward from both vertical edges.",
+          "type": "string",
+          "const": "horizontalEdgesIn"
+        },
+        {
+          "description": "Symmetric vertical reveal expanding outward from the horizontal centerline.",
+          "type": "string",
+          "const": "verticalCenterOut"
+        },
+        {
+          "description": "Symmetric vertical reveal collapsing inward from both horizontal edges.",
+          "type": "string",
+          "const": "verticalEdgesIn"
+        },
+        {
           "description": "Reveal progresses along a configured angle.",
           "type": "string",
           "const": "angle"
@@ -7443,6 +7463,11 @@
           "description": "Diamond aperture.",
           "type": "string",
           "const": "diamond"
+        },
+        {
+          "description": "Axis-aligned rectangular aperture.",
+          "type": "string",
+          "const": "box"
         }
       ]
     },

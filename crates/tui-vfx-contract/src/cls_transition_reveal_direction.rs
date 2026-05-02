@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/cls_transition_reveal_direction.rs</FILE> - <DESC>Qualified wipe reveal direction enum</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>V3.1 field normalization: avoid ambiguous generic direction fields for wipes.</WCTX>
-// <CLOG>0.1.0: INIT — add revealDirection vocabulary.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Add horizontal/vertical centerOut and edgesIn directions for symmetric two-sided wipes.</WCTX>
+// <CLOG>0.2.0: MINOR — add four symmetric reveal directions (horizontal/vertical × centerOut/edgesIn).</CLOG>
 
 /// Direction of coverage progression for a visibility wipe.
 #[derive(
@@ -26,9 +26,17 @@ pub enum TransitionRevealDirection {
     TopToBottom,
     /// Reveal progresses from bottom to top.
     BottomToTop,
+    /// Symmetric horizontal reveal expanding outward from the vertical centerline.
+    HorizontalCenterOut,
+    /// Symmetric horizontal reveal collapsing inward from both vertical edges.
+    HorizontalEdgesIn,
+    /// Symmetric vertical reveal expanding outward from the horizontal centerline.
+    VerticalCenterOut,
+    /// Symmetric vertical reveal collapsing inward from both horizontal edges.
+    VerticalEdgesIn,
     /// Reveal progresses along a configured angle.
     Angle,
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_transition_reveal_direction.rs</FILE> - <DESC>Qualified wipe reveal direction enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/cls_visibility_iris_shape.rs</FILE> - <DESC>Visibility iris aperture shape enum</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>V3.1 transition tracks: represent iris aperture shape without generic type fields.</WCTX>
-// <CLOG>0.1.0: INIT — add iris shape enum.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Add box aperture for axis-aligned rectangular iris reveals.</WCTX>
+// <CLOG>0.2.0: MINOR — add box aperture variant for rectangular iris reveals.</CLOG>
 
 /// Aperture shape used by a `visibility.iris` transition track.
 #[derive(
@@ -22,7 +22,9 @@ pub enum VisibilityIrisShape {
     Circle,
     /// Diamond aperture.
     Diamond,
+    /// Axis-aligned rectangular aperture.
+    Box,
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_visibility_iris_shape.rs</FILE> - <DESC>Visibility iris aperture shape enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

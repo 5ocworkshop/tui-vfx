@@ -110,6 +110,7 @@ fn build_iris_track(
 ) -> Result<Value, CanonicalizationError> {
     let shape = match consume_string(author, "shape", consumed).as_deref() {
         Some("diamond") => "diamond".to_string(),
+        Some("box") | Some("square") | Some("rect") => "box".to_string(),
         Some("circle") | None => "circle".to_string(),
         Some(other) => {
             return Err(CanonicalizationError::new(
@@ -117,7 +118,7 @@ fn build_iris_track(
                     detail: format!("iris shape `{other}`"),
                 },
                 format!(
-                    "VisibilityIrisShape only accepts `circle` and `diamond`. Author wrote `{other}`. Either map this to one of the canonical shapes in the recipe, or extend VisibilityIrisShape in the contract."
+                    "VisibilityIrisShape has no variant for `{other}`. Use circle / diamond / box, or extend VisibilityIrisShape in the contract."
                 ),
             ));
         }
@@ -177,6 +178,10 @@ fn canonical_reveal_direction(author: &str) -> Result<&'static str, Canonicaliza
         "rightToLeft" => "rightToLeft",
         "topToBottom" => "topToBottom",
         "bottomToTop" => "bottomToTop",
+        "horizontalCenterOut" => "horizontalCenterOut",
+        "horizontalEdgesIn" => "horizontalEdgesIn",
+        "verticalCenterOut" => "verticalCenterOut",
+        "verticalEdgesIn" => "verticalEdgesIn",
         "angle" => "angle",
         other => {
             return Err(CanonicalizationError::new(
@@ -184,7 +189,7 @@ fn canonical_reveal_direction(author: &str) -> Result<&'static str, Canonicaliza
                     detail: format!("wipe direction `{other}`"),
                 },
                 format!(
-                    "TransitionRevealDirection only accepts leftToRight / rightToLeft / topToBottom / bottomToTop / angle. Author wrote `{other}`. Use the canonical name, or extend TransitionRevealDirection / TransitionVisibilityGeometry in the contract."
+                    "TransitionRevealDirection has no variant for `{other}`. Use one of the canonical names or extend the enum in the contract."
                 ),
             ));
         }
