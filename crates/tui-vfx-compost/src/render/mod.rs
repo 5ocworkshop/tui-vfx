@@ -26,13 +26,20 @@ mod fnc_apply_effect_stack;
 mod fnc_apply_role_write_policy;
 mod fnc_build_effect_stack;
 mod fnc_clip_element_bounds;
+mod fnc_element_bounds_fully_visible;
+mod fnc_evaluate_value_predicate;
 mod fnc_is_node_active;
+mod fnc_is_scene_element_visible;
 mod fnc_merge_element_surface;
 mod fnc_merge_parallel_surfaces;
+mod fnc_render_clipped_scene_element;
+mod fnc_render_hidden_overflow_scene_element;
 mod fnc_render_recipe;
 mod fnc_render_scene;
 mod fnc_render_scene_element;
+mod fnc_render_wrapped_scene_element;
 mod fnc_resolve_shader_phase_t;
+mod fnc_wrap_element_cell_bounds;
 mod orc_render_observability;
 
 pub use cls_frame::Frame;
@@ -54,12 +61,21 @@ pub(crate) use fnc_apply_effect_stack::apply_effect_stack;
 pub(crate) use fnc_apply_role_write_policy::apply_role_write_policy;
 pub(crate) use fnc_build_effect_stack::build_effect_stack;
 pub(crate) use fnc_clip_element_bounds::{ElementClipBounds, clip_element_bounds};
+pub(crate) use fnc_element_bounds_fully_visible::element_bounds_fully_visible;
+pub(crate) use fnc_evaluate_value_predicate::evaluate_value_predicate;
 pub(crate) use fnc_is_node_active::is_node_active;
+pub(crate) use fnc_is_scene_element_visible::is_scene_element_visible;
 pub(crate) use fnc_merge_element_surface::merge_element_surface;
 pub(crate) use fnc_merge_parallel_surfaces::has_parallel_surface_merge;
+pub(crate) use fnc_render_clipped_scene_element::{
+    render_clipped_scene_element, source_fits_scene,
+};
+pub(crate) use fnc_render_hidden_overflow_scene_element::render_hidden_overflow_scene_element;
 pub(crate) use fnc_render_scene::render_scene;
 pub(crate) use fnc_render_scene_element::render_scene_element;
+pub(crate) use fnc_render_wrapped_scene_element::render_wrapped_scene_element;
 pub(crate) use fnc_resolve_shader_phase_t::resolve_shader_phase_t;
+pub(crate) use fnc_wrap_element_cell_bounds::wrap_element_cell_bounds;
 pub(crate) use orc_render_observability::trace_applied_effects;
 
 // <FILE>crates/tui-vfx-compost/src/render/mod.rs</FILE> - <DESC>Native v3.1 render entrypoints and types</DESC>

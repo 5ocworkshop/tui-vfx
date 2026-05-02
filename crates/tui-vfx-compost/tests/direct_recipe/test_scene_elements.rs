@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>VERSION: 0.4.2</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Scene substrate tests prove multi-element composition, z ordering, signed placement clipping, and strict unsupported-policy rejection.</WCTX>
-// <CLOG>0.4.2: PATCH — assert stable one-scene unsupported diagnostic wording.
+// <CLOG>0.5.0: MINOR — prove native visibility, warn clipping, hide overflow, and wrap overflow execution.
+// 0.4.2: PATCH — assert stable one-scene unsupported diagnostic wording.
 // 0.4.1: PATCH — use unsupported-policy language instead of schedule language in test names.
 // 0.4.0: MINOR — drop stale role-policy rejection now that role writes execute natively.
 // 0.3.3: PATCH — keep scene test imports rustfmt-aligned.
@@ -14,6 +15,7 @@
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{Frame, LoadedRecipe, SampleContext, render_recipe};
+use tui_vfx_contract::LifecyclePhase;
 use tui_vfx_types::RoleTag;
 
 fn source_with_message(message: &str, width: i64, height: i64) -> serde_json::Value {
@@ -60,10 +62,14 @@ fn set_scene_size(recipe: &mut serde_json::Value, width: i64, height: i64) {
 }
 
 fn render_test_recipe(recipe: serde_json::Value) -> Frame {
+    render_test_recipe_at(recipe, SampleContext::default())
+}
+
+fn render_test_recipe_at(recipe: serde_json::Value, sample: SampleContext) -> Frame {
     let catalog = primitive_catalog();
     let loaded = LoadedRecipe::load(recipe_from_value(recipe), &catalog).expect("load recipe");
 
-    render_recipe(&loaded, &SampleContext::default()).expect("render scene")
+    render_recipe(&loaded, &sample).expect("render scene")
 }
 
 fn assert_rejects_element_policy(policy: &str, value: serde_json::Value) {
@@ -263,21 +269,106 @@ fn rejects_multiple_scenes_instead_of_silently_dropping_later_scenes() {
 }
 
 #[test]
-fn rejects_unsupported_clip_warning_policy_at_load_time() {
-    assert_rejects_element_policy("clipPolicy", serde_json::json!("warn"));
+fn warn_clip_policy_renders_visible_cells_and_reports_diagnostic() {
+    let mut recipe = linear_gradient_recipe_value();
+    set_scene_size(&mut recipe, 1, 1);
+    recipe["sources"]["mainCard"] = source_with_message("AB", 2, 1);
+    recipe["scenes"][0]["elements"][0]["placement"] = serde_json::json!({ "x": -1, "y": 0 });
+    recipe["scenes"][0]["elements"][0]["clipPolicy"] = serde_json::json!("warn");
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'B');
+    assert!(frame.diagnostics.iter().any(|diagnostic| {
+        diagnostic.message.contains("mainElement")
+            && diagnostic.message.contains("clipped")
+            && diagnostic.message.contains("warn")
+    }));
 }
 
 #[test]
-fn rejects_unsupported_overflow_policy_at_load_time() {
-    assert_rejects_element_policy("overflow", serde_json::json!("wrap"));
+fn hide_overflow_skips_partially_outside_element() {
+    let mut recipe = linear_gradient_recipe_value();
+    set_scene_size(&mut recipe, 1, 1);
+    recipe["sources"]["mainCard"] = source_with_message("AB", 2, 1);
+    recipe["scenes"][0]["elements"][0]["overflow"] = serde_json::json!("hide");
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, ' ');
+    assert!(frame.applied_effect_kinds.is_empty());
+    assert!(frame.diagnostics.iter().any(|diagnostic| {
+        diagnostic.message.contains("mainElement") && diagnostic.message.contains("hidden")
+    }));
 }
 
 #[test]
-fn rejects_unsupported_visibility_policy_at_load_time() {
-    assert_rejects_element_policy(
-        "visibility",
-        serde_json::json!({ "kind": "phase", "phases": ["enter"] }),
+fn wrap_overflow_wraps_cells_into_scene_bounds() {
+    let mut recipe = linear_gradient_recipe_value();
+    set_scene_size(&mut recipe, 2, 1);
+    recipe["sources"]["mainCard"] = source_with_message("ABC", 3, 1);
+    recipe["scenes"][0]["elements"][0]["placement"] = serde_json::json!({ "x": 1, "y": 0 });
+    recipe["scenes"][0]["elements"][0]["overflow"] = serde_json::json!("wrap");
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'B');
+    assert_eq!(frame.grid.cell((1, 0)).unwrap().ch, 'C');
+    assert_eq!(frame.applied_effect_kinds, vec!["shader.linearGradient"]);
+}
+
+#[test]
+fn phase_visibility_renders_only_during_matching_lifecycle_phase() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["visibility"] =
+        serde_json::json!({ "kind": "phase", "phases": ["enter"] });
+
+    let hidden_frame = render_test_recipe(recipe.clone());
+    let visible_frame = render_test_recipe_at(
+        recipe,
+        SampleContext::default().with_lifecycle_phase(LifecyclePhase::Enter),
     );
+
+    assert_eq!(hidden_frame.grid.cell((0, 0)).unwrap().ch, ' ');
+    assert!(hidden_frame.applied_effect_kinds.is_empty());
+    assert_eq!(visible_frame.grid.cell((0, 0)).unwrap().ch, 'A');
+    assert_eq!(
+        visible_frame.applied_effect_kinds,
+        vec!["shader.linearGradient"]
+    );
+}
+
+#[test]
+fn predicate_visibility_uses_runtime_resolver_value() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["graph"]["parameters"]["showElement"] = serde_json::json!({
+        "id": "showElement",
+        "displayName": "Show element",
+        "description": null,
+        "value": {
+            "kind": "boolean",
+            "default": { "kind": "boolean", "value": false },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "bindable": true
+    });
+    recipe["scenes"][0]["elements"][0]["visibility"] = serde_json::json!({
+        "kind": "predicate",
+        "predicate_source": {
+            "kind": "parameter",
+            "id": "showElement",
+            "fallback": { "kind": "boolean", "value": true }
+        },
+        "predicate": { "kind": "isTrue" }
+    });
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, ' ');
+    assert!(frame.applied_effect_kinds.is_empty());
 }
 
 #[test]
@@ -289,8 +380,14 @@ fn rejects_unsupported_surface_policy_at_load_time() {
 }
 
 #[test]
-fn rejects_unsupported_scroll_factor_at_load_time() {
-    assert_rejects_element_policy("scrollFactor", serde_json::json!({ "x": 0.5, "y": 1.25 }));
+fn scroll_factor_is_preserved_as_noop_without_scroll_runtime_input() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["scrollFactor"] = serde_json::json!({ "x": 0.5, "y": 1.25 });
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
+    assert_eq!(frame.applied_effect_kinds, vec!["shader.linearGradient"]);
 }
 
 #[test]
@@ -307,4 +404,4 @@ fn rejects_unsupported_graph_binding_timing_at_load_time() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>END OF VERSION: 0.4.2</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

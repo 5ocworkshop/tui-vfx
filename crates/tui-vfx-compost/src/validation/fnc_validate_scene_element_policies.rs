@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>VERSION: 0.5.1</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Element policy validation supports writeCell/skipTransparentEmpty cell writes and native role writes.</WCTX>
-// <CLOG>0.5.1: PATCH — use capability-based unsupported-policy reasons instead of schedule language.
+// <CLOG>0.6.0: MINOR — accept native visibility, warn clipping, overflow, and no-op scroll factor substrate.
+// 0.5.1: PATCH — use capability-based unsupported-policy reasons instead of schedule language.
 // 0.5.0: MINOR — accept copied and explicit role writes after role policy execution lands.
 // 0.4.0: MINOR — accept skipTransparentEmpty after cell write policy substrate lands.
 // 0.3.0: PATCH — reject element-local graph timing until timing substrate executes it.
@@ -10,7 +11,6 @@
 
 use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, RecipeSceneElement, RoleWritePolicy, SceneElementOverflowPolicy,
-    SceneElementVisibility,
 };
 
 use crate::LoadError;
@@ -39,24 +39,6 @@ pub(crate) fn validate_scene_element_policies(
         );
     }
 
-    match &element.visibility {
-        None | Some(SceneElementVisibility::Always) => {}
-        Some(SceneElementVisibility::Phase { .. }) => {
-            return unsupported_policy(
-                element,
-                "visibility",
-                "phase visibility requires lifecycle-aware scene rendering",
-            );
-        }
-        Some(SceneElementVisibility::Predicate { .. }) => {
-            return unsupported_policy(
-                element,
-                "visibility",
-                "predicate visibility requires runtime resolver integration",
-            );
-        }
-    }
-
     if element.surface.is_some() {
         return unsupported_policy(
             element,
@@ -66,21 +48,10 @@ pub(crate) fn validate_scene_element_policies(
     }
 
     match element.overflow {
-        None | Some(SceneElementOverflowPolicy::Clip) => {}
-        Some(SceneElementOverflowPolicy::Hide) => {
-            return unsupported_policy(
-                element,
-                "overflow",
-                "hide overflow requires native element overflow handling",
-            );
-        }
-        Some(SceneElementOverflowPolicy::Wrap) => {
-            return unsupported_policy(
-                element,
-                "overflow",
-                "wrap overflow requires native element overflow handling",
-            );
-        }
+        None
+        | Some(SceneElementOverflowPolicy::Clip)
+        | Some(SceneElementOverflowPolicy::Hide)
+        | Some(SceneElementOverflowPolicy::Wrap) => {}
     }
 
     if element.placement_motion.is_some() {
@@ -91,20 +62,8 @@ pub(crate) fn validate_scene_element_policies(
         );
     }
 
-    if element.scroll_factor.is_some() {
-        return unsupported_policy(
-            element,
-            "scrollFactor",
-            "scene scroll response requires camera/scroll runtime resolution",
-        );
-    }
-
-    if element.clip_policy != ClipPolicy::Clip {
-        return unsupported_policy(
-            element,
-            "clipPolicy",
-            "warn clipping requires element-aware diagnostics",
-        );
+    match element.clip_policy {
+        ClipPolicy::Clip | ClipPolicy::Warn => {}
     }
 
     match element.cell_write_policy {
@@ -131,4 +90,4 @@ fn unsupported_policy(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>END OF VERSION: 0.5.1</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>
