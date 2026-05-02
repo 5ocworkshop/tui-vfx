@@ -1,9 +1,11 @@
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 introduces the registry installation entrypoint; bootstrap carry-forward will merge unported descriptors during codegen.</WCTX>
-// <CLOG>0.1.0: INIT — install the first Rust-owned primitive, filter.dim.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 1 registry installation collects domain-directory primitive ports; codegen will later derive descriptor artifacts from this Rust SSOT.</WCTX>
+// <CLOG>0.2.0: MINOR — install mask.dissolve alongside filter.dim.
+// 0.1.0: INIT — install the first Rust-owned primitive, filter.dim.</CLOG>
 
 use crate::filters::FilterDim;
+use crate::masks::MaskDissolve;
 
 use super::{EffectRegistry, PrimitiveRegistryError};
 
@@ -11,8 +13,10 @@ use super::{EffectRegistry, PrimitiveRegistryError};
 pub fn install_v31_primitive_pack(
     registry: &mut EffectRegistry,
 ) -> Result<(), PrimitiveRegistryError> {
-    registry.install_frame_filter::<FilterDim>()
+    registry.install_frame_filter::<FilterDim>()?;
+    registry.install_mask::<MaskDissolve>()?;
+    Ok(())
 }
 
 // <FILE>crates/tui-vfx-compost/src/primitive/fnc_install_v31_primitive_pack.rs</FILE> - <DESC>Register Rust-owned v3.1 primitive declarations</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
