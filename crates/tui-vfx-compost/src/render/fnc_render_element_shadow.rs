@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_element_shadow.rs</FILE> - <DESC>Render scene-element surface shadows into the destination scene</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Surface shadows reuse tui-vfx-shadow geometry and compositor source-over blending while writing native RoleTag::Shadow cells.</WCTX>
-// <CLOG>0.1.0: INIT — render v3.1 surface shadow attachments around source-backed scene elements.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Surface shadows reuse tui-vfx-shadow geometry and compositor source-over blending while reporting actual native RoleTag::Shadow writes.</WCTX>
+// <CLOG>0.2.0: MINOR — return actual shadow cell write count for observability.
+// 0.1.0: INIT — render v3.1 surface shadow attachments around source-backed scene elements.</CLOG>
 
 use tui_vfx_contract::{ShadowGlyphMaterial, ShadowSpec};
 use tui_vfx_shadow::render_shadow;
@@ -14,18 +15,19 @@ pub(crate) fn render_element_shadow(
     shadow: &ShadowSpec,
     rect: Rect,
     progress: f64,
-) {
+) -> u32 {
     let config = build_shadow_config(shadow);
     let mut shadow_grid = OwnedGrid::new(destination.grid().width(), destination.grid().height());
     render_shadow(&mut shadow_grid, rect, &config, progress);
-    merge_shadow_grid(destination, &shadow_grid, shadow.glyph_material);
+    merge_shadow_grid(destination, &shadow_grid, shadow.glyph_material)
 }
 
 fn merge_shadow_grid(
     destination: &mut SemanticScene,
     shadow_grid: &OwnedGrid,
     glyph_material: Option<ShadowGlyphMaterial>,
-) {
+) -> u32 {
+    let mut written_cells = 0;
     for y in 0..shadow_grid.height() {
         for x in 0..shadow_grid.width() {
             let Some(shadow_cell) = shadow_grid.get(x, y) else {
@@ -47,9 +49,11 @@ fn merge_shadow_grid(
             destination
                 .roles_mut()
                 .set((x as u16, y as u16), RoleTag::Shadow);
+            written_cells += 1;
         }
     }
+    written_cells
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_element_shadow.rs</FILE> - <DESC>Render scene-element surface shadows into the destination scene</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

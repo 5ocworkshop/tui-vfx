@@ -1,18 +1,24 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_execute_effect_graph.rs</FILE> - <DESC>Execute native effect topology for one sampled cell</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Graph execution preserves sequence state, node-local write policies, and parallel branch snapshots before deterministic merge.</WCTX>
-// <CLOG>0.2.0: MINOR — carry non-default node-local write policies with executed stage output.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Graph execution preserves sequence state, node scopes, node-local write policies, parallel branch snapshots, and per-cell trace evidence before deterministic merge.</WCTX>
+// <CLOG>0.6.0: MINOR — allocate topology synthetic trace indices with deterministic pre-order identity.
+// 0.5.0: MINOR — use stable authored and topology-local trace indices.
+// 0.4.0: MINOR — emit trace evidence from actual node execution decisions.
+// 0.3.0: MINOR — honor canonical node scopes during graph execution.
+// 0.2.0: MINOR — carry non-default node-local write policies with executed stage output.
 // 0.1.0: INIT — execute sequence/parallel graph steps with graph-value publication and merge isolation.</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use tui_vfx_contract::{
-    CellChannel, CellWritePolicy, GraphStep, GraphValueId, RoleWritePolicy, Value,
+    CellChannel, CellWritePolicy, CoordinateSpace, GraphStep, GraphValueId, RoleSpace,
+    RoleWritePolicy, ScopeEvalInput, Value,
 };
 use tui_vfx_types::Style;
 
 use crate::render::{
-    EffectStack, EffectStage, RenderError, SampleContext, explicit_node_write_mask, is_node_active,
+    CellStageTrace, EffectStack, EffectStage, RenderError, RenderSkipReason, RenderStageKind,
+    SampleContext, explicit_node_write_mask, is_node_active, parallel_cell_trace,
     publish_node_outputs, resolve_shader_phase_t,
 };
 use crate::runtime::RuntimeContext;
@@ -26,6 +32,7 @@ pub(crate) struct EffectGraphResult {
     context: RuntimeContext,
     channels: BTreeSet<CellChannel>,
     published_values: BTreeMap<GraphValueId, Value>,
+    pub(crate) stage_traces: Vec<CellStageTrace>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -34,6 +41,7 @@ pub(crate) fn execute_effect_graph(
     sample: &SampleContext,
     base_style: Style,
     context: &RuntimeContext,
+    scope_input: &ScopeEvalInput,
     local_x: u16,
     local_y: u16,
     width: u16,
@@ -42,15 +50,30 @@ pub(crate) fn execute_effect_graph(
     screen_y: u16,
 ) -> Result<EffectGraphResult, RenderError> {
     match stack.topology() {
-        Some(step) => execute_step(
-            step, stack, sample, base_style, context, local_x, local_y, width, height, screen_x,
-            screen_y,
-        ),
+        Some(step) => {
+            let mut next_synthetic_stage_index = stack.stage_count();
+            execute_step(
+                step,
+                stack,
+                sample,
+                base_style,
+                context,
+                scope_input,
+                local_x,
+                local_y,
+                width,
+                height,
+                screen_x,
+                screen_y,
+                &mut next_synthetic_stage_index,
+            )
+        }
         None => execute_stages(
-            stack.ordered_stages(),
+            stack.indexed_stages(),
             sample,
             base_style,
             context,
+            scope_input,
             local_x,
             local_y,
             width,
@@ -68,12 +91,14 @@ fn execute_step(
     sample: &SampleContext,
     base_style: Style,
     context: &RuntimeContext,
+    scope_input: &ScopeEvalInput,
     local_x: u16,
     local_y: u16,
     width: u16,
     height: u16,
     screen_x: u16,
     screen_y: u16,
+    next_synthetic_stage_index: &mut usize,
 ) -> Result<EffectGraphResult, RenderError> {
     match step {
         GraphStep::Node { node } => {
@@ -84,10 +109,11 @@ fn execute_step(
                 )));
             };
             execute_stages(
-                [stage],
+                [(stack.stage_index_for_node(node).unwrap_or(0), stage)],
                 sample,
                 base_style,
                 context,
+                scope_input,
                 local_x,
                 local_y,
                 width,
@@ -97,12 +123,34 @@ fn execute_step(
             )
         }
         GraphStep::Sequence { children } => execute_sequence(
-            children, stack, sample, base_style, context, local_x, local_y, width, height,
-            screen_x, screen_y,
+            children,
+            stack,
+            sample,
+            base_style,
+            context,
+            scope_input,
+            local_x,
+            local_y,
+            width,
+            height,
+            screen_x,
+            screen_y,
+            next_synthetic_stage_index,
         ),
         GraphStep::Parallel { children, .. } => execute_parallel(
-            children, stack, sample, base_style, context, local_x, local_y, width, height,
-            screen_x, screen_y,
+            children,
+            stack,
+            sample,
+            base_style,
+            context,
+            scope_input,
+            local_x,
+            local_y,
+            width,
+            height,
+            screen_x,
+            screen_y,
+            next_synthetic_stage_index,
         ),
     }
 }
@@ -114,12 +162,14 @@ fn execute_sequence(
     sample: &SampleContext,
     base_style: Style,
     context: &RuntimeContext,
+    scope_input: &ScopeEvalInput,
     local_x: u16,
     local_y: u16,
     width: u16,
     height: u16,
     screen_x: u16,
     screen_y: u16,
+    next_synthetic_stage_index: &mut usize,
 ) -> Result<EffectGraphResult, RenderError> {
     let mut result = EffectGraphResult::new(base_style, context.clone());
     for child in children {
@@ -129,12 +179,14 @@ fn execute_sequence(
             sample,
             result.style,
             &result.context,
+            scope_input,
             local_x,
             local_y,
             width,
             height,
             screen_x,
             screen_y,
+            next_synthetic_stage_index,
         )?;
         result.style = child_result.style;
         result.context = child_result.context;
@@ -146,6 +198,7 @@ fn execute_sequence(
         result
             .published_values
             .extend(child_result.published_values);
+        result.stage_traces.extend(child_result.stage_traces);
     }
     result.channels = style_changed_channels(base_style, result.style);
     Ok(result)
@@ -158,18 +211,33 @@ fn execute_parallel(
     sample: &SampleContext,
     base_style: Style,
     context: &RuntimeContext,
+    scope_input: &ScopeEvalInput,
     local_x: u16,
     local_y: u16,
     width: u16,
     height: u16,
     screen_x: u16,
     screen_y: u16,
+    next_synthetic_stage_index: &mut usize,
 ) -> Result<EffectGraphResult, RenderError> {
     let mut result = EffectGraphResult::new(base_style, context.clone());
+    let parallel_stage_index = *next_synthetic_stage_index;
+    *next_synthetic_stage_index += 1;
     for child in children {
         let branch = execute_step(
-            child, stack, sample, base_style, context, local_x, local_y, width, height, screen_x,
+            child,
+            stack,
+            sample,
+            base_style,
+            context,
+            scope_input,
+            local_x,
+            local_y,
+            width,
+            height,
+            screen_x,
             screen_y,
+            next_synthetic_stage_index,
         )?;
         result.style = merge_style_channels(result.style, branch.style, &branch.channels);
         result.select_write_policies(branch.cell_write_policy, branch.role_write_policy);
@@ -178,17 +246,22 @@ fn execute_parallel(
             result.published_values.insert(id, value);
         }
         result.channels.extend(branch.channels);
+        result.stage_traces.extend(branch.stage_traces);
     }
+    result
+        .stage_traces
+        .push(parallel_cell_trace(parallel_stage_index));
     result.channels = style_changed_channels(base_style, result.style);
     Ok(result)
 }
 
 #[allow(clippy::too_many_arguments)]
 fn execute_stages<'a>(
-    stages: impl IntoIterator<Item = EffectStage<'a>>,
+    stages: impl IntoIterator<Item = (usize, EffectStage<'a>)>,
     sample: &SampleContext,
     base_style: Style,
     context: &RuntimeContext,
+    scope_input: &ScopeEvalInput,
     local_x: u16,
     local_y: u16,
     width: u16,
@@ -197,8 +270,29 @@ fn execute_stages<'a>(
     screen_y: u16,
 ) -> Result<EffectGraphResult, RenderError> {
     let mut result = EffectGraphResult::new(base_style, context.clone());
-    for stage in stages {
+    for (stage_index, stage) in stages {
         if !is_node_active(stage.node(), sample) {
+            result.stage_traces.push(CellStageTrace::skipped(
+                stage_index,
+                stage_family_kind(stage),
+                stage.node().effect.as_str(),
+                RenderSkipReason::InactiveLifecycle,
+            ));
+            continue;
+        }
+        if stage.node().scope.as_ref().is_some_and(|scope| {
+            !scope.matches(
+                scope_input,
+                CoordinateSpace::default(),
+                RoleSpace::default(),
+            )
+        }) {
+            result.stage_traces.push(CellStageTrace::skipped(
+                stage_index,
+                stage_family_kind(stage),
+                stage.node().effect.as_str(),
+                RenderSkipReason::ScopeMatchedZeroCells,
+            ));
             continue;
         }
         let shader = supported_shader_stage(stage)?;
@@ -235,8 +329,25 @@ fn execute_stages<'a>(
             .published_values
             .extend(publish_node_outputs(stage.node(), &mut result.context)?);
         result.channels.extend(output_channels);
+        result.stage_traces.push(CellStageTrace::finished(
+            stage_index,
+            stage_family_kind(stage),
+            stage.node().effect.as_str(),
+        ));
     }
     Ok(result)
+}
+
+fn stage_family_kind(stage: EffectStage<'_>) -> RenderStageKind {
+    match stage.family() {
+        crate::render::EffectFamily::Content => RenderStageKind::Content,
+        crate::render::EffectFamily::Style => RenderStageKind::Style,
+        crate::render::EffectFamily::Shader => RenderStageKind::Shader,
+        crate::render::EffectFamily::Filter => RenderStageKind::Filter,
+        crate::render::EffectFamily::Mask => RenderStageKind::Mask,
+        crate::render::EffectFamily::Sampler => RenderStageKind::Sampler,
+        crate::render::EffectFamily::Unknown => RenderStageKind::Unknown,
+    }
 }
 
 fn supported_shader_stage<'a>(
@@ -299,6 +410,7 @@ impl EffectGraphResult {
             context,
             channels: BTreeSet::new(),
             published_values: BTreeMap::new(),
+            stage_traces: Vec::new(),
         }
     }
 
@@ -317,4 +429,4 @@ impl EffectGraphResult {
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_execute_effect_graph.rs</FILE> - <DESC>Execute native effect topology for one sampled cell</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

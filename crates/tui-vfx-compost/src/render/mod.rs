@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/src/render/mod.rs</FILE> - <DESC>Native v3.1 render entrypoints and types</DESC>
-// <VERS>VERSION: 0.6.1</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Render orchestration is split by recipe, scene, element, clip, effect-stack, and timing responsibilities.</WCTX>
-// <CLOG>0.6.1: PATCH — expose shader phase timing through the renamed render helper.
+// <CLOG>0.8.0: MINOR — expose execution-stage trace aggregation helpers.
+// 0.7.0: MINOR — expose native observability helpers for stage trace lifecycle.
+// 0.6.1: PATCH — expose shader phase timing through the renamed render helper.
 // 0.6.0: MINOR — add native frame diagnostics and trace event observability.
 // 0.5.0: MINOR — add cell, role, and parallel-merge policy seams for native surface writes.
 // 0.4.0: MINOR — add native timing substrate.
@@ -52,7 +54,7 @@ mod orc_render_observability;
 pub use cls_frame::Frame;
 pub use cls_render_diagnostic::RenderDiagnostic;
 pub use cls_render_error::RenderError;
-pub use cls_render_trace_event::RenderTraceEvent;
+pub use cls_render_trace_event::{RenderSkipReason, RenderStageKind, RenderTraceEvent};
 pub use cls_sample_context::SampleContext;
 pub use fnc_render_recipe::render_recipe;
 
@@ -64,7 +66,7 @@ pub(crate) use cls_render_timing::RenderTiming;
 pub(crate) use col_collect_graph_step_nodes::collect_graph_step_nodes;
 pub(crate) use col_scene_elements_in_paint_order::scene_elements_in_paint_order;
 pub(crate) use fnc_apply_cell_write_policy::apply_cell_write_policy;
-pub(crate) use fnc_apply_effect_stack::apply_effect_stack;
+pub(crate) use fnc_apply_effect_stack::{ScopeCoordinateMode, apply_effect_stack};
 pub(crate) use fnc_apply_role_write_policy::apply_role_write_policy;
 pub(crate) use fnc_blend_shadow_cell::blend_shadow_cell;
 pub(crate) use fnc_blend_underlying_shadow_cell::blend_underlying_shadow_cell;
@@ -92,7 +94,10 @@ pub(crate) use fnc_render_wrapped_scene_element::render_wrapped_scene_element;
 pub(crate) use fnc_resolve_shader_phase_t::resolve_shader_phase_t;
 pub(crate) use fnc_shadow_cast_rect::{shadow_cast_rect, shadow_edge_progress};
 pub(crate) use fnc_wrap_element_cell_bounds::wrap_element_cell_bounds;
-pub(crate) use orc_render_observability::trace_applied_effects;
+pub(crate) use orc_render_observability::{
+    CellStageTrace, RenderStageAccumulator, ScopeDestination, parallel_cell_trace,
+    scope_eval_input, trace_element_skipped,
+};
 
 // <FILE>crates/tui-vfx-compost/src/render/mod.rs</FILE> - <DESC>Native v3.1 render entrypoints and types</DESC>
-// <VERS>END OF VERSION: 0.6.1</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

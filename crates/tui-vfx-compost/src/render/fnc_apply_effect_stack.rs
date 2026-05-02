@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Effect application delegates per-cell style mutation and node-local write policy selection to native graph execution, then writes through the role-aware element-surface merge seam.</WCTX>
-// <CLOG>0.5.0: MINOR — apply non-default node-local write policies at the final merge seam.
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Effect application delegates scoped per-cell style mutation, node-local write policy selection, and trace evidence to native graph execution before writing through the merge seam.</WCTX>
+// <CLOG>0.8.0: MINOR — preserve element-local scope coordinates for wrapped overflow sampling.
+// 0.7.0: MINOR — return trace evidence gathered from actual graph execution.
+// 0.6.0: MINOR — pass scope evaluation input into graph execution.
+// 0.5.0: MINOR — apply non-default node-local write policies at the final merge seam.
 // 0.4.0: MINOR — execute graph topology before final cell writes.
 // 0.3.0: MINOR — skip inactive lifecycle stages and copy sampled source roles during merge.
 // 0.2.1: PATCH — remove redundant timing/effect-id reads from shader application.
@@ -12,10 +15,17 @@
 use tui_vfx_types::{Grid, RoleTag, SemanticScene, Style};
 
 use crate::render::{
-    EffectStack, ElementClipBounds, RenderError, SampleContext, execute_effect_graph,
-    is_node_active, merge_element_surface,
+    EffectStack, ElementClipBounds, RenderError, RenderStageAccumulator, SampleContext,
+    ScopeDestination, execute_effect_graph, is_node_active, merge_element_surface,
+    scope_eval_input,
 };
 use crate::runtime::RuntimeContext;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum ScopeCoordinateMode {
+    VisibleBounds,
+    SourceElement,
+}
 
 pub(crate) fn apply_effect_stack(
     source: &SemanticScene,
@@ -24,7 +34,8 @@ pub(crate) fn apply_effect_stack(
     sample: &SampleContext,
     stack: &EffectStack<'_>,
     runtime_context: &RuntimeContext,
-) -> Result<(), RenderError> {
+    scope_coordinate_mode: ScopeCoordinateMode,
+) -> Result<RenderStageAccumulator, RenderError> {
     if let Some(stage) = stack
         .content_stages()
         .chain(stack.style_stages())
@@ -36,6 +47,7 @@ pub(crate) fn apply_effect_stack(
         return Err(unsupported_stage(stage));
     }
 
+    let mut trace_accumulator = RenderStageAccumulator::default();
     let source_grid = source.grid();
     let base_context = runtime_context
         .clone()
@@ -55,11 +67,23 @@ pub(crate) fn apply_effect_stack(
             let cell_context = base_context
                 .clone()
                 .with_cell(local_x as u16, local_y as u16);
+            let scope_destination =
+                scope_destination(scope_coordinate_mode, bounds, local_x, local_y, source_grid);
+            let scope_input = scope_eval_input(
+                source,
+                destination,
+                scope_destination,
+                local_x,
+                local_y,
+                dest_x,
+                dest_y,
+            );
             let graph_result = execute_effect_graph(
                 stack,
                 sample,
                 Style::new(source_cell.fg, source_cell.bg, source_cell.mods),
                 &cell_context,
+                &scope_input,
                 local_x as u16,
                 local_y as u16,
                 source_grid.width() as u16,
@@ -67,6 +91,9 @@ pub(crate) fn apply_effect_stack(
                 dest_x as u16,
                 dest_y as u16,
             )?;
+            for stage_trace in graph_result.stage_traces {
+                trace_accumulator.record_cell_trace(stage_trace);
+            }
             let style = graph_result.style;
             let final_cell = source_cell
                 .with_fg(style.fg)
@@ -89,7 +116,30 @@ pub(crate) fn apply_effect_stack(
         }
     }
 
-    Ok(())
+    Ok(trace_accumulator)
+}
+
+fn scope_destination(
+    mode: ScopeCoordinateMode,
+    bounds: ElementClipBounds,
+    local_x: usize,
+    local_y: usize,
+    source_grid: &impl Grid,
+) -> ScopeDestination {
+    match mode {
+        ScopeCoordinateMode::VisibleBounds => ScopeDestination {
+            x: local_x.saturating_sub(bounds.local_x_start),
+            y: local_y.saturating_sub(bounds.local_y_start),
+            width: bounds.width,
+            height: bounds.height,
+        },
+        ScopeCoordinateMode::SourceElement => ScopeDestination {
+            x: local_x,
+            y: local_y,
+            width: source_grid.width(),
+            height: source_grid.height(),
+        },
+    }
 }
 
 fn unsupported_stage(stage: crate::render::EffectStage<'_>) -> RenderError {
@@ -102,4 +152,4 @@ fn unsupported_stage(stage: crate::render::EffectStage<'_>) -> RenderError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
