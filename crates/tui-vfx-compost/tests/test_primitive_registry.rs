@@ -1,20 +1,25 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 0 of Rust-SSOT primitive migration locks domain-specific registry construction and runtime cell access enforcement before primitive ports begin.</WCTX>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration starts the v3.1 primitive pack with filter.dim and shared color/channel helpers.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
+// <CLOG>0.2.0: ADD — prove filter.dim descriptor parity with the migration seed, pack installation, and v3.1 runtime color semantics.</CLOG>
 
 use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
 
 use tui_vfx_compost::primitive::{
     CellView, EffectPrimitive, EffectRegistry, EffectRuntimeContext, EffectRuntimeError,
-    EffectRuntimeKind, FrameFilterRuntime, MaskRuntime, MaskVisibility, NoInputs, NoOutputs,
-    PrimitiveRegistryError, SourcePrimitive, SourceRuntime, SourceSurface,
+    EffectRuntimeKind, FilterDim, FilterDimInputs, FrameFilterRuntime, MaskRuntime, MaskVisibility,
+    NoInputs, NoOutputs, PrimitiveRegistryError, SourcePrimitive, SourceRuntime, SourceSurface,
+    dim_color, install_v31_primitive_pack,
 };
 use tui_vfx_contract::{
-    CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorPackId, EffectCompletion,
-    EffectDescriptor, EffectDomain, EffectId, EffectLifecycle, RoleSpace, RoleWritePolicyKind,
-    ScopeKind, ScopeSupport, SourceDescriptor, SourceId, SourceKind, SourceLifecycle,
-    SourceOutputSize, SourceOutputSpec, SourceRolePolicy, WriteSupport,
+    CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorPack, DescriptorPackId,
+    EffectCompletion, EffectDescriptor, EffectDomain, EffectId, EffectInputId, EffectLifecycle,
+    RoleSpace, RoleWritePolicyKind, ScopeKind, ScopeSupport, SourceDescriptor, SourceId,
+    SourceKind, SourceLifecycle, SourceOutputSize, SourceOutputSpec, SourceRolePolicy, Value,
+    WriteSupport,
 };
 use tui_vfx_types::{Cell, Color, RoleTag};
 
@@ -225,5 +230,87 @@ fn cell_view_panics_on_undeclared_write_in_debug_builds() {
     view.set_foreground(Color::RED);
 }
 
+#[test]
+fn filter_dim_descriptor_matches_current_migration_seed() {
+    let pack_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .expect("crate lives under repo/crates/tui-vfx-compost")
+        .join("descriptors/v3.1/packs/primitive.json");
+    let pack: DescriptorPack = serde_json::from_str(
+        &fs::read_to_string(pack_path).expect("read primitive descriptor seed"),
+    )
+    .expect("deserialize primitive descriptor seed");
+
+    assert_eq!(
+        FilterDim::descriptor(),
+        pack.effects[&EffectId::new("filter.dim")]
+    );
+}
+
+#[test]
+fn v31_primitive_pack_installs_filter_dim() {
+    let mut registry = EffectRegistry::new();
+
+    install_v31_primitive_pack(&mut registry).expect("v3.1 primitive pack installs");
+
+    let id = EffectId::new("filter.dim");
+    let descriptor = registry
+        .effect(&id)
+        .expect("filter.dim descriptor is registered");
+    assert_eq!(descriptor.domain, EffectDomain::FrameFilter);
+    assert_eq!(
+        descriptor.inputs[&EffectInputId::new("factor")]
+            .value
+            .default,
+        Some(Value::Number(0.3))
+    );
+    assert_eq!(
+        descriptor.inputs[&EffectInputId::new("channelTarget")]
+            .value
+            .allowed_values,
+        vec!["both", "foreground", "background"]
+    );
+    assert!(registry.has_runtime(&id, EffectRuntimeKind::FrameFilter));
+}
+
+#[test]
+fn dim_color_clamps_factor_and_preserves_alpha() {
+    assert_eq!(
+        dim_color(Color::new(100, 50, 25, 128), 2.0),
+        Color::new(0, 0, 0, 128)
+    );
+    assert_eq!(
+        dim_color(Color::new(100, 50, 25, 128), -1.0),
+        Color::new(100, 50, 25, 128)
+    );
+}
+
+#[test]
+fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
+    let sample = tui_vfx_compost::SampleContext::default();
+    let context = EffectRuntimeContext::new(&sample, 0, 0, 1, 1);
+    let mut cell = Cell::styled(
+        'x',
+        Color::rgb(100, 50, 0),
+        Color::rgb(10, 20, 30),
+        tui_vfx_types::Modifiers::NONE,
+    );
+    let mut view = CellView::<FilterDim>::new(&mut cell);
+
+    FilterDim::filter_cell(
+        &FilterDimInputs {
+            factor: 0.5,
+            channel_target: tui_vfx_compost::primitive::ChannelTarget::Foreground,
+        },
+        &mut view,
+        &context,
+    )
+    .expect("filter.dim applies");
+
+    assert_eq!(view.cell().fg, Color::rgb(50, 25, 0));
+    assert_eq!(view.cell().bg, Color::rgb(10, 20, 30));
+}
+
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
