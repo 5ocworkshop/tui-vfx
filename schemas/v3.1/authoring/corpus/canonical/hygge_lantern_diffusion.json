@@ -10,7 +10,7 @@
     "nodes": {
       "concealed_light0": {
         "activePhases": [],
-        "effect": "shader.concealed_light",
+        "effect": "shader.concealedLight",
         "id": "concealed_light0",
         "inputs": {
           "color": {
@@ -149,7 +149,7 @@
         "activePhases": [
           "dwell"
         ],
-        "effect": "filter.subcell_light",
+        "effect": "filter.subcellLight",
         "id": "subcell_light0",
         "inputs": {
           "litColor": {
@@ -227,7 +227,7 @@
     "aliasUsages": {
       "concealed_light0": {
         "axis": "shader",
-        "canonicalEffect": "shader.concealed_light",
+        "canonicalEffect": "shader.concealedLight",
         "from": "concealed_light"
       },
       "diffusion0": {
@@ -237,7 +237,7 @@
       },
       "subcell_light0": {
         "axis": "filter",
-        "canonicalEffect": "filter.subcell_light",
+        "canonicalEffect": "filter.subcellLight",
         "from": "subcell_light"
       }
     }

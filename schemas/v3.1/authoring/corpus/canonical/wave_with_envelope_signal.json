@@ -12,7 +12,7 @@
         "activePhases": [
           "dwell"
         ],
-        "effect": "filter.pill_button",
+        "effect": "filter.pillButton",
         "id": "pill_button0",
         "inputs": {
           "bgColor": {
@@ -110,7 +110,7 @@
     "aliasUsages": {
       "pill_button0": {
         "axis": "filter",
-        "canonicalEffect": "filter.pill_button",
+        "canonicalEffect": "filter.pillButton",
         "from": "pill_button"
       }
     }

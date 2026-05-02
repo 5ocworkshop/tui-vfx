@@ -14,7 +14,7 @@
     },
     {
       "from": "split_flap",
-      "canonicalEffect": "content.split_flap"
+      "canonicalEffect": "content.splitFlap"
     }
   ]
 }

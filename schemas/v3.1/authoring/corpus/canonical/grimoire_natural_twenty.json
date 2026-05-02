@@ -12,7 +12,7 @@
         "activePhases": [
           "dwell"
         ],
-        "effect": "filter.braille_dust",
+        "effect": "filter.brailleDust",
         "id": "braille_dust0",
         "inputs": {
           "density": {
@@ -55,7 +55,7 @@
       },
       "glisten_band0": {
         "activePhases": [],
-        "effect": "shader.glisten_band",
+        "effect": "shader.glistenBand",
         "id": "glisten_band0",
         "inputs": {
           "angleDeg": {
@@ -217,12 +217,12 @@
     "aliasUsages": {
       "braille_dust0": {
         "axis": "filter",
-        "canonicalEffect": "filter.braille_dust",
+        "canonicalEffect": "filter.brailleDust",
         "from": "braille_dust"
       },
       "glisten_band0": {
         "axis": "shader",
-        "canonicalEffect": "shader.glisten_band",
+        "canonicalEffect": "shader.glistenBand",
         "from": "glisten_band"
       },
       "pulse0": {

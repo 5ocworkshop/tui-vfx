@@ -10,7 +10,7 @@
     "nodes": {
       "glisten_band0": {
         "activePhases": [],
-        "effect": "shader.glisten_band",
+        "effect": "shader.glistenBand",
         "id": "glisten_band0",
         "inputs": {
           "angleDeg": {
@@ -104,7 +104,7 @@
     "aliasUsages": {
       "glisten_band0": {
         "axis": "shader",
-        "canonicalEffect": "shader.glisten_band",
+        "canonicalEffect": "shader.glistenBand",
         "from": "glisten_band"
       }
     }

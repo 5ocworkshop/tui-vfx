@@ -55,7 +55,7 @@
     },
     {
       "from": "pattern_fill",
-      "canonicalEffect": "filter.pattern_fill",
+      "canonicalEffect": "filter.patternFill",
       "paramMapping": {
         "pattern":   { "to": "pattern",   "envelope": "passthrough" },
         "color":     { "to": "color",     "envelope": "literal-color" },
@@ -66,7 +66,7 @@
     },
     {
       "from": "bracket_emphasis",
-      "canonicalEffect": "filter.bracket_emphasis",
+      "canonicalEffect": "filter.bracketEmphasis",
       "paramMapping": {
         "left":     { "to": "left",     "envelope": "literal-text" },
         "right":    { "to": "right",    "envelope": "literal-text" },
@@ -79,7 +79,7 @@
     },
     {
       "from": "rigid_shake",
-      "canonicalEffect": "filter.rigid_shake",
+      "canonicalEffect": "filter.rigidShake",
       "paramMapping": {
         "amplitude": { "to": "amplitude", "envelope": "literal-number" },
         "frequency": { "to": "frequency", "envelope": "literal-number" },
@@ -91,7 +91,7 @@
     },
     {
       "from": "glyph_timeline",
-      "canonicalEffect": "filter.glyph_timeline",
+      "canonicalEffect": "filter.glyphTimeline",
       "paramMapping": {
         "trigger": { "to": "trigger", "envelope": "passthrough", "default": { "kind": "immediate" } },
         "phase":   { "to": "activePhases", "envelope": "phases-list" },
@@ -101,16 +101,16 @@
     },
     {
       "from": "kitt_scanner",
-      "canonicalEffect": "filter.kitt_scanner",
+      "canonicalEffect": "filter.kittScanner",
       "notes": "Bouncing-band scanner filter. Author params (boost, bandWidth, bps, progress, motionMode) pass through with type-inferred envelopes."
     },
     {
       "from": "braille_dust",
-      "canonicalEffect": "filter.braille_dust"
+      "canonicalEffect": "filter.brailleDust"
     },
     {
       "from": "subcell_light",
-      "canonicalEffect": "filter.subcell_light"
+      "canonicalEffect": "filter.subcellLight"
     },
     {
       "from": "tint",
@@ -118,11 +118,11 @@
     },
     {
       "from": "edge_grow",
-      "canonicalEffect": "filter.edge_grow"
+      "canonicalEffect": "filter.edgeGrow"
     },
     {
       "from": "pill_button",
-      "canonicalEffect": "filter.pill_button"
+      "canonicalEffect": "filter.pillButton"
     }
   ]
 }

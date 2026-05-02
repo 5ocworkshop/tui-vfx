@@ -7,7 +7,7 @@
   "aliases": [
     {
       "from": "focused_row_gradient",
-      "canonicalEffect": "shader.focused_row_gradient",
+      "canonicalEffect": "shader.focusedRowGradient",
       "applyToIsInput": true,
       "paramMapping": {
         "selectedRow":     { "to": "selectedRow",     "envelope": "value-source" },
@@ -33,7 +33,7 @@
     },
     {
       "from": "trace_path",
-      "canonicalEffect": "shader.trace_path",
+      "canonicalEffect": "shader.tracePath",
       "paramMapping": {
         "color":          { "to": "color",          "envelope": "literal-color" },
         "speed":          { "to": "speed",          "envelope": "literal-number", "default": 1.0 },
@@ -50,7 +50,7 @@
     },
     {
       "from": "border_sweep",
-      "canonicalEffect": "shader.border_sweep",
+      "canonicalEffect": "shader.borderSweep",
       "paramMapping": {
         "speed":  { "to": "speed",  "envelope": "literal-number", "default": 0.5 },
         "length": { "to": "length", "envelope": "literal-integer" },
@@ -75,7 +75,7 @@
     },
     {
       "from": "wayfinding_node",
-      "canonicalEffect": "shader.wayfinding_node",
+      "canonicalEffect": "shader.wayfindingNode",
       "paramMapping": {
         "nodes":        { "to": "nodes",        "envelope": "passthrough" },
         "currentIndex": { "to": "currentIndex", "envelope": "value-source" },
@@ -87,11 +87,24 @@
     },
     {
       "from": "reflect",
-      "canonicalEffect": "shader.reflect"
+      "canonicalEffect": "shader.reflect",
+      "paramMapping": {
+        "color": { "to": "reflectionColor", "envelope": "literal-color" },
+        "rate":  { "to": "reflectionRate",  "envelope": "literal-number" },
+        "phase": { "to": "activePhases",    "envelope": "phases-list" },
+        "scope": { "to": "scope",           "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `color` and `rate` map to descriptor inputs `reflectionColor` and `reflectionRate`."
     },
     {
       "from": "highlighter",
-      "canonicalEffect": "shader.highlighter"
+      "canonicalEffect": "shader.highlighter",
+      "paramMapping": {
+        "color": { "to": "highlightColor", "envelope": "literal-color" },
+        "phase": { "to": "activePhases",   "envelope": "phases-list" },
+        "scope": { "to": "scope",          "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `color` maps to the descriptor input `highlightColor`. Other highlighter inputs (bandWidth, sweepDirection, etc.) pass through verbatim."
     },
     {
       "from": "glow",
@@ -103,28 +116,28 @@
     },
     {
       "from": "edge_sheen",
-      "canonicalEffect": "shader.edge_sheen"
+      "canonicalEffect": "shader.edgeSheen"
     },
     {
       "from": "concealed_light",
-      "canonicalEffect": "shader.concealed_light"
+      "canonicalEffect": "shader.concealedLight"
     },
     {
       "from": "affordance_wake",
-      "canonicalEffect": "shader.affordance_wake"
+      "canonicalEffect": "shader.affordanceWake"
     },
     {
       "from": "glisten_band",
-      "canonicalEffect": "shader.glisten_band",
-      "notes": "Shader-axis glisten band (mid-century). Distinct from style.glisten_band; the corpus uses the shader form for the marquee-style sweep."
+      "canonicalEffect": "shader.glistenBand",
+      "notes": "Shader-axis glisten band (mid-century). Distinct from style.glistenBand; the corpus uses the shader form for the marquee-style sweep."
     },
     {
       "from": "linear_gradient",
-      "canonicalEffect": "shader.linear_gradient"
+      "canonicalEffect": "shader.linearGradient"
     },
     {
       "from": "colored_overlay",
-      "canonicalEffect": "shader.colored_overlay"
+      "canonicalEffect": "shader.coloredOverlay"
     },
     {
       "from": "bevel",

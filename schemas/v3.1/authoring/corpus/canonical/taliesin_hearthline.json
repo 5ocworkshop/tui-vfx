@@ -10,7 +10,7 @@
     "nodes": {
       "edge_sheen0": {
         "activePhases": [],
-        "effect": "shader.edge_sheen",
+        "effect": "shader.edgeSheen",
         "id": "edge_sheen0",
         "inputs": {
           "bandWidth": {
@@ -107,7 +107,7 @@
     "aliasUsages": {
       "edge_sheen0": {
         "axis": "shader",
-        "canonicalEffect": "shader.edge_sheen",
+        "canonicalEffect": "shader.edgeSheen",
         "from": "edge_sheen"
       },
       "tint0": {

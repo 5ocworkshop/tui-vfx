@@ -12,7 +12,7 @@
         "activePhases": [
           "dwell"
         ],
-        "effect": "filter.rigid_shake",
+        "effect": "filter.rigidShake",
         "id": "rigid_shake0",
         "inputs": {
           "dampingScale": {
@@ -104,7 +104,7 @@
     "aliasUsages": {
       "rigid_shake0": {
         "axis": "filter",
-        "canonicalEffect": "filter.rigid_shake",
+        "canonicalEffect": "filter.rigidShake",
         "from": "rigid_shake"
       }
     }

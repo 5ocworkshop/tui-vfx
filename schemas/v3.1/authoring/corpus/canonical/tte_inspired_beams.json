@@ -12,7 +12,7 @@
         "activePhases": [
           "enter"
         ],
-        "effect": "filter.glyph_timeline",
+        "effect": "filter.glyphTimeline",
         "id": "glyph_timeline0",
         "inputs": {
           "frames": {
@@ -86,7 +86,7 @@
         "activePhases": [
           "enter"
         ],
-        "effect": "filter.glyph_timeline",
+        "effect": "filter.glyphTimeline",
         "id": "glyph_timeline1",
         "inputs": {
           "frames": {
@@ -158,7 +158,7 @@
       },
       "linear_gradient0": {
         "activePhases": [],
-        "effect": "shader.linear_gradient",
+        "effect": "shader.linearGradient",
         "id": "linear_gradient0",
         "inputs": {
           "angle": {
@@ -219,17 +219,17 @@
     "aliasUsages": {
       "glyph_timeline0": {
         "axis": "filter",
-        "canonicalEffect": "filter.glyph_timeline",
+        "canonicalEffect": "filter.glyphTimeline",
         "from": "glyph_timeline"
       },
       "glyph_timeline1": {
         "axis": "filter",
-        "canonicalEffect": "filter.glyph_timeline",
+        "canonicalEffect": "filter.glyphTimeline",
         "from": "glyph_timeline"
       },
       "linear_gradient0": {
         "axis": "shader",
-        "canonicalEffect": "shader.linear_gradient",
+        "canonicalEffect": "shader.linearGradient",
         "from": "linear_gradient"
       }
     }

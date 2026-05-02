@@ -10,7 +10,7 @@
     "nodes": {
       "radial_twist0": {
         "activePhases": [],
-        "effect": "sampler.radial_twist",
+        "effect": "sampler.radialTwist",
         "id": "radial_twist0",
         "inputs": {
           "center": {
@@ -48,7 +48,7 @@
     "aliasUsages": {
       "radial_twist0": {
         "axis": "sampler",
-        "canonicalEffect": "sampler.radial_twist",
+        "canonicalEffect": "sampler.radialTwist",
         "from": "radial_twist"
       }
     }

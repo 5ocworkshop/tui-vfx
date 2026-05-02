@@ -29,7 +29,7 @@
     },
     {
       "from": "sine_wave",
-      "canonicalEffect": "sampler.sine_wave",
+      "canonicalEffect": "sampler.sineWave",
       "paramMapping": {
         "frequency": { "to": "frequency", "envelope": "literal-number" },
         "amplitude": { "to": "amplitude", "envelope": "literal-number" },
@@ -40,7 +40,7 @@
     },
     {
       "from": "radial_twist",
-      "canonicalEffect": "sampler.radial_twist",
+      "canonicalEffect": "sampler.radialTwist",
       "paramMapping": {
         "center":   { "to": "center",   "envelope": "passthrough" },
         "strength": { "to": "strength", "envelope": "literal-number" },
@@ -51,7 +51,7 @@
     },
     {
       "from": "spatial_signal",
-      "canonicalEffect": "sampler.spatial_signal"
+      "canonicalEffect": "sampler.spatialSignal"
     }
   ]
 }

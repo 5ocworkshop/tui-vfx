@@ -10,7 +10,7 @@
     "nodes": {
       "border_sweep0": {
         "activePhases": [],
-        "effect": "shader.border_sweep",
+        "effect": "shader.borderSweep",
         "id": "border_sweep0",
         "inputs": {
           "color": {
@@ -48,7 +48,7 @@
       },
       "focused_row_gradient0": {
         "activePhases": [],
-        "effect": "shader.focused_row_gradient",
+        "effect": "shader.focusedRowGradient",
         "id": "focused_row_gradient0",
         "inputs": {
           "brightColor": {
@@ -107,7 +107,7 @@
               "value": "$hint:reveal_field"
             }
           },
-          "color": {
+          "highlightColor": {
             "kind": "literal",
             "value": {
               "kind": "color",
@@ -128,7 +128,7 @@
       },
       "spatial_signal0": {
         "activePhases": [],
-        "effect": "sampler.spatial_signal",
+        "effect": "sampler.spatialSignal",
         "id": "spatial_signal0",
         "inputs": {
           "emitsHint": {
@@ -195,12 +195,12 @@
     "aliasUsages": {
       "border_sweep0": {
         "axis": "shader",
-        "canonicalEffect": "shader.border_sweep",
+        "canonicalEffect": "shader.borderSweep",
         "from": "border_sweep"
       },
       "focused_row_gradient0": {
         "axis": "shader",
-        "canonicalEffect": "shader.focused_row_gradient",
+        "canonicalEffect": "shader.focusedRowGradient",
         "from": "focused_row_gradient"
       },
       "highlighter0": {
@@ -210,7 +210,7 @@
       },
       "spatial_signal0": {
         "axis": "sampler",
-        "canonicalEffect": "sampler.spatial_signal",
+        "canonicalEffect": "sampler.spatialSignal",
         "from": "spatial_signal"
       }
     }

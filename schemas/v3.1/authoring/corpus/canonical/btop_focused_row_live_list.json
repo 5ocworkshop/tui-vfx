@@ -10,7 +10,7 @@
     "nodes": {
       "focused_row_gradient0": {
         "activePhases": [],
-        "effect": "shader.focused_row_gradient",
+        "effect": "shader.focusedRowGradient",
         "id": "focused_row_gradient0",
         "inputs": {
           "applyTo": {
@@ -95,7 +95,7 @@
     "aliasUsages": {
       "focused_row_gradient0": {
         "axis": "shader",
-        "canonicalEffect": "shader.focused_row_gradient",
+        "canonicalEffect": "shader.focusedRowGradient",
         "from": "focused_row_gradient"
       }
     }

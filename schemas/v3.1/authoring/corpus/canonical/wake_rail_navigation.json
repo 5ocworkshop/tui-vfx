@@ -10,7 +10,7 @@
     "nodes": {
       "affordance_wake0": {
         "activePhases": [],
-        "effect": "shader.affordance_wake",
+        "effect": "shader.affordanceWake",
         "id": "affordance_wake0",
         "inputs": {
           "color": {
@@ -59,7 +59,7 @@
       },
       "edge_grow0": {
         "activePhases": [],
-        "effect": "filter.edge_grow",
+        "effect": "filter.edgeGrow",
         "id": "edge_grow0",
         "inputs": {
           "bgColor": {
@@ -126,7 +126,7 @@
       },
       "focused_row_gradient0": {
         "activePhases": [],
-        "effect": "shader.focused_row_gradient",
+        "effect": "shader.focusedRowGradient",
         "id": "focused_row_gradient0",
         "inputs": {
           "brightColor": {
@@ -175,7 +175,7 @@
       },
       "wayfinding_node0": {
         "activePhases": [],
-        "effect": "shader.wayfinding_node",
+        "effect": "shader.wayfindingNode",
         "id": "wayfinding_node0",
         "inputs": {
           "color": {
@@ -362,22 +362,22 @@
     "aliasUsages": {
       "affordance_wake0": {
         "axis": "shader",
-        "canonicalEffect": "shader.affordance_wake",
+        "canonicalEffect": "shader.affordanceWake",
         "from": "affordance_wake"
       },
       "edge_grow0": {
         "axis": "filter",
-        "canonicalEffect": "filter.edge_grow",
+        "canonicalEffect": "filter.edgeGrow",
         "from": "edge_grow"
       },
       "focused_row_gradient0": {
         "axis": "shader",
-        "canonicalEffect": "shader.focused_row_gradient",
+        "canonicalEffect": "shader.focusedRowGradient",
         "from": "focused_row_gradient"
       },
       "wayfinding_node0": {
         "axis": "shader",
-        "canonicalEffect": "shader.wayfinding_node",
+        "canonicalEffect": "shader.wayfindingNode",
         "from": "wayfinding_node"
       }
     }

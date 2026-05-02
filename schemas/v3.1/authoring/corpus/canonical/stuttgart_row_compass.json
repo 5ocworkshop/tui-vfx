@@ -10,7 +10,7 @@
     "nodes": {
       "focused_row_gradient0": {
         "activePhases": [],
-        "effect": "shader.focused_row_gradient",
+        "effect": "shader.focusedRowGradient",
         "id": "focused_row_gradient0",
         "inputs": {
           "applyTo": {
@@ -66,7 +66,7 @@
       },
       "wayfinding_node0": {
         "activePhases": [],
-        "effect": "shader.wayfinding_node",
+        "effect": "shader.wayfindingNode",
         "id": "wayfinding_node0",
         "inputs": {
           "color": {
@@ -165,12 +165,12 @@
     "aliasUsages": {
       "focused_row_gradient0": {
         "axis": "shader",
-        "canonicalEffect": "shader.focused_row_gradient",
+        "canonicalEffect": "shader.focusedRowGradient",
         "from": "focused_row_gradient"
       },
       "wayfinding_node0": {
         "axis": "shader",
-        "canonicalEffect": "shader.wayfinding_node",
+        "canonicalEffect": "shader.wayfindingNode",
         "from": "wayfinding_node"
       }
     }

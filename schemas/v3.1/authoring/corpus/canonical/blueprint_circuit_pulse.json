@@ -10,7 +10,7 @@
     "nodes": {
       "border_sweep0": {
         "activePhases": [],
-        "effect": "shader.border_sweep",
+        "effect": "shader.borderSweep",
         "id": "border_sweep0",
         "inputs": {
           "color": {
@@ -65,7 +65,7 @@
       },
       "pattern_fill0": {
         "activePhases": [],
-        "effect": "filter.pattern_fill",
+        "effect": "filter.patternFill",
         "id": "pattern_fill0",
         "inputs": {
           "color": {
@@ -136,7 +136,7 @@
       },
       "trace_path0": {
         "activePhases": [],
-        "effect": "shader.trace_path",
+        "effect": "shader.tracePath",
         "id": "trace_path0",
         "inputs": {
           "color": {
@@ -306,7 +306,7 @@
     "aliasUsages": {
       "border_sweep0": {
         "axis": "shader",
-        "canonicalEffect": "shader.border_sweep",
+        "canonicalEffect": "shader.borderSweep",
         "from": "border_sweep"
       },
       "dim0": {
@@ -316,7 +316,7 @@
       },
       "pattern_fill0": {
         "axis": "filter",
-        "canonicalEffect": "filter.pattern_fill",
+        "canonicalEffect": "filter.patternFill",
         "from": "pattern_fill"
       },
       "pulse0": {
@@ -326,7 +326,7 @@
       },
       "trace_path0": {
         "axis": "shader",
-        "canonicalEffect": "shader.trace_path",
+        "canonicalEffect": "shader.tracePath",
         "from": "trace_path"
       },
       "vignette0": {

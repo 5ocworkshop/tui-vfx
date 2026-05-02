@@ -13,7 +13,7 @@
         "effect": "shader.highlighter",
         "id": "highlighter0",
         "inputs": {
-          "color": {
+          "highlightColor": {
             "kind": "literal",
             "value": {
               "kind": "color",

@@ -12,7 +12,7 @@
         "activePhases": [
           "enter"
         ],
-        "effect": "style.color_fade",
+        "effect": "style.colorFade",
         "id": "color_fade0",
         "inputs": {
           "colorSpace": {
@@ -41,7 +41,7 @@
         "activePhases": [
           "exit"
         ],
-        "effect": "style.color_fade",
+        "effect": "style.colorFade",
         "id": "color_fade1",
         "inputs": {
           "colorSpace": {
@@ -78,12 +78,12 @@
     "aliasUsages": {
       "color_fade0": {
         "axis": "style",
-        "canonicalEffect": "style.color_fade",
+        "canonicalEffect": "style.colorFade",
         "from": "color_fade"
       },
       "color_fade1": {
         "axis": "style",
-        "canonicalEffect": "style.color_fade",
+        "canonicalEffect": "style.colorFade",
         "from": "color_fade"
       }
     }

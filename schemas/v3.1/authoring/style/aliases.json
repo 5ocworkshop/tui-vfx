@@ -7,7 +7,7 @@
   "aliases": [
     {
       "from": "color_fade",
-      "canonicalEffect": "style.color_fade",
+      "canonicalEffect": "style.colorFade",
       "paramMapping": {
         "colorSpace": { "to": "colorSpace", "envelope": "literal-enum", "default": "rgb" },
         "target":     { "to": "target",     "envelope": "literal-color" },
@@ -27,7 +27,7 @@
     },
     {
       "from": "glisten_band",
-      "canonicalEffect": "style.glisten_band",
+      "canonicalEffect": "style.glistenBand",
       "paramMapping": {
         "color":  { "to": "color",  "envelope": "literal-color" },
         "speed":  { "to": "speed",  "envelope": "literal-number" },

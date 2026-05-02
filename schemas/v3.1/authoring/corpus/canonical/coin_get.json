@@ -13,11 +13,16 @@
         "effect": "shader.reflect",
         "id": "reflect0",
         "inputs": {
-          "color": {
+          "reflectionColor": {
             "kind": "literal",
             "value": {
-              "kind": "text",
-              "value": "white"
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 229,
+                "g": 229,
+                "r": 229
+              }
             }
           },
           "speed": {
