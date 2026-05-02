@@ -81,6 +81,10 @@ impl RuntimeContext {
         self.graph_values.get(id)
     }
 
+    pub(crate) fn set_graph_value(&mut self, id: GraphValueId, value: Value) {
+        self.graph_values.insert(id, value);
+    }
+
     pub(crate) fn effective_loop_t(&self) -> f64 {
         self.loop_t.unwrap_or(self.phase_t).clamp(0.0, 1.0)
     }

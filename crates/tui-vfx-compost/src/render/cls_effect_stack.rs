@@ -6,7 +6,7 @@
 // 0.1.1: PATCH — read applied effect kinds directly from stored stages and remove the unused raw-stage accessor.
 // 0.1.0: INIT — add ordered effect stage container and family-slot views.</CLOG>
 
-use tui_vfx_contract::{CellWritePolicy, RoleWritePolicy};
+use tui_vfx_contract::{CellWritePolicy, GraphStep, NodeId, RoleWritePolicy};
 
 use crate::render::{EffectFamily, EffectStage, SampleContext, is_node_active};
 
@@ -15,6 +15,7 @@ pub(crate) struct EffectStack<'a> {
     stages: Vec<EffectStage<'a>>,
     cell_write_policy: CellWritePolicy,
     role_write_policy: RoleWritePolicy,
+    topology: Option<&'a GraphStep>,
 }
 
 impl<'a> EffectStack<'a> {
@@ -22,12 +23,29 @@ impl<'a> EffectStack<'a> {
         stages: Vec<EffectStage<'a>>,
         cell_write_policy: CellWritePolicy,
         role_write_policy: RoleWritePolicy,
+        topology: Option<&'a GraphStep>,
     ) -> Self {
         Self {
             stages,
             cell_write_policy,
             role_write_policy,
+            topology,
         }
+    }
+
+    pub(crate) fn topology(&self) -> Option<&'a GraphStep> {
+        self.topology
+    }
+
+    pub(crate) fn ordered_stages(&self) -> impl Iterator<Item = EffectStage<'a>> + '_ {
+        self.stages.iter().copied()
+    }
+
+    pub(crate) fn stage_for_node(&self, node: &NodeId) -> Option<EffectStage<'a>> {
+        self.stages
+            .iter()
+            .copied()
+            .find(|stage| stage.node_id() == node)
     }
 
     pub(crate) fn cell_write_policy(&self) -> CellWritePolicy {
@@ -52,10 +70,6 @@ impl<'a> EffectStack<'a> {
 
     pub(crate) fn mask_stages(&self) -> impl Iterator<Item = EffectStage<'a>> + '_ {
         self.stages_for_family(EffectFamily::Mask)
-    }
-
-    pub(crate) fn shader_stages(&self) -> impl Iterator<Item = EffectStage<'a>> + '_ {
-        self.stages_for_family(EffectFamily::Shader)
     }
 
     pub(crate) fn filter_stages(&self) -> impl Iterator<Item = EffectStage<'a>> + '_ {

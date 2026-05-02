@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_build_effect_stack.rs</FILE> - <DESC>Build native effect stack from canonical graph binding</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Effect stack construction keeps element write policy with the collected native effect stages.</WCTX>
-// <CLOG>0.2.0: MINOR — carry cell and role write policies into the stack.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Effect stack construction keeps element write policy and optional topology with the collected native effect stages.</WCTX>
+// <CLOG>0.3.0: MINOR — carry graph topology for native sequence/parallel execution.
+// 0.2.0: MINOR — carry cell and role write policies into the stack.
 // 0.1.0: INIT — collect deterministic effect stages for one scene element.</CLOG>
 
 use tui_vfx_contract::{RecipeDocument, RecipeSceneElement};
@@ -10,7 +11,7 @@ use crate::render::{EffectStack, EffectStage, RenderError, collect_graph_step_no
 
 pub(crate) fn build_effect_stack<'a>(
     recipe: &'a RecipeDocument,
-    element: &RecipeSceneElement,
+    element: &'a RecipeSceneElement,
 ) -> Result<EffectStack<'a>, RenderError> {
     let mut node_ids = Vec::new();
     let topology = element
@@ -38,8 +39,9 @@ pub(crate) fn build_effect_stack<'a>(
         stages,
         element.cell_write_policy,
         element.role_write_policy.clone(),
+        topology,
     ))
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_build_effect_stack.rs</FILE> - <DESC>Build native effect stack from canonical graph binding</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

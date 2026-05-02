@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Effect application writes output through the native role-aware element-surface merge seam.</WCTX>
-// <CLOG>0.3.0: MINOR — skip inactive lifecycle stages and copy sampled source roles during merge.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Effect application delegates per-cell style mutation to native graph execution, then writes through the role-aware element-surface merge seam.</WCTX>
+// <CLOG>0.4.0: MINOR — execute graph topology before final cell writes.
+// 0.3.0: MINOR — skip inactive lifecycle stages and copy sampled source roles during merge.
 // 0.2.1: PATCH — remove redundant timing/effect-id reads from shader application.
 // 0.2.0: MINOR — route destination mutation through cell and role write policies.
 // 0.1.1: PATCH — separate supported shader dispatch from cell application.
@@ -10,11 +11,10 @@
 use tui_vfx_types::{Grid, RoleTag, SemanticScene, Style};
 
 use crate::render::{
-    EffectStack, EffectStage, ElementClipBounds, RenderError, SampleContext, is_node_active,
-    merge_element_surface, resolve_shader_phase_t,
+    EffectStack, ElementClipBounds, RenderError, SampleContext, execute_effect_graph,
+    is_node_active, merge_element_surface,
 };
 use crate::runtime::RuntimeContext;
-use crate::shaders::LinearGradientNode;
 
 pub(crate) fn apply_effect_stack(
     source: &SemanticScene,
@@ -35,12 +35,6 @@ pub(crate) fn apply_effect_stack(
         return Err(unsupported_stage(stage));
     }
 
-    let shaders = stack
-        .shader_stages()
-        .filter(|stage| is_node_active(stage.node(), sample))
-        .map(supported_shader_stage)
-        .collect::<Result<Vec<_>, _>>()?;
-
     let source_grid = source.grid();
     let base_context = runtime_context
         .clone()
@@ -60,20 +54,19 @@ pub(crate) fn apply_effect_stack(
             let cell_context = base_context
                 .clone()
                 .with_cell(local_x as u16, local_y as u16);
-            let mut style = Style::new(source_cell.fg, source_cell.bg, source_cell.mods);
-            for shader in &shaders {
-                style = shader.style_at(
-                    local_x as u16,
-                    local_y as u16,
-                    source_grid.width() as u16,
-                    source_grid.height() as u16,
-                    dest_x as u16,
-                    dest_y as u16,
-                    resolve_shader_phase_t(sample),
-                    style,
-                    &cell_context,
-                );
-            }
+            let style = execute_effect_graph(
+                stack,
+                sample,
+                Style::new(source_cell.fg, source_cell.bg, source_cell.mods),
+                &cell_context,
+                local_x as u16,
+                local_y as u16,
+                source_grid.width() as u16,
+                source_grid.height() as u16,
+                dest_x as u16,
+                dest_y as u16,
+            )?
+            .style;
             let final_cell = source_cell
                 .with_fg(style.fg)
                 .with_bg(style.bg)
@@ -93,16 +86,7 @@ pub(crate) fn apply_effect_stack(
     Ok(())
 }
 
-fn supported_shader_stage<'a>(
-    stage: EffectStage<'a>,
-) -> Result<LinearGradientNode<'a>, RenderError> {
-    match stage.node().effect.as_str() {
-        "shader.linearGradient" => LinearGradientNode::new(stage.node()),
-        _ => Err(unsupported_stage(stage)),
-    }
-}
-
-fn unsupported_stage(stage: EffectStage<'_>) -> RenderError {
+fn unsupported_stage(stage: crate::render::EffectStage<'_>) -> RenderError {
     RenderError::Unsupported(format!(
         "effect stage `{}` uses unsupported {} family effect `{}`",
         stage.node_id().as_str(),
@@ -112,4 +96,4 @@ fn unsupported_stage(stage: EffectStage<'_>) -> RenderError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

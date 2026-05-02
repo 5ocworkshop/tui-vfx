@@ -31,10 +31,12 @@ mod fnc_build_shadow_config;
 mod fnc_clip_element_bounds;
 mod fnc_element_bounds_fully_visible;
 mod fnc_evaluate_value_predicate;
+mod fnc_execute_effect_graph;
 mod fnc_is_node_active;
 mod fnc_is_scene_element_visible;
 mod fnc_merge_element_surface;
 mod fnc_merge_parallel_surfaces;
+mod fnc_publish_node_outputs;
 mod fnc_render_clipped_scene_element;
 mod fnc_render_element_shadow;
 mod fnc_render_hidden_overflow_scene_element;
@@ -71,10 +73,14 @@ pub(crate) use fnc_build_shadow_config::build_shadow_config;
 pub(crate) use fnc_clip_element_bounds::{ElementClipBounds, clip_element_bounds};
 pub(crate) use fnc_element_bounds_fully_visible::element_bounds_fully_visible;
 pub(crate) use fnc_evaluate_value_predicate::evaluate_value_predicate;
+pub(crate) use fnc_execute_effect_graph::execute_effect_graph;
 pub(crate) use fnc_is_node_active::is_node_active;
 pub(crate) use fnc_is_scene_element_visible::is_scene_element_visible;
 pub(crate) use fnc_merge_element_surface::merge_element_surface;
-pub(crate) use fnc_merge_parallel_surfaces::has_parallel_surface_merge;
+pub(crate) use fnc_merge_parallel_surfaces::{
+    ParallelMergeConflict, explicit_node_write_mask, parallel_merge_conflict,
+};
+pub(crate) use fnc_publish_node_outputs::publish_node_outputs;
 pub(crate) use fnc_render_clipped_scene_element::{
     render_clipped_scene_element, source_fits_scene,
 };
