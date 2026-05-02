@@ -335,6 +335,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": " Hygge ",
+              "titleAlign": "left"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

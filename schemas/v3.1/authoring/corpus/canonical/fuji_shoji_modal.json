@@ -154,6 +154,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": "Confirm",
+              "titleAlign": "center"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

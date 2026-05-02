@@ -478,6 +478,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": "Mail",
+              "titleAlign": "left"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

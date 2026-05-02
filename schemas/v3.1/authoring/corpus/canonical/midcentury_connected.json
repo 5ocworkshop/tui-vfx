@@ -176,6 +176,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": "◉ ONLINE",
+              "titleAlign": "center"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

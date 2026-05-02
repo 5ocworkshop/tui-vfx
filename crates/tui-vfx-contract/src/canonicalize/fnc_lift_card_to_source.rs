@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_lift_card_to_source.rs</FILE> - <DESC>Lift author-side card block into a canonical source instance</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 of canonicalize: lift the top-level card: { ... } shorthand into sources.mainCard with literal envelopes.</WCTX>
-// <CLOG>0.1.0: INIT — handle message, size tuple, fg, bg, border (string + object), bold; emit literal envelopes.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Audit follow-up: preserve title/titleAlign/frame fields from object-form border so descriptor-side custom borders, titled borders, and titleAlign are not silently dropped at canonicalize time.</WCTX>
+// <CLOG>0.2.0: MINOR — emit borderConfig structured input carrying every non-type border field so descriptor-defined extras (title, titleAlign, frame) survive canonicalization.</CLOG>
 
 use serde_json::{Map, Value, json};
 
@@ -118,8 +118,17 @@ fn build_card_inputs(card: Map<String, Value>) -> Result<Value, Canonicalization
     }
 
     if let Some(border) = card.get("border") {
-        let style = border_style_value(border)?;
+        let (style, config) = border_style_and_config(border)?;
         inputs.insert("borderStyle".into(), enum_envelope(style));
+        if let Some(config) = config {
+            inputs.insert(
+                "borderConfig".into(),
+                json!({
+                    "kind": "literal",
+                    "value": { "kind": "structured", "value": config }
+                }),
+            );
+        }
     }
 
     if let Some(bold) = card.get("bold").and_then(Value::as_bool) {
@@ -129,24 +138,48 @@ fn build_card_inputs(card: Map<String, Value>) -> Result<Value, Canonicalization
     Ok(Value::Object(inputs))
 }
 
-fn border_style_value(border: &Value) -> Result<String, CanonicalizationError> {
+/// Resolve a card-level border declaration into the canonical `borderStyle`
+/// enum value plus an optional structured config payload preserving every
+/// other field the author wrote (e.g., `title`, `titleAlign`, custom
+/// `frame` glyphs). The config payload survives as a `Value::Structured`
+/// input so the source.card descriptor can apply descriptor-defined extras
+/// without canonicalize having to know each field.
+///
+/// Both `{ type: "<style>", ... }` and `{ frame: { ... } }` (implicit
+/// `"custom"`) author shapes pass through; in both cases the non-type
+/// fields land in the config map.
+fn border_style_and_config(
+    border: &Value,
+) -> Result<(String, Option<Value>), CanonicalizationError> {
     match border {
-        Value::String(s) => Ok(s.clone()),
+        Value::String(s) => Ok((s.clone(), None)),
         Value::Object(obj) => {
-            if let Some(t) = obj.get("type").and_then(Value::as_str) {
-                Ok(t.to_string())
+            let style = if let Some(t) = obj.get("type").and_then(Value::as_str) {
+                t.to_string()
             } else if obj.contains_key("frame") {
-                Ok("custom".into())
+                "custom".into()
             } else {
-                Err(CanonicalizationError::new(
+                return Err(CanonicalizationError::new(
                     CanonicalizationErrorKind::UnexpectedJsonShape {
                         expected: "object with `type` or `frame` field".into(),
                     },
                     "card.border object must include `type` or `frame`",
                 )
                 .at(JsonPathSegment::field("border"))
-                .at(JsonPathSegment::field("card")))
+                .at(JsonPathSegment::field("card")));
+            };
+            let mut config = Map::new();
+            for (k, v) in obj {
+                if k != "type" {
+                    config.insert(k.clone(), v.clone());
+                }
             }
+            let config_value = if config.is_empty() {
+                None
+            } else {
+                Some(Value::Object(config))
+            };
+            Ok((style, config_value))
         }
         _ => Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnexpectedJsonShape {

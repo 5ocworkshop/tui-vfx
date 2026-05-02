@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_lift_scene_array.rs</FILE> - <DESC>Lift the top-level `scene: [...]` multi-element shorthand into per-element sources + canonical scene elements</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Per-element scene[] handling: motion lifts to placement_motion, shadow renames, effects build per-element graph topology, procedural sources emit source.procedural inputs.</WCTX>
-// <CLOG>0.2.0: MINOR — handle per-element effects (graph topology), procedural source descriptor, motion/follow/shadow lifts.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Audit follow-up: preserve title/titleAlign/frame fields on per-element scene[] borders so descriptor extras survive canonicalization the same way they do for the root card.</WCTX>
+// <CLOG>0.3.0: MINOR — emit borderConfig structured input for object-form scene[] borders so descriptor-defined extras are not silently dropped.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -254,17 +254,40 @@ fn build_source_for_entry(
         inputs.insert("bold".into(), boolean_envelope(bold));
     }
     if let Some(border) = entry.get("border") {
-        let style = match border {
-            Value::String(s) => Some(s.clone()),
-            Value::Object(obj) => obj
-                .get("type")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-                .or_else(|| obj.contains_key("frame").then(|| "custom".into())),
-            _ => None,
+        let (style, config) = match border {
+            Value::String(s) => (Some(s.clone()), None),
+            Value::Object(obj) => {
+                let style = obj
+                    .get("type")
+                    .and_then(Value::as_str)
+                    .map(str::to_string)
+                    .or_else(|| obj.contains_key("frame").then(|| "custom".into()));
+                let mut extras = Map::new();
+                for (k, v) in obj {
+                    if k != "type" {
+                        extras.insert(k.clone(), v.clone());
+                    }
+                }
+                let extras_value = if extras.is_empty() {
+                    None
+                } else {
+                    Some(Value::Object(extras))
+                };
+                (style, extras_value)
+            }
+            _ => (None, None),
         };
         if let Some(style) = style {
             inputs.insert("borderStyle".into(), enum_envelope(style));
+        }
+        if let Some(config) = config {
+            inputs.insert(
+                "borderConfig".into(),
+                json!({
+                    "kind": "literal",
+                    "value": { "kind": "structured", "value": config }
+                }),
+            );
         }
     }
 

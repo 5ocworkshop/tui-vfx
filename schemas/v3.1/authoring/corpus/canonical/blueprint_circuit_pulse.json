@@ -450,6 +450,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": " ▣ ROUTING ACTIVE ",
+              "titleAlign": "left"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

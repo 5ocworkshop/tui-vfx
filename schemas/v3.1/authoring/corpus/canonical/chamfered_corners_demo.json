@@ -117,6 +117,28 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "frame": {
+                "corners": [
+                  "◢",
+                  "◣",
+                  "◥",
+                  "◤"
+                ],
+                "edges": [
+                  "▀",
+                  "█",
+                  "▄",
+                  "█"
+                ]
+              }
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

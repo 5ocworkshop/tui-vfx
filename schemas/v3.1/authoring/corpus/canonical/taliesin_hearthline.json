@@ -216,6 +216,16 @@
             }
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": "Taliesin",
+              "titleAlign": "left"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {

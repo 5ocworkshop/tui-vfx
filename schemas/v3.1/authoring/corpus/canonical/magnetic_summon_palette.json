@@ -312,6 +312,16 @@
             "value": true
           }
         },
+        "borderConfig": {
+          "kind": "literal",
+          "value": {
+            "kind": "structured",
+            "value": {
+              "title": "Command Palette",
+              "titleAlign": "center"
+            }
+          }
+        },
         "borderStyle": {
           "kind": "literal",
           "value": {
