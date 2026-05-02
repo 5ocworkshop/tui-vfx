@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
+// <VERS>VERSION: 0.11.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.10.0: ADD — prove sampler.pendulum installs through the primitive pack.
+// <CLOG>0.11.0: ADD — prove sampler.sineWave installs through the primitive pack.
+// 0.10.0: ADD — prove sampler.pendulum installs through the primitive pack.
 // 0.9.0: ADD — prove sampler.bounce installs through the primitive pack.
 // 0.8.0: ADD — prove mask.checkers installs through the primitive pack.
 // 0.7.0: ADD — prove filter.tint installs through the primitive pack.
@@ -388,6 +389,19 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
         Some(Value::Enum("x".to_string()))
     );
     assert!(registry.has_runtime(&pendulum_id, EffectRuntimeKind::CoordinateSampler));
+
+    let sine_id = EffectId::new("sampler.sineWave");
+    let sine_descriptor = registry
+        .effect(&sine_id)
+        .expect("sampler.sineWave descriptor is registered");
+    assert_eq!(sine_descriptor.domain, EffectDomain::CoordinateSampler);
+    assert_eq!(
+        sine_descriptor.inputs[&EffectInputId::new("spatialFreq")]
+            .value
+            .default,
+        Some(Value::Number(0.5))
+    );
+    assert!(registry.has_runtime(&sine_id, EffectRuntimeKind::CoordinateSampler));
 }
 
 #[test]
@@ -429,4 +443,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>
