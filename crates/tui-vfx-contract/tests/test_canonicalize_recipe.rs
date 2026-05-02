@@ -38,6 +38,16 @@ const CANONICAL_MASK_IRIS: &str = include_str!(concat!(
     "/../../schemas/v3.1/authoring/corpus/canonical/mask_iris.json"
 ));
 
+const SHORTHAND_BTOP: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../schemas/v3.1/authoring/corpus/shorthand/btop_focused_row_live_list.json"
+));
+
+const CANONICAL_BTOP: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../schemas/v3.1/authoring/corpus/canonical/btop_focused_row_live_list.json"
+));
+
 fn assert_round_trip(label: &str, shorthand_str: &str, canonical_str: &str) {
     let shorthand: Value = serde_json::from_str(shorthand_str).expect("shorthand parses");
     let canonical_value: Value = serde_json::from_str(canonical_str).expect("canonical parses");
@@ -86,6 +96,11 @@ fn filter_dim_shorthand_round_trips_to_canonical() {
 #[test]
 fn mask_iris_shorthand_round_trips_to_canonical() {
     assert_round_trip("mask_iris", SHORTHAND_MASK_IRIS, CANONICAL_MASK_IRIS);
+}
+
+#[test]
+fn btop_focused_row_shorthand_round_trips_to_canonical() {
+    assert_round_trip("btop_focused_row_live_list", SHORTHAND_BTOP, CANONICAL_BTOP);
 }
 
 /// Channel-scoping verification gate (response-memo verification request).

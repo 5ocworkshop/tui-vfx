@@ -28,6 +28,7 @@ pub mod fnc_apply_alias;
 pub mod fnc_apply_preset;
 pub mod fnc_canonicalize_recipe;
 pub mod fnc_default_recipe;
+pub mod fnc_lift_bindings_to_signals;
 pub mod fnc_lift_card_to_source;
 pub mod fnc_lift_effects_to_nodes;
 pub mod fnc_lift_transitions;

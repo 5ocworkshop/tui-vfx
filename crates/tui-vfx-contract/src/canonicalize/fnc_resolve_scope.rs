@@ -124,8 +124,8 @@ fn resolve_object_scope(obj: &Map<String, Value>) -> Result<ResolvedScope, Canon
 
 fn scope_from_pair(key: &str, value: &Value) -> Result<Value, CanonicalizationError> {
     match key {
-        "role" => Ok(json!({ "kind": "role", "role": value })),
-        "content" => Ok(json!({ "kind": "content", "value": value })),
+        "role" => Ok(json!({ "kind": "role", "role": pascalize_role(value)? })),
+        "content" => map_content_shorthand(value),
         "rect" => {
             let arr = value.as_array().ok_or_else(|| {
                 CanonicalizationError::new(
@@ -199,6 +199,41 @@ fn scope_from_pair(key: &str, value: &Value) -> Result<Value, CanonicalizationEr
     }
 }
 
+fn map_content_shorthand(value: &Value) -> Result<Value, CanonicalizationError> {
+    let s = value.as_str().ok_or_else(|| {
+        CanonicalizationError::new(
+            CanonicalizationErrorKind::InvalidScopeShape,
+            "scope.content must be a string (text|empty|any)",
+        )
+    })?;
+    match s {
+        "text" => Ok(json!({ "kind": "role", "role": "Text" })),
+        "any" => Ok(json!({ "kind": "all" })),
+        "empty" => Ok(json!({ "kind": "nonEmpty" })),
+        other => Err(CanonicalizationError::new(
+            CanonicalizationErrorKind::InvalidScopeShape,
+            format!("unknown scope.content value: {other}"),
+        )),
+    }
+}
+
+/// `RoleTag` serializes in PascalCase. Author shorthand allows lower or mixed
+/// case for ergonomics; canonicalize promotes the first letter.
+fn pascalize_role(value: &Value) -> Result<Value, CanonicalizationError> {
+    let s = value.as_str().ok_or_else(|| {
+        CanonicalizationError::new(
+            CanonicalizationErrorKind::InvalidScopeShape,
+            "scope.role must be a string",
+        )
+    })?;
+    let mut chars = s.chars();
+    let normalized: String = match chars.next() {
+        Some(c) => c.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    };
+    Ok(Value::String(normalized))
+}
+
 fn pair_tuple(value: &Value, key: &str) -> Result<(Value, Value), CanonicalizationError> {
     let arr = value.as_array().ok_or_else(|| {
         CanonicalizationError::new(
@@ -268,21 +303,27 @@ mod tests {
     }
 
     #[test]
-    fn role_passthrough_string() {
+    fn role_lowercase_promotes_to_pascal_case() {
         let resolved = resolve_scope(&json!({ "role": "border" })).unwrap();
         assert_eq!(
             resolved.scope,
-            Some(json!({ "kind": "role", "role": "border" }))
+            Some(json!({ "kind": "role", "role": "Border" }))
         );
     }
 
     #[test]
-    fn content_passthrough() {
+    fn content_text_maps_to_role_text() {
         let resolved = resolve_scope(&json!({ "content": "text" })).unwrap();
         assert_eq!(
             resolved.scope,
-            Some(json!({ "kind": "content", "value": "text" }))
+            Some(json!({ "kind": "role", "role": "Text" }))
         );
+    }
+
+    #[test]
+    fn content_any_maps_to_all_scope() {
+        let resolved = resolve_scope(&json!({ "content": "any" })).unwrap();
+        assert_eq!(resolved.scope, Some(json!({ "kind": "all" })));
     }
 
     #[test]

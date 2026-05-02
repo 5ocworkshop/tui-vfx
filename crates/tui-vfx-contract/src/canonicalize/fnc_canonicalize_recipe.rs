@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_canonicalize_recipe.rs</FILE> - <DESC>Top-level canonicalize orchestrator</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase 2b of canonicalize: lift the transitions block plus preset expansions and record PresetUsage provenance.</WCTX>
-// <CLOG>0.3.0: MINOR — sequence transition lifting and merge PresetUsage into RecipeIntent.preset_usages.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase 2c of canonicalize: lift the bindings block into graph.signals.</WCTX>
+// <CLOG>0.4.0: MINOR — sequence bindings-to-signals lifting before effects so $bind references resolve cleanly.
+// 0.3.0: MINOR — sequence transition lifting and merge PresetUsage into RecipeIntent.preset_usages.
 // 0.2.0: MINOR — add effects-to-nodes pass plus RecipeIntent.alias_usages population.
 // 0.1.0: INIT — sequence card-lift and defaults; deserialize via serde_json::from_value; defer descriptor validation to the loader.</CLOG>
 
@@ -12,6 +13,7 @@ use crate::RecipeDocument;
 use super::cls_canonicalization_error::{CanonicalizationError, CanonicalizationErrorKind};
 use super::cls_recipe_intent::RecipeIntent;
 use super::fnc_default_recipe::apply_recipe_defaults;
+use super::fnc_lift_bindings_to_signals::lift_bindings_to_signals;
 use super::fnc_lift_card_to_source::lift_card_to_source;
 use super::fnc_lift_effects_to_nodes::lift_effects_to_nodes;
 use super::fnc_lift_transitions::lift_transitions;
@@ -31,6 +33,7 @@ pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, Canonicalizat
     let mut tree = input;
 
     lift_card_to_source(&mut tree)?;
+    lift_bindings_to_signals(&mut tree)?;
     let alias_usages = lift_effects_to_nodes(&mut tree)?;
     let preset_usages = lift_transitions(&mut tree)?;
     apply_recipe_defaults(&mut tree)?;
