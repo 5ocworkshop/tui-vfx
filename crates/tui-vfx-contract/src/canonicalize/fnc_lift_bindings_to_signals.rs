@@ -170,9 +170,9 @@ fn build_signal(id: &str, entry: Value) -> Result<Value, CanonicalizationError> 
 fn canonical_value_kind(author_kind: &str) -> Result<&'static str, CanonicalizationError> {
     Ok(match author_kind {
         "boolean" | "bool" => "boolean",
-        "integer" | "int" => "integer",
-        "number" | "float" => "number",
-        "text" | "string" => "text",
+        "integer" | "int" | "i32" | "i64" | "u16" | "u32" | "u64" | "usize" => "integer",
+        "number" | "float" | "f32" | "f64" => "number",
+        "text" | "string" | "str" => "text",
         "color" => "color",
         "duration" => "duration",
         other => {

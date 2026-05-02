@@ -16,6 +16,8 @@ use super::fnc_default_recipe::apply_recipe_defaults;
 use super::fnc_lift_bindings_to_signals::lift_bindings_to_signals;
 use super::fnc_lift_card_to_source::lift_card_to_source;
 use super::fnc_lift_effects_to_nodes::lift_effects_to_nodes;
+use super::fnc_lift_lifecycle::lift_lifecycle;
+use super::fnc_lift_top_level_extras::{apply_anchor_to_default_element, lift_top_level_extras};
 use super::fnc_lift_transitions::lift_transitions;
 
 /// Translate authoring shorthand into a canonical [`RecipeDocument`].
@@ -32,11 +34,19 @@ use super::fnc_lift_transitions::lift_transitions;
 pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, CanonicalizationError> {
     let mut tree = input;
 
+    let extras = lift_top_level_extras(&mut tree)?;
+    lift_lifecycle(&mut tree)?;
     lift_card_to_source(&mut tree)?;
     lift_bindings_to_signals(&mut tree)?;
     let alias_usages = lift_effects_to_nodes(&mut tree)?;
     let preset_usages = lift_transitions(&mut tree)?;
     apply_recipe_defaults(&mut tree)?;
+
+    if let Some(anchor) = extras.anchor.as_deref()
+        && let Some(scenes) = tree.get_mut("scenes").and_then(Value::as_array_mut)
+    {
+        apply_anchor_to_default_element(scenes, anchor)?;
+    }
 
     let mut recipe: RecipeDocument = serde_json::from_value(tree).map_err(|e| {
         CanonicalizationError::new(

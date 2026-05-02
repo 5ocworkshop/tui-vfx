@@ -48,6 +48,10 @@
         "phase":    { "to": "activePhases", "envelope": "phases-list" },
         "scope":    { "to": "scope",        "envelope": "scope-spec" }
       }
+    },
+    {
+      "from": "spatial_signal",
+      "canonicalEffect": "sampler.spatial_signal"
     }
   ]
 }

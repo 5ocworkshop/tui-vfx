@@ -84,6 +84,47 @@
         "scope":        { "to": "scope",        "envelope": "scope-spec" }
       },
       "notes": "Node-set geometry stays private (Q12). Distinct from trace_path's polyline shape."
+    },
+    {
+      "from": "reflect",
+      "canonicalEffect": "shader.reflect"
+    },
+    {
+      "from": "highlighter",
+      "canonicalEffect": "shader.highlighter"
+    },
+    {
+      "from": "glow",
+      "canonicalEffect": "shader.glow"
+    },
+    {
+      "from": "diffusion",
+      "canonicalEffect": "shader.diffusion"
+    },
+    {
+      "from": "edge_sheen",
+      "canonicalEffect": "shader.edge_sheen"
+    },
+    {
+      "from": "concealed_light",
+      "canonicalEffect": "shader.concealed_light"
+    },
+    {
+      "from": "affordance_wake",
+      "canonicalEffect": "shader.affordance_wake"
+    },
+    {
+      "from": "glisten_band",
+      "canonicalEffect": "shader.glisten_band",
+      "notes": "Shader-axis glisten band (mid-century). Distinct from style.glisten_band; the corpus uses the shader form for the marquee-style sweep."
+    },
+    {
+      "from": "linear_gradient",
+      "canonicalEffect": "shader.linear_gradient"
+    },
+    {
+      "from": "colored_overlay",
+      "canonicalEffect": "shader.colored_overlay"
     }
   ]
 }

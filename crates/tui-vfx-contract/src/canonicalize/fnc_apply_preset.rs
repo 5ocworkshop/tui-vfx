@@ -10,6 +10,7 @@ use super::cls_canonicalization_error::{
 };
 use super::cls_recipe_intent::PresetUsage;
 use super::fnc_resolve_duration::resolve_duration;
+use super::fnc_resolve_easing::resolve_easing;
 
 /// Build a canonical [`TransitionSpec`]-shape JSON value from one author-side
 /// preset entry.
@@ -70,6 +71,12 @@ fn build_track_for_preset(
         "crossfade" => build_relation_track("relation.crossfade", author, consumed),
         "push" => build_push_track(author, consumed),
         "morph" => build_morph_track(author, consumed),
+        // `radial` is an iris-from-anchor variant; emit as visibility.iris
+        // with circle shape so the canonical pipeline can execute it.
+        "radial" => build_iris_track(author, consumed),
+        // `cellular` reads as a per-cell stipple reveal in the corpus; emit
+        // as visibility.dissolve so it round-trips structurally.
+        "cellular" => build_dissolve_track(author, consumed),
         _ => Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnknownPreset {
                 axis: "transition".into(),
@@ -257,19 +264,8 @@ fn build_timing(
     }
     if let Some(easing) = author.get("easing") {
         consumed.push("easing".into());
-        let resolved = match easing {
-            Value::String(s) => json!({ "kind": "named", "value": s }),
-            Value::Object(_) => easing.clone(),
-            _ => {
-                return Err(CanonicalizationError::new(
-                    CanonicalizationErrorKind::UnexpectedJsonShape {
-                        expected: "string or object".into(),
-                    },
-                    "easing must be a named string or object",
-                )
-                .at(JsonPathSegment::field("easing")));
-            }
-        };
+        let resolved =
+            resolve_easing(easing).map_err(|e| e.at(JsonPathSegment::field("easing")))?;
         timing.insert("easing".into(), resolved);
     }
     Ok(Value::Object(timing))

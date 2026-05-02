@@ -98,6 +98,31 @@
         "scope":   { "to": "scope",        "envelope": "scope-spec" }
       },
       "notes": "Trigger is a polymorphic { kind: ... } discriminator with four variants (immediate, phase_offset, wavefront, poisson_burst). Passthrough — the author writes the canonical shape directly per the discriminator (Q9 / DECISIONS.md)."
+    },
+    {
+      "from": "kitt_scanner",
+      "canonicalEffect": "filter.kitt_scanner",
+      "notes": "Bouncing-band scanner filter. Author params (boost, bandWidth, bps, progress, motionMode) pass through with type-inferred envelopes."
+    },
+    {
+      "from": "braille_dust",
+      "canonicalEffect": "filter.braille_dust"
+    },
+    {
+      "from": "subcell_light",
+      "canonicalEffect": "filter.subcell_light"
+    },
+    {
+      "from": "tint",
+      "canonicalEffect": "filter.tint"
+    },
+    {
+      "from": "edge_grow",
+      "canonicalEffect": "filter.edge_grow"
+    },
+    {
+      "from": "pill_button",
+      "canonicalEffect": "filter.pill_button"
     }
   ]
 }

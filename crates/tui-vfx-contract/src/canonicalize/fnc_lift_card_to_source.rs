@@ -132,20 +132,22 @@ fn build_card_inputs(card: Map<String, Value>) -> Result<Value, Canonicalization
 fn border_style_value(border: &Value) -> Result<String, CanonicalizationError> {
     match border {
         Value::String(s) => Ok(s.clone()),
-        Value::Object(obj) => obj
-            .get("type")
-            .and_then(Value::as_str)
-            .map(str::to_string)
-            .ok_or_else(|| {
-                CanonicalizationError::new(
+        Value::Object(obj) => {
+            if let Some(t) = obj.get("type").and_then(Value::as_str) {
+                Ok(t.to_string())
+            } else if obj.contains_key("frame") {
+                Ok("custom".into())
+            } else {
+                Err(CanonicalizationError::new(
                     CanonicalizationErrorKind::UnexpectedJsonShape {
-                        expected: "object with `type` field".into(),
+                        expected: "object with `type` or `frame` field".into(),
                     },
-                    "card.border object must include a `type` field",
+                    "card.border object must include `type` or `frame`",
                 )
                 .at(JsonPathSegment::field("border"))
-                .at(JsonPathSegment::field("card"))
-            }),
+                .at(JsonPathSegment::field("card")))
+            }
+        }
         _ => Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnexpectedJsonShape {
                 expected: "string or object".into(),

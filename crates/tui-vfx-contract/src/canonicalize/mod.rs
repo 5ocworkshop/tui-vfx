@@ -31,11 +31,14 @@ pub mod fnc_default_recipe;
 pub mod fnc_lift_bindings_to_signals;
 pub mod fnc_lift_card_to_source;
 pub mod fnc_lift_effects_to_nodes;
+pub mod fnc_lift_lifecycle;
+pub mod fnc_lift_top_level_extras;
 pub mod fnc_lift_transitions;
 pub mod fnc_lift_value_envelope;
 pub mod fnc_load_tables;
 pub mod fnc_resolve_color;
 pub mod fnc_resolve_duration;
+pub mod fnc_resolve_easing;
 pub mod fnc_resolve_phases;
 pub mod fnc_resolve_scope;
 
