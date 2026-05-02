@@ -125,7 +125,8 @@
               "none",
               "plain",
               "rounded",
-              "double"
+              "double",
+              "custom"
             ],
             "unit": null,
             "semantic": "border-style"
@@ -149,6 +150,39 @@
             "unit": null,
             "semantic": "border-trim"
           },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "borderConfig": {
+          "displayName": "Border Config",
+          "description": "Optional structured payload preserving non-type border fields (title, titleAlign, custom frame glyphs) from authoring shorthand.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
+          "bindable": false,
+          "runtimeMutability": "phaseStart"
+        },
+        "bold": {
+          "displayName": "Bold",
+          "description": "When true, the rendered card text uses the bold modifier.",
+          "value": {
+            "kind": "boolean",
+            "default": {
+              "kind": "boolean",
+              "value": false
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "phaseStart"
         }
@@ -224,6 +258,54 @@
           },
           "bindable": true,
           "runtimeMutability": "compileTime"
+        },
+        "foreground": {
+          "displayName": "Foreground",
+          "description": "Optional foreground color override for the text source.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "foreground-color"
+          },
+          "optional": true,
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "background": {
+          "displayName": "Background",
+          "description": "Optional background color override for the text source.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "background-color"
+          },
+          "optional": true,
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "bold": {
+          "displayName": "Bold",
+          "description": "When true, the rendered text uses the bold modifier.",
+          "value": {
+            "kind": "boolean",
+            "default": {
+              "kind": "boolean",
+              "value": false
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
         }
       },
       "assets": {},

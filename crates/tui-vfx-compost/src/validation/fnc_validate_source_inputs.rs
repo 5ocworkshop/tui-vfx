@@ -1,9 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_source_inputs.rs</FILE> - <DESC>Validate native v3.1 source inputs for direct rendering</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Compost validates source.card inputs through the native runtime value resolver before materialization.</WCTX>
-// <CLOG>0.4.0: MINOR — route source ValueSource handling through the runtime value resolver.
-// 0.3.0: PATCH — enforce source.card descriptor dimension bounds during load validation.
-// 0.2.1: PATCH — centralize source.card constants and source input error construction.</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Accept the full set of borderStyle values declared by the source.card descriptor and the borderConfig structured payload that preserves title/titleAlign/frame extras through canonicalize.</WCTX>
+// <CLOG>0.5.0: MINOR — accept all source.card descriptor borderStyle values plus the borderConfig structured input emitted for object-form borders.</CLOG>
 
 use tui_vfx_contract::{SourceInputId, SourceInstanceId, SourceSpec, Value};
 
@@ -15,6 +13,11 @@ const REQUIRED_SOURCE_CARD_INPUTS: [&str; 5] =
 const SOURCE_CARD_HEIGHT_MAX: i64 = 256;
 const SOURCE_CARD_DESCRIPTOR: &str = "source.card";
 const SOURCE_CARD_WIDTH_MAX: i64 = 512;
+/// borderStyle enum values accepted by source.card. Mirrors the descriptor
+/// declaration plus the `custom` author-shorthand which lands when the
+/// border block carries a `frame:` glyph map without an explicit `type:`.
+const SOURCE_CARD_BORDER_STYLES: [&str; 5] = ["none", "plain", "rounded", "double", "custom"];
+const SOURCE_CARD_BORDER_TRIMS: [&str; 1] = ["none"];
 
 pub(crate) fn validate_source_inputs(
     source_id: &SourceInstanceId,
@@ -56,7 +59,10 @@ fn validate_source_card_input(
         "width" => source_dimension_in_range(value, SOURCE_CARD_WIDTH_MAX),
         "height" => source_dimension_in_range(value, SOURCE_CARD_HEIGHT_MAX),
         "foreground" | "background" => matches!(value, Value::Color(_)),
-        "borderStyle" | "borderTrim" => matches!(value, Value::Enum(value) if value == "none"),
+        "borderStyle" => matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_STYLES.contains(&name.as_str())),
+        "borderTrim" => matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_TRIMS.contains(&name.as_str())),
+        "borderConfig" => matches!(value, Value::Structured(_)),
+        "bold" => matches!(value, Value::Boolean(_)),
         _ => {
             return Err(source_input_error(
                 source_id,

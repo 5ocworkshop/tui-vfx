@@ -146,10 +146,10 @@
     "canadaFlag": {
       "assets": {},
       "inputs": {
-        "descriptorId": {
+        "generator": {
           "kind": "literal",
           "value": {
-            "kind": "text",
+            "kind": "string",
             "value": "braille_flag_field"
           }
         },

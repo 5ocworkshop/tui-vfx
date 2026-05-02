@@ -327,7 +327,10 @@ fn build_procedural_source(
 
     let mut inputs = Map::new();
     if let Some(descriptor_id) = obj.get("id").and_then(Value::as_str) {
-        insert_text_input(&mut inputs, "descriptorId", descriptor_id);
+        inputs.insert(
+            "generator".into(),
+            json!({ "kind": "literal", "value": { "kind": "string", "value": descriptor_id } }),
+        );
     }
     if let Some(size) = obj.get("size").and_then(Value::as_array)
         && size.len() == 2

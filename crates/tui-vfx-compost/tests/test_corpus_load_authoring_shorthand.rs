@@ -118,16 +118,15 @@ fn corpus_load_authoring_shorthand_summary() {
             }
         };
 
-        let status =
-            match LoadedRecipe::load_authoring_shorthand(shorthand, &templates, &catalog) {
-                Ok(_) => PairStatus::LoadedOk,
-                Err(LoadError::Canonicalize { message }) => PairStatus::CanonicalizeRegressed {
-                    error: message,
-                },
-                Err(other) => PairStatus::LoadRejected {
-                    error: format!("{other}"),
-                },
-            };
+        let status = match LoadedRecipe::load_authoring_shorthand(shorthand, &templates, &catalog) {
+            Ok(_) => PairStatus::LoadedOk,
+            Err(LoadError::Canonicalize { message }) => {
+                PairStatus::CanonicalizeRegressed { error: message }
+            }
+            Err(other) => PairStatus::LoadRejected {
+                error: format!("{other}"),
+            },
+        };
 
         results.push(PairResult {
             name: name.into(),
