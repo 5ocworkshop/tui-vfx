@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Effect application delegates per-cell style mutation to native graph execution, then writes through the role-aware element-surface merge seam.</WCTX>
-// <CLOG>0.4.0: MINOR — execute graph topology before final cell writes.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Effect application delegates per-cell style mutation and node-local write policy selection to native graph execution, then writes through the role-aware element-surface merge seam.</WCTX>
+// <CLOG>0.5.0: MINOR — apply non-default node-local write policies at the final merge seam.
+// 0.4.0: MINOR — execute graph topology before final cell writes.
 // 0.3.0: MINOR — skip inactive lifecycle stages and copy sampled source roles during merge.
 // 0.2.1: PATCH — remove redundant timing/effect-id reads from shader application.
 // 0.2.0: MINOR — route destination mutation through cell and role write policies.
@@ -54,7 +55,7 @@ pub(crate) fn apply_effect_stack(
             let cell_context = base_context
                 .clone()
                 .with_cell(local_x as u16, local_y as u16);
-            let style = execute_effect_graph(
+            let graph_result = execute_effect_graph(
                 stack,
                 sample,
                 Style::new(source_cell.fg, source_cell.bg, source_cell.mods),
@@ -65,8 +66,8 @@ pub(crate) fn apply_effect_stack(
                 source_grid.height() as u16,
                 dest_x as u16,
                 dest_y as u16,
-            )?
-            .style;
+            )?;
+            let style = graph_result.style;
             let final_cell = source_cell
                 .with_fg(style.fg)
                 .with_bg(style.bg)
@@ -77,8 +78,13 @@ pub(crate) fn apply_effect_stack(
                 dest_y,
                 sampled_role.clone(),
                 final_cell,
-                stack.cell_write_policy(),
-                stack.role_write_policy(),
+                graph_result
+                    .cell_write_policy
+                    .unwrap_or_else(|| stack.cell_write_policy()),
+                graph_result
+                    .role_write_policy
+                    .as_ref()
+                    .unwrap_or_else(|| stack.role_write_policy()),
             );
         }
     }
@@ -96,4 +102,4 @@ fn unsupported_stage(stage: crate::render::EffectStage<'_>) -> RenderError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_apply_effect_stack.rs</FILE> - <DESC>Apply supported native effect stages to a source grid</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

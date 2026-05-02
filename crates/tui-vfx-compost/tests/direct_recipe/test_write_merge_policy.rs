@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_write_merge_policy.rs</FILE> - <DESC>Compost write and merge policy substrate tests</DESC>
 // <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Write substrate tests cover final-cell skip behavior, role writes, node policies, graph value publication, and parallel merge semantics.</WCTX>
+// <WCTX>Write substrate tests cover final-cell skip behavior, role writes, graph value publication, and parallel merge semantics.</WCTX>
 // <CLOG>0.4.0: MINOR — cover native graph execution, graph values, parallel merge, and writeChannels masking.
 // 0.3.1: PATCH — name unsupported-policy tests with present capability language.
 // 0.3.0: MINOR — cover copied source roles and explicit role writes.
@@ -597,45 +597,6 @@ fn parallel_dynamic_channel_target_rejects_before_surface_merge() {
         ),
         "expected dynamic channel target rejection, got {error:?}"
     );
-}
-
-#[test]
-fn rejects_unsupported_node_local_write_policy_precedence() {
-    let mut role_recipe = linear_gradient_recipe_value();
-    role_recipe["graph"]["nodes"]["gradient"]["roleWritePolicy"] =
-        serde_json::json!({ "kind": "copySampledSource" });
-
-    let role_error = load_recipe_error(role_recipe);
-
-    assert!(matches!(
-        role_error,
-        LoadError::UnsupportedNodeWritePolicy {
-            node_id,
-            effect,
-            field,
-            ..
-        } if node_id == "gradient"
-            && effect == "shader.linearGradient"
-            && field == "roleWritePolicy"
-    ));
-
-    let mut cell_recipe = linear_gradient_recipe_value();
-    cell_recipe["graph"]["nodes"]["gradient"]["cellWritePolicy"] =
-        serde_json::Value::String("skipTransparentEmpty".to_string());
-
-    let cell_error = load_recipe_error(cell_recipe);
-
-    assert!(matches!(
-        cell_error,
-        LoadError::UnsupportedNodeWritePolicy {
-            node_id,
-            effect,
-            field,
-            ..
-        } if node_id == "gradient"
-            && effect == "shader.linearGradient"
-            && field == "cellWritePolicy"
-    ));
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_write_merge_policy.rs</FILE> - <DESC>Compost write and merge policy substrate tests</DESC>

@@ -1,11 +1,14 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_execute_effect_graph.rs</FILE> - <DESC>Execute native effect topology for one sampled cell</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Graph execution preserves sequence state while parallel branches read identical style/value snapshots before deterministic merge.</WCTX>
-// <CLOG>0.1.0: INIT — execute sequence/parallel graph steps with graph-value publication and merge isolation.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Graph execution preserves sequence state, node-local write policies, and parallel branch snapshots before deterministic merge.</WCTX>
+// <CLOG>0.2.0: MINOR — carry non-default node-local write policies with executed stage output.
+// 0.1.0: INIT — execute sequence/parallel graph steps with graph-value publication and merge isolation.</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use tui_vfx_contract::{CellChannel, GraphStep, GraphValueId, Value};
+use tui_vfx_contract::{
+    CellChannel, CellWritePolicy, GraphStep, GraphValueId, RoleWritePolicy, Value,
+};
 use tui_vfx_types::Style;
 
 use crate::render::{
@@ -18,6 +21,8 @@ use crate::shaders::LinearGradientNode;
 #[derive(Clone, Debug)]
 pub(crate) struct EffectGraphResult {
     pub(crate) style: Style,
+    pub(crate) cell_write_policy: Option<CellWritePolicy>,
+    pub(crate) role_write_policy: Option<RoleWritePolicy>,
     context: RuntimeContext,
     channels: BTreeSet<CellChannel>,
     published_values: BTreeMap<GraphValueId, Value>,
@@ -133,6 +138,10 @@ fn execute_sequence(
         )?;
         result.style = child_result.style;
         result.context = child_result.context;
+        result.select_write_policies(
+            child_result.cell_write_policy,
+            child_result.role_write_policy,
+        );
         result.channels.extend(child_result.channels);
         result
             .published_values
@@ -163,6 +172,7 @@ fn execute_parallel(
             screen_y,
         )?;
         result.style = merge_style_channels(result.style, branch.style, &branch.channels);
+        result.select_write_policies(branch.cell_write_policy, branch.role_write_policy);
         for (id, value) in branch.published_values {
             result.context.set_graph_value(id.clone(), value.clone());
             result.published_values.insert(id, value);
@@ -209,6 +219,18 @@ fn execute_stages<'a>(
             explicit_node_write_mask(stage.node()).as_ref(),
         );
         result.style = merge_style_channels(input_style, rendered_style, &output_channels);
+        result.select_write_policies(
+            stage
+                .node()
+                .cell_write_policy
+                .filter(|policy| *policy != CellWritePolicy::WriteCell),
+            stage
+                .node()
+                .role_write_policy
+                .as_ref()
+                .filter(|policy| !matches!(policy, RoleWritePolicy::PreserveDestination))
+                .cloned(),
+        );
         result
             .published_values
             .extend(publish_node_outputs(stage.node(), &mut result.context)?);
@@ -272,12 +294,27 @@ impl EffectGraphResult {
     fn new(style: Style, context: RuntimeContext) -> Self {
         Self {
             style,
+            cell_write_policy: None,
+            role_write_policy: None,
             context,
             channels: BTreeSet::new(),
             published_values: BTreeMap::new(),
         }
     }
+
+    fn select_write_policies(
+        &mut self,
+        cell_write_policy: Option<CellWritePolicy>,
+        role_write_policy: Option<RoleWritePolicy>,
+    ) {
+        if cell_write_policy.is_some() {
+            self.cell_write_policy = cell_write_policy;
+        }
+        if role_write_policy.is_some() {
+            self.role_write_policy = role_write_policy;
+        }
+    }
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_execute_effect_graph.rs</FILE> - <DESC>Execute native effect topology for one sampled cell</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

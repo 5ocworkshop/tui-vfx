@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/validation/orc_validate_render_contract.rs</FILE> - <DESC>Validate native direct-render contract at recipe load</DESC>
-// <VERS>VERSION: 0.8.1</VERS>
-// <WCTX>Validation dispatches supported native primitives, effect family slots, node timing, graph merge policy, and scene policies across order and topology references at load time.</WCTX>
-// <CLOG>0.8.1: PATCH — validate reachable node graph-value publication contracts at load time.
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>Validation dispatches supported native primitives, effect family slots, graph outputs, graph merge policy, and scene policies across order and topology references at load time.</WCTX>
+// <CLOG>0.9.0: MINOR — allow supported node-local write policy execution.
+// 0.8.1: PATCH — validate reachable node graph-value publication contracts at load time.
 // 0.8.0: MINOR — validate every node reachable from root or element-local topology.
 // 0.7.1: PATCH — use capability-based unsupported graph/write policy reasons.
 // 0.7.0: MINOR — allow activePhases because lifecycle gating executes during render.
@@ -25,8 +26,6 @@ const UNSUPPORTED_EFFECT_FAMILY_REASON: &str =
 const SAME_CHANNEL_CONFLICT_REASON: &str = "parallel graph topology requested errorOnSameChannelConflict and branches write the same channel";
 const SAME_VALUE_CONFLICT_REASON: &str = "parallel graph topology requested errorOnSameValueConflict and branches publish the same graph value";
 const DYNAMIC_CHANNEL_TARGET_REASON: &str = "parallel graph topology requires literal shader channel targets for deterministic surface merge";
-const UNSUPPORTED_NODE_WRITE_POLICY_REASON: &str =
-    "node-local write policy precedence requires per-stage write policy execution";
 const UNSUPPORTED_EFFECT_OUTPUT_REASON: &str =
     "effect-output publication requires native effect output capture";
 const MISSING_OUTPUT_INPUT_REASON: &str =
@@ -64,30 +63,6 @@ pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), Lo
         let Some(node) = recipe.graph.nodes.get(node_id) else {
             continue;
         };
-        if node
-            .cell_write_policy
-            .is_some_and(|policy| policy != tui_vfx_contract::CellWritePolicy::WriteCell)
-        {
-            return Err(LoadError::UnsupportedNodeWritePolicy {
-                node_id: node_id.as_str().to_string(),
-                effect: node.effect.as_str().to_string(),
-                field: "cellWritePolicy".to_string(),
-                reason: UNSUPPORTED_NODE_WRITE_POLICY_REASON.to_string(),
-            });
-        }
-        if node.role_write_policy.as_ref().is_some_and(|policy| {
-            !matches!(
-                policy,
-                tui_vfx_contract::RoleWritePolicy::PreserveDestination
-            )
-        }) {
-            return Err(LoadError::UnsupportedNodeWritePolicy {
-                node_id: node_id.as_str().to_string(),
-                effect: node.effect.as_str().to_string(),
-                field: "roleWritePolicy".to_string(),
-                reason: UNSUPPORTED_NODE_WRITE_POLICY_REASON.to_string(),
-            });
-        }
         validate_node_outputs(node_id, node)?;
         match (
             EffectFamily::from_effect_id(node.effect.as_str()),
@@ -174,4 +149,4 @@ fn parallel_merge_error(root: &str, conflict: ParallelMergeConflict) -> Result<(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/orc_validate_render_contract.rs</FILE> - <DESC>Validate native direct-render contract at recipe load</DESC>
-// <VERS>END OF VERSION: 0.8.1</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>
