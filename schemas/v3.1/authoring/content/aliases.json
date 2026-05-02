@@ -1,0 +1,20 @@
+{
+  "$schema": "../meta/alias-table.schema.json",
+  "version": "0.1",
+  "axis": "content",
+  "description": "Content-axis aliases. Author-side { content: '<name>', ... } in an effects[] entry maps to a graph node with effect: 'content.<canonical>'. The content axis covers per-cell text mutations like scrambling, typewriter reveals, and split-flap rolls — distinct from filter (channel mutation), shader (geometric), sampler (per-cell pipeline), style (channel composition), and mask (visibility) axes.",
+  "aliases": [
+    {
+      "from": "scramble",
+      "canonicalEffect": "content.scramble"
+    },
+    {
+      "from": "typewriter",
+      "canonicalEffect": "content.typewriter"
+    },
+    {
+      "from": "split_flap",
+      "canonicalEffect": "content.split_flap"
+    }
+  ]
+}

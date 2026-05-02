@@ -49,6 +49,11 @@ const MASK_ALIASES_JSON: &str = include_str!(concat!(
     "/../../schemas/v3.1/authoring/mask/aliases.json"
 ));
 
+const CONTENT_ALIASES_JSON: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../schemas/v3.1/authoring/content/aliases.json"
+));
+
 static RULES: OnceLock<CanonicalizationRules> = OnceLock::new();
 static TRANSITION_ALIASES: OnceLock<AliasTable> = OnceLock::new();
 static TRANSITION_EXPANSION: OnceLock<ExpansionTable> = OnceLock::new();
@@ -57,6 +62,7 @@ static SHADER_ALIASES: OnceLock<AliasTable> = OnceLock::new();
 static SAMPLER_ALIASES: OnceLock<AliasTable> = OnceLock::new();
 static STYLE_ALIASES: OnceLock<AliasTable> = OnceLock::new();
 static MASK_ALIASES: OnceLock<AliasTable> = OnceLock::new();
+static CONTENT_ALIASES: OnceLock<AliasTable> = OnceLock::new();
 
 /// Universal canonicalization rules table.
 pub fn canonicalization_rules() -> Result<&'static CanonicalizationRules, CanonicalizationError> {
@@ -92,6 +98,11 @@ pub fn alias_table(axis: AliasAxis) -> Result<&'static AliasTable, Canonicalizat
         ),
         AliasAxis::Style => (&STYLE_ALIASES, STYLE_ALIASES_JSON, "style/aliases.json"),
         AliasAxis::Mask => (&MASK_ALIASES, MASK_ALIASES_JSON, "mask/aliases.json"),
+        AliasAxis::Content => (
+            &CONTENT_ALIASES,
+            CONTENT_ALIASES_JSON,
+            "content/aliases.json",
+        ),
     };
     if let Some(table) = cell.get() {
         return Ok(table);
@@ -133,6 +144,7 @@ pub enum AliasAxis {
     Sampler,
     Style,
     Mask,
+    Content,
 }
 
 impl AliasAxis {
@@ -144,6 +156,7 @@ impl AliasAxis {
             Self::Sampler => "sampler",
             Self::Style => "style",
             Self::Mask => "mask",
+            Self::Content => "content",
         }
     }
 }
@@ -169,6 +182,7 @@ mod tests {
             AliasAxis::Sampler,
             AliasAxis::Style,
             AliasAxis::Mask,
+            AliasAxis::Content,
         ] {
             let table = alias_table(axis).expect("alias table parses");
             assert_eq!(table.axis, axis.as_str());

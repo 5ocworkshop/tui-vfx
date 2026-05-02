@@ -18,7 +18,7 @@
     "axis": {
       "description": "Which authoring axis this table covers. The canonicalizer keys off this when routing shorthand.",
       "type": "string",
-      "enum": ["transition", "filter", "shader", "sampler", "mask", "style"]
+      "enum": ["transition", "filter", "shader", "sampler", "mask", "style", "content"]
     },
     "description": {
       "type": "string"

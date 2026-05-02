@@ -188,6 +188,20 @@ pub fn lift_effects_to_nodes(
     Ok(alias_usages)
 }
 
+/// Axis discriminator detection, exposed for callers that need to consume
+/// the same effects[] entry shape outside the top-level orchestrator
+/// (notably per-element scene[] effects).
+pub fn detect_axis_pub(
+    entry: &Map<String, Value>,
+) -> Result<(AliasAxis, &'static str, String), CanonicalizationError> {
+    detect_axis(entry)
+}
+
+/// Per-call ID counter exposed for callers that allocate node IDs in batches.
+pub fn allocate_node_id_pub(base: &str, counter: &mut BTreeMap<String, usize>) -> String {
+    allocate_node_id(base, counter)
+}
+
 fn detect_axis(
     entry: &Map<String, Value>,
 ) -> Result<(AliasAxis, &'static str, String), CanonicalizationError> {
@@ -197,6 +211,7 @@ fn detect_axis(
         ("sampler", AliasAxis::Sampler),
         ("style", AliasAxis::Style),
         ("mask", AliasAxis::Mask),
+        ("content", AliasAxis::Content),
     ] {
         if let Some(Value::String(name)) = entry.get(key) {
             return Ok((axis, key, name.clone()));

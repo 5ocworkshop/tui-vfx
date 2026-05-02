@@ -75,20 +75,18 @@ fn default_phase(name: &str) -> Value {
 }
 
 fn build_phase(name: &str, value: &Value) -> Result<Value, CanonicalizationError> {
+    // Trigger-based dwell shorthand: `dwell: { until: "$bind:<id>", fallback: "<dur>" }`.
+    if name == "dwell"
+        && let Value::Object(obj) = value
+        && obj.contains_key("until")
+    {
+        return build_until_dwell(obj);
+    }
+
     let duration = match value {
         Value::String(_) => resolve_duration(value)?,
         Value::Object(obj) => match obj.get("duration") {
             Some(d) => resolve_duration(d)?,
-            None if obj.contains_key("until") => {
-                return Err(CanonicalizationError::new(
-                    CanonicalizationErrorKind::UnsupportedShorthand {
-                        detail: "trigger-based dwell".into(),
-                    },
-                    format!(
-                        "lifecycle.{name} declares `until: <trigger>` shorthand. The canonical DwellPolicy::Until needs a TriggerSpec with explicit condition/latch/reset/action wiring; this canonicalize pass cannot synthesize that without the descriptor catalog. Provide a canonical `policy: {{ kind: \"until\", trigger: ..., maxDuration: ... }}` directly, or extend canonicalize with a TriggerSpec lift in coordination with the contract owners."
-                    ),
-                ));
-            }
             None => {
                 return Err(CanonicalizationError::new(
                     CanonicalizationErrorKind::MissingRequired {
@@ -117,6 +115,69 @@ fn build_phase(name: &str, value: &Value) -> Result<Value, CanonicalizationError
         json!({ "kind": "fixed", "duration": duration })
     };
     Ok(json!({ "phase": name, "timing": timing }))
+}
+
+/// Synthesize a `DwellPolicy::Until` from `{ until: <trigger-source>, fallback }`
+/// shorthand. The trigger source is parsed as a ValueSource (typically a
+/// `$bind:<id>` signal reference) and wrapped in a TriggerCondition that
+/// fires when the sampled value is `isTrue`. Defaults: latch=untilPhaseReset,
+/// reset=phaseStart, action=advancePhase. The `fallback` duration becomes
+/// the policy's maxDuration cap so the dwell terminates even if the trigger
+/// never fires.
+fn build_until_dwell(obj: &serde_json::Map<String, Value>) -> Result<Value, CanonicalizationError> {
+    let until = obj.get("until").ok_or_else(|| {
+        CanonicalizationError::new(
+            CanonicalizationErrorKind::MissingRequired {
+                field: "until".into(),
+            },
+            "until-dwell shorthand requires `until` source",
+        )
+    })?;
+    let predicate_source = parse_until_source(until)?;
+    let max_duration = obj
+        .get("fallback")
+        .map(resolve_duration)
+        .transpose()?
+        .unwrap_or(Value::Null);
+
+    let trigger = json!({
+        "condition": {
+            "predicateSource": predicate_source,
+            "predicate": { "kind": "isTrue" }
+        },
+        "latch": "untilPhaseReset",
+        "reset": "phaseStart",
+        "action": "advancePhase",
+    });
+    Ok(json!({
+        "phase": "dwell",
+        "timing": {
+            "kind": "dwell",
+            "policy": {
+                "kind": "until",
+                "trigger": trigger,
+                "maxDuration": max_duration,
+            }
+        }
+    }))
+}
+
+fn parse_until_source(value: &Value) -> Result<Value, CanonicalizationError> {
+    match value {
+        Value::String(s) if s.starts_with("$bind:") => {
+            let id = s.trim_start_matches("$bind:");
+            Ok(json!({ "kind": "signal", "id": id }))
+        }
+        Value::Object(_) => Ok(value.clone()),
+        other => Err(CanonicalizationError::new(
+            CanonicalizationErrorKind::UnexpectedJsonShape {
+                expected: "$bind:<id> string or canonical ValueSource object".into(),
+            },
+            format!(
+                "dwell `until` must be a $bind:<id> reference or a canonical ValueSource, got {other}"
+            ),
+        )),
+    }
 }
 
 #[cfg(test)]
