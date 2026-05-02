@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.7.0: ADD — prove filter.tint installs through the primitive pack.
+// <CLOG>0.8.0: ADD — prove mask.checkers installs through the primitive pack.
+// 0.7.0: ADD — prove filter.tint installs through the primitive pack.
 // 0.6.0: ADD — prove filter.greyscale installs through the primitive pack.
 // 0.5.0: ADD — prove filter.invert installs through the primitive pack.
 // 0.4.0: ADD — prove sampler.gravity installs through the primitive pack.
@@ -298,6 +299,19 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     );
     assert!(registry.has_runtime(&tint_id, EffectRuntimeKind::FrameFilter));
 
+    let checkers_id = EffectId::new("mask.checkers");
+    let checkers_descriptor = registry
+        .effect(&checkers_id)
+        .expect("mask.checkers descriptor is registered");
+    assert_eq!(checkers_descriptor.domain, EffectDomain::Mask);
+    assert_eq!(
+        checkers_descriptor.inputs[&EffectInputId::new("cellSize")]
+            .value
+            .default,
+        Some(Value::Integer(2))
+    );
+    assert!(registry.has_runtime(&checkers_id, EffectRuntimeKind::Mask));
+
     let mask_id = EffectId::new("mask.dissolve");
     let mask_descriptor = registry
         .effect(&mask_id)
@@ -387,4 +401,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
