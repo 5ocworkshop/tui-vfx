@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
+// <VERS>VERSION: 0.12.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.11.0: ADD — prove sampler.sineWave installs through the primitive pack.
+// <CLOG>0.12.0: ADD — prove sampler.distortion installs through the primitive pack.
+// 0.11.0: ADD — prove sampler.sineWave installs through the primitive pack.
 // 0.10.0: ADD — prove sampler.pendulum installs through the primitive pack.
 // 0.9.0: ADD — prove sampler.bounce installs through the primitive pack.
 // 0.8.0: ADD — prove mask.checkers installs through the primitive pack.
@@ -348,6 +349,17 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     );
     assert!(registry.has_runtime(&bounce_id, EffectRuntimeKind::CoordinateSampler));
 
+    let distortion_id = EffectId::new("sampler.distortion");
+    let distortion_descriptor = registry
+        .effect(&distortion_id)
+        .expect("sampler.distortion descriptor is registered");
+    assert_eq!(
+        distortion_descriptor.domain,
+        EffectDomain::CoordinateSampler
+    );
+    assert!(distortion_descriptor.inputs.is_empty());
+    assert!(registry.has_runtime(&distortion_id, EffectRuntimeKind::CoordinateSampler));
+
     let sampler_id = EffectId::new("sampler.gravity");
     let sampler_descriptor = registry
         .effect(&sampler_id)
@@ -443,4 +455,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>
