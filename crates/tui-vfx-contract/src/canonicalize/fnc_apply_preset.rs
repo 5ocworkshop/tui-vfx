@@ -29,10 +29,7 @@ pub fn apply_preset(
 
     let mut spec = Map::new();
     spec.insert("id".into(), Value::String(transition_id));
-    spec.insert(
-        "intent".into(),
-        json!({ "kind": "preset", "preset": preset }),
-    );
+    spec.insert("intent".into(), build_intent(preset));
     spec.insert(
         "subjects".into(),
         json!({ "from": { "kind": "empty" }, "to": { "kind": "empty" } }),
@@ -53,6 +50,26 @@ pub fn apply_preset(
             consumed_params,
         },
     ))
+}
+
+/// Build the [`TransitionIntent`] JSON for a preset name. Names in the closed
+/// `TransitionPreset` enum become `Preset { preset }`; corpus-witnessed
+/// non-canonical names (`radial`, `cellular`) become `Alias { alias,
+/// canonicalPreset }` referencing the closest canonical preset they expand to.
+fn build_intent(preset: &str) -> Value {
+    match preset {
+        "radial" => json!({
+            "kind": "alias",
+            "alias": "radial",
+            "canonicalPreset": "iris"
+        }),
+        "cellular" => json!({
+            "kind": "alias",
+            "alias": "cellular",
+            "canonicalPreset": "dissolve"
+        }),
+        canonical => json!({ "kind": "preset", "preset": canonical }),
+    }
 }
 
 fn build_track_for_preset(
@@ -113,12 +130,10 @@ fn build_fade_track(
     _author: &Map<String, Value>,
     _consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    Ok(json!({
-        "kind": "opacity.fade",
-        "subject": "to",
-        "from": 0.0,
-        "to": 1.0,
-    }))
+    // The canonical opacity.fade track defaults from=0 / to=1 when the
+    // optional sources are omitted. Emitting just `subject` keeps the
+    // canonical document smaller and avoids a ValueSource wrap on each side.
+    Ok(json!({ "kind": "opacity.fade", "subject": "to" }))
 }
 
 fn build_wipe_track(
@@ -149,13 +164,15 @@ fn build_dissolve_track(
         "kind": "visibility.dissolve",
         "subject": "to",
     });
-    if let Some(seed) = author.get("seed").and_then(Value::as_i64) {
+    if let Some(seed) = author.get("seed") {
         consumed.push("seed".into());
-        track["seed"] = json!(seed);
+        track["seed"] = wrap_value_source(seed)?;
     }
-    if let Some(chunk) = author.get("chunkSize").and_then(Value::as_i64) {
+    // chunkSize is author-side metadata; the canonical visibility.dissolve
+    // track does not carry it. Record consumption so PresetUsage reflects the
+    // author-side intent without polluting the track.
+    if author.contains_key("chunkSize") {
         consumed.push("chunkSize".into());
-        track["chunkSize"] = json!(chunk);
     }
     Ok(track)
 }
@@ -166,56 +183,43 @@ fn build_blinds_track(
 ) -> Result<Value, CanonicalizationError> {
     let orientation =
         consume_string(author, "orientation", consumed).unwrap_or_else(|| "horizontal".into());
-    let mut track = json!({
+    let count_value = author.get("count").cloned().unwrap_or_else(|| json!(4));
+    if author.contains_key("count") {
+        consumed.push("count".into());
+    }
+    Ok(json!({
         "kind": "visibility.blinds",
         "subject": "to",
         "orientation": orientation,
-    });
-    if let Some(count) = author.get("count").and_then(Value::as_i64) {
-        consumed.push("count".into());
-        track["count"] = json!(count);
-    }
-    Ok(track)
+        "count": wrap_value_source(&count_value)?,
+    }))
 }
 
 fn build_stippled_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    let mut track = json!({
-        "kind": "visibility.stippled",
-        "subject": "to",
-    });
-    if let Some(pattern) = consume_string(author, "pattern", consumed) {
-        track["pattern"] = Value::String(pattern);
+    // The canonical visibility.stippled track only accepts `subject` and
+    // `transitionProgress`. Record pattern/density/seed as consumed for
+    // PresetUsage but do not emit them onto the track.
+    for author_key in ["pattern", "density", "seed"] {
+        if author.contains_key(author_key) {
+            consumed.push(author_key.into());
+        }
     }
-    if let Some(density) = author.get("density").and_then(Value::as_f64) {
-        consumed.push("density".into());
-        track["density"] = json!(density);
-    }
-    if let Some(seed) = author.get("seed").and_then(Value::as_i64) {
-        consumed.push("seed".into());
-        track["seed"] = json!(seed);
-    }
-    Ok(track)
+    Ok(json!({ "kind": "visibility.stippled", "subject": "to" }))
 }
 
 fn build_braille_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    let mut track = json!({
-        "kind": "visibility.braille",
-        "subject": "to",
-    });
-    if let Some(order) = consume_string(author, "subcellOrder", consumed) {
-        track["subcellOrder"] = Value::String(order);
+    for author_key in ["subcellOrder", "seed"] {
+        if author.contains_key(author_key) {
+            consumed.push(author_key.into());
+        }
     }
-    if let Some(seed) = author.get("seed").and_then(Value::as_i64) {
-        consumed.push("seed".into());
-        track["seed"] = json!(seed);
-    }
-    Ok(track)
+    Ok(json!({ "kind": "visibility.braille", "subject": "to" }))
 }
 
 fn build_relation_track(
@@ -223,7 +227,7 @@ fn build_relation_track(
     _author: &Map<String, Value>,
     _consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    Ok(json!({ "kind": kind, "subject": "shared" }))
+    Ok(json!({ "kind": kind }))
 }
 
 fn build_push_track(
@@ -234,8 +238,7 @@ fn build_push_track(
         consume_string(author, "direction", consumed).unwrap_or_else(|| "leftToRight".into());
     Ok(json!({
         "kind": "relation.push",
-        "subject": "shared",
-        "direction": direction,
+        "travelDirection": travel_direction_from_reveal(&direction),
     }))
 }
 
@@ -243,12 +246,52 @@ fn build_morph_track(
     author: &Map<String, Value>,
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
-    let match_kind = consume_string(author, "match", consumed).unwrap_or_else(|| "glyph".into());
-    Ok(json!({
-        "kind": "relation.morph",
-        "subject": "shared",
-        "match": match_kind,
-    }))
+    if author.contains_key("match") {
+        consumed.push("match".into());
+    }
+    Ok(json!({ "kind": "relation.morph" }))
+}
+
+/// Wrap an author-side raw value into a canonical ValueSource literal envelope
+/// when it isn't already one.
+fn wrap_value_source(value: &Value) -> Result<Value, CanonicalizationError> {
+    if let Value::Object(obj) = value
+        && obj.contains_key("kind")
+    {
+        return Ok(value.clone());
+    }
+    let inner = match value {
+        Value::Bool(b) => json!({ "kind": "boolean", "value": b }),
+        Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                json!({ "kind": "integer", "value": i })
+            } else {
+                json!({ "kind": "number", "value": n.as_f64().unwrap_or(0.0) })
+            }
+        }
+        Value::String(s) => json!({ "kind": "text", "value": s }),
+        _ => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::EnvelopeLiftFailed,
+                format!("cannot wrap value {value} as ValueSource literal"),
+            ));
+        }
+    };
+    Ok(json!({ "kind": "literal", "value": inner }))
+}
+
+/// Map an author-side reveal-style direction (`leftToRight`, `rightToLeft`,
+/// `topToBottom`, `bottomToTop`) to the canonical TransitionTravelDirection
+/// (`left`, `right`, `up`, `down`). The canonical naming describes which way
+/// the surface travels; the corpus uses CSS reveal-direction naming.
+fn travel_direction_from_reveal(reveal: &str) -> &'static str {
+    match reveal {
+        "leftToRight" | "right" => "right",
+        "rightToLeft" | "left" => "left",
+        "topToBottom" | "down" => "down",
+        "bottomToTop" | "up" => "up",
+        _ => "right",
+    }
 }
 
 fn build_timing(

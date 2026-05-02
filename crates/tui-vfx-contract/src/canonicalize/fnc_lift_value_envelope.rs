@@ -28,6 +28,27 @@ pub fn lift_value_envelope(
         return Ok(resolve_binding_string(rest));
     }
 
+    // EnvelopeHint::None on a complex structural value (object without kind, or
+    // an array that isn't a color tuple) passes through unwrapped. Shader
+    // inputs like `paths`, `stops`, `nodes`, `pattern`, and `signal` are not
+    // ValueSource positions — they're structural arguments the descriptor
+    // deserializes directly.
+    if matches!(hint, EnvelopeHint::None) {
+        match value {
+            Value::Object(_) => return Ok(value.clone()),
+            Value::Array(arr) => {
+                let is_color_tuple = (arr.len() == 3 || arr.len() == 4)
+                    && arr
+                        .iter()
+                        .all(|v| v.is_u64() || v.is_i64() || v.is_number());
+                if !is_color_tuple {
+                    return Ok(value.clone());
+                }
+            }
+            _ => {}
+        }
+    }
+
     let inner = match hint {
         EnvelopeHint::None => infer_literal(value)?,
         EnvelopeHint::Integer => match value.as_i64() {
@@ -101,16 +122,19 @@ fn infer_literal(value: &Value) -> Result<Value, CanonicalizationError> {
             if all_numeric {
                 Ok(json!({ "kind": "color", "value": resolve_color(value)? }))
             } else {
-                Err(CanonicalizationError::new(
-                    CanonicalizationErrorKind::EnvelopeLiftFailed,
-                    "could not infer canonical kind for non-numeric array literal",
-                ))
+                // Complex array (e.g., gradient stops `[[0, [r,g,b]], …]`,
+                // wayfinding nodes `[[x, y], …]`) — pass through unwrapped.
+                // The canonical input descriptor decides how to deserialize.
+                Ok(value.clone())
             }
         }
-        _ => Err(CanonicalizationError::new(
-            CanonicalizationErrorKind::EnvelopeLiftFailed,
-            format!("could not infer canonical kind for value {value}"),
-        )),
+        Value::Array(_) | Value::Object(_) => {
+            // Structural input (pattern, paths, stops, signal expression).
+            // Pass through unwrapped; canonical type-check at the end of
+            // canonicalize will reject genuinely wrong shapes.
+            Ok(value.clone())
+        }
+        Value::Null => Ok(json!({ "kind": "null" })),
     }
 }
 
