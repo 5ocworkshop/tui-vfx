@@ -37,12 +37,21 @@ pub fn lift_top_level_extras(recipe: &mut Value) -> Result<TopLevelExtras, Canon
         )
     })?;
 
+    // `extends:` is consumed by `fnc_resolve_extends::resolve_extends` before
+    // this pass runs (via canonicalize_recipe_with_templates). If it survives
+    // to here it indicates a caller used the template-less entry without
+    // pre-resolving; surface as ExtendsTargetNotFound for clarity.
     if recipe_obj.contains_key("extends") {
+        let path = recipe_obj
+            .get("extends")
+            .and_then(Value::as_str)
+            .unwrap_or("(non-string)")
+            .to_string();
         return Err(CanonicalizationError::new(
-            CanonicalizationErrorKind::UnexpectedJsonShape {
-                expected: "(unsupported)".into(),
-            },
-            "top-level `extends: \"...\"` template chain is pending — Phase 2f lands the deep-merge",
+            CanonicalizationErrorKind::ExtendsTargetNotFound { path: path.clone() },
+            format!(
+                "recipe declares `extends: \"{path}\"` but canonicalize_recipe was called without a template map. Use canonicalize_recipe_with_templates(value, templates) to resolve the chain."
+            ),
         )
         .at(JsonPathSegment::field("extends")));
     }
@@ -149,10 +158,13 @@ mod tests {
     }
 
     #[test]
-    fn extends_rejects_with_pending_message() {
+    fn extends_without_templates_surfaces_extends_target_not_found() {
         let mut recipe = json!({ "id": "x", "extends": "themes/foo.json" });
         let err = lift_top_level_extras(&mut recipe).unwrap_err();
-        assert!(err.message.contains("pending"));
+        assert!(matches!(
+            err.kind,
+            CanonicalizationErrorKind::ExtendsTargetNotFound { .. }
+        ));
     }
 
     #[test]

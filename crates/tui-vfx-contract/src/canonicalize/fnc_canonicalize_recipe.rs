@@ -1,10 +1,9 @@
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_canonicalize_recipe.rs</FILE> - <DESC>Top-level canonicalize orchestrator</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Phase 2c of canonicalize: lift the bindings block into graph.signals.</WCTX>
-// <CLOG>0.4.0: MINOR — sequence bindings-to-signals lifting before effects so $bind references resolve cleanly.
-// 0.3.0: MINOR — sequence transition lifting and merge PresetUsage into RecipeIntent.preset_usages.
-// 0.2.0: MINOR — add effects-to-nodes pass plus RecipeIntent.alias_usages population.
-// 0.1.0: INIT — sequence card-lift and defaults; deserialize via serde_json::from_value; defer descriptor validation to the loader.</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Add canonicalize_recipe_with_templates entry that resolves the extends: chain before the lift sequence.</WCTX>
+// <CLOG>0.5.0: MINOR — add canonicalize_recipe_with_templates entry; resolve extends before the lift sequence.</CLOG>
+
+use std::collections::BTreeMap;
 
 use serde_json::Value;
 
@@ -20,6 +19,7 @@ use super::fnc_lift_lifecycle::lift_lifecycle;
 use super::fnc_lift_scene_array::lift_scene_array;
 use super::fnc_lift_top_level_extras::{apply_anchor_to_default_element, lift_top_level_extras};
 use super::fnc_lift_transitions::lift_transitions;
+use super::fnc_resolve_extends::resolve_extends;
 
 /// Translate authoring shorthand into a canonical [`RecipeDocument`].
 ///
@@ -32,9 +32,27 @@ use super::fnc_lift_transitions::lift_transitions;
 /// at the end of canonicalize would reject most legitimate inputs.
 ///
 /// Errors carry a JSON-path stack pointing at the failure site.
+///
+/// Use [`canonicalize_recipe_with_templates`] when the input may declare
+/// `extends: "<template-path>"`; this entry rejects that shape with
+/// [`CanonicalizationErrorKind::ExtendsTargetNotFound`] because no template
+/// map is supplied.
 pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, CanonicalizationError> {
+    let templates: BTreeMap<String, Value> = BTreeMap::new();
+    canonicalize_recipe_with_templates(input, &templates)
+}
+
+/// Translate authoring shorthand into a canonical [`RecipeDocument`], first
+/// resolving any `extends: "<path>"` chain against the supplied template map.
+/// Each template is itself a recipe-shaped JSON value (including possibly its
+/// own `extends`); deep-merge follows the child-wins rule and detects cycles.
+pub fn canonicalize_recipe_with_templates(
+    input: Value,
+    templates: &BTreeMap<String, Value>,
+) -> Result<RecipeDocument, CanonicalizationError> {
     let mut tree = input;
 
+    let extends_chain = resolve_extends(&mut tree, templates)?;
     let extras = lift_top_level_extras(&mut tree)?;
     lift_lifecycle(&mut tree)?;
     lift_scene_array(&mut tree)?;
@@ -59,14 +77,17 @@ pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, Canonicalizat
         )
     })?;
 
-    if !alias_usages.is_empty() || !preset_usages.is_empty() {
+    let has_provenance =
+        !alias_usages.is_empty() || !preset_usages.is_empty() || !extends_chain.is_empty();
+    if has_provenance {
         let intent = recipe.intent.get_or_insert_with(RecipeIntent::default);
         intent.alias_usages.extend(alias_usages);
         intent.preset_usages.extend(preset_usages);
+        intent.extends_chain.extend(extends_chain);
     }
 
     Ok(recipe)
 }
 
 // <FILE>crates/tui-vfx-contract/src/canonicalize/fnc_canonicalize_recipe.rs</FILE> - <DESC>Top-level canonicalize orchestrator</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

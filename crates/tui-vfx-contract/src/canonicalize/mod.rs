@@ -40,6 +40,7 @@ pub mod fnc_load_tables;
 pub mod fnc_resolve_color;
 pub mod fnc_resolve_duration;
 pub mod fnc_resolve_easing;
+pub mod fnc_resolve_extends;
 pub mod fnc_resolve_phases;
 pub mod fnc_resolve_scope;
 
@@ -52,7 +53,7 @@ pub use cls_canonicalization_rules::{
 };
 pub use cls_expansion_table::{ExpansionTable, ParamSpec, PresetEntry};
 pub use cls_recipe_intent::{AliasUsage, ExtendsChainEntry, PresetUsage, RecipeIntent};
-pub use fnc_canonicalize_recipe::canonicalize_recipe;
+pub use fnc_canonicalize_recipe::{canonicalize_recipe, canonicalize_recipe_with_templates};
 
 // <FILE>crates/tui-vfx-contract/src/canonicalize/mod.rs</FILE> - <DESC>Authoring shorthand canonicalize module entry point</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

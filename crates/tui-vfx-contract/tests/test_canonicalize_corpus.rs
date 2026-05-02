@@ -3,17 +3,45 @@
 // <WCTX>Phase 3 of canonicalize: iterate every corpus shorthand/canonical pair and report canonicalize and round-trip status.</WCTX>
 // <CLOG>0.1.0: INIT — driver harness; reports per-pair canonicalize success vs round-trip mismatch with full diffs at failure.</CLOG>
 
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 use tui_vfx_contract::RecipeDocument;
-use tui_vfx_contract::canonicalize::canonicalize_recipe;
+use tui_vfx_contract::canonicalize::canonicalize_recipe_with_templates;
 
 fn corpus_root() -> PathBuf {
     PathBuf::from(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../schemas/v3.1/authoring/corpus"
     ))
+}
+
+/// Load every JSON file under `<shorthand>/themes/` into a template map keyed
+/// by `themes/<stem>` so author-side `extends: "themes/<stem>"` resolves.
+fn load_templates(shorthand_dir: &Path) -> BTreeMap<String, Value> {
+    let mut templates = BTreeMap::new();
+    let themes_dir = shorthand_dir.join("themes");
+    let Ok(entries) = std::fs::read_dir(&themes_dir) else {
+        return templates;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().is_none_or(|ext| ext != "json") {
+            continue;
+        }
+        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Ok(value) = serde_json::from_str::<Value>(&text) else {
+            continue;
+        };
+        templates.insert(format!("themes/{stem}"), value);
+    }
+    templates
 }
 
 #[derive(Debug)]
@@ -35,8 +63,13 @@ enum PairStatus {
     Mismatch,
 }
 
-fn classify(name: &str, shorthand: &Value, canonical_str: &str) -> PairStatus {
-    let canonicalized = match canonicalize_recipe(shorthand.clone()) {
+fn classify(
+    name: &str,
+    shorthand: &Value,
+    canonical_str: &str,
+    templates: &BTreeMap<String, Value>,
+) -> PairStatus {
+    let canonicalized = match canonicalize_recipe_with_templates(shorthand.clone(), templates) {
         Ok(recipe) => recipe,
         Err(e) => {
             return PairStatus::CanonicalizeFailed {
@@ -86,6 +119,8 @@ fn corpus_round_trip_summary() {
         .collect();
     entries.sort();
 
+    let templates = load_templates(&shorthand_dir);
+
     let mut results: Vec<PairResult> = Vec::with_capacity(entries.len());
 
     for path in &entries {
@@ -120,7 +155,7 @@ fn corpus_round_trip_summary() {
 
         results.push(PairResult {
             name: name.into(),
-            status: classify(name, &shorthand, &canonical_str),
+            status: classify(name, &shorthand, &canonical_str, &templates),
         });
     }
 

@@ -1,0 +1,9 @@
+{
+  "card": {
+    "size": [40, 5],
+    "fg": [0, 230, 80],
+    "bg": [0, 0, 0],
+    "border": "double",
+    "bold": true
+  }
+}
