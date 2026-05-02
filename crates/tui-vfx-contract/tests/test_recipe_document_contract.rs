@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>v3.1 pre-release scene vocabulary: keep recipe fixture builders current with scrollFactor.</WCTX>
-// <CLOG>0.3.0: MINOR — assert typed scene-element shadow attachment shape.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Recipe document contract tests: keep scene fixture builders current with scrollFactor and shadow edge-crossing policy.</WCTX>
+// <CLOG>0.4.0: MINOR — assert typed shadow edge-crossing policy shape.
+// 0.3.0: MINOR — assert typed scene-element shadow attachment shape.
 // 0.2.0: MINOR — assert scrollFactor absent/present recipe scene element serde behavior.
 // 0.1.2: PATCH — initialize absent scrollFactor in recipe scene element test fixtures.
 // 0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
@@ -19,10 +20,10 @@ use tui_vfx_contract::{
     RecipeElementGraphBinding, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
     RoleWritePolicy, SceneAnchor, SceneElementOverflowPolicy, SceneElementPlacementRule,
     SceneElementSurface, SceneElementVisibility, SceneId, ScopeSpec, ScrollFactor, ShadowBlendMode,
-    ShadowCompositeMode, ShadowEdge, ShadowFalloff, ShadowInset, ShadowOffset, ShadowSpec,
-    SourceDescriptor, SourceId, SourceInputId, SourceInputSpec, SourceInstanceId, SourceKind,
-    SourceLifecycle, SourceOutputSize, SourceOutputSpec, SourceRolePolicy, SourceSpec,
-    StructuredValue, Value, ValueKind, ValuePredicate, ValueSource,
+    ShadowCompositeMode, ShadowEdge, ShadowEdgeCrossingPolicy, ShadowFalloff, ShadowInset,
+    ShadowOffset, ShadowSpec, SourceDescriptor, SourceId, SourceInputId, SourceInputSpec,
+    SourceInstanceId, SourceKind, SourceLifecycle, SourceOutputSize, SourceOutputSpec,
+    SourceRolePolicy, SourceSpec, StructuredValue, Value, ValueKind, ValuePredicate, ValueSource,
 };
 use tui_vfx_types::{Color, RoleTag};
 
@@ -642,6 +643,7 @@ fn recipe_accepts_v3_scene_extension_contracts() {
             soft_edges: true,
             composite_mode: ShadowCompositeMode::Under,
             blend_mode: ShadowBlendMode::SourceOver,
+            edge_crossing_policy: Some(ShadowEdgeCrossingPolicy::Fade),
             glyph_material: None,
             paint_outset: None,
         }),
@@ -693,4 +695,4 @@ fn recipe_rejects_scene_visibility_predicate_kind_mismatch() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

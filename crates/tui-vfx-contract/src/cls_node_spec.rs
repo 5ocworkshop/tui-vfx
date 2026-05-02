@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/cls_node_spec.rs</FILE> - <DESC>Canonical graph node contract DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G4: add node graph-value output declarations.</WCTX>
-// <CLOG>0.2.0: MINOR — add graph-local output map to node DTO.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Graph contract DTO: node outputs and explicit channel-restricted writes.</WCTX>
+// <CLOG>0.3.0: MINOR — add node-level writeChannels for channel-targeted effect output.
+// 0.2.0: MINOR — add graph-local output map to node DTO.
 // 0.1.0: INIT — add node DTO for graph-level descriptor/input validation.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
-    CellWritePolicy, EffectId, EffectInputId, GraphValueId, LifecyclePhase, NodeId, NodeOutputSpec,
-    RoleWritePolicy, ScopeSpec, ValueSource,
+    CellChannel, CellWritePolicy, EffectId, EffectInputId, GraphValueId, LifecyclePhase, NodeId,
+    NodeOutputSpec, RoleWritePolicy, ScopeSpec, ValueSource,
 };
 
 /// One effect node in a canonical v3.1 graph.
@@ -32,6 +33,13 @@ pub struct NodeSpec {
     /// Optional scope limiting where this node applies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<ScopeSpec>,
+    /// Optional cell-channel restriction for writes produced by this node.
+    ///
+    /// Empty means the node does not further restrict the descriptor's declared
+    /// writable channels. Non-empty lists must be a subset of the descriptor's
+    /// `cellAccess.writes` declaration.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub write_channels: Vec<CellChannel>,
     /// Optional cell write policy requested by this node.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cell_write_policy: Option<CellWritePolicy>,
@@ -65,4 +73,4 @@ fn add_graph_value_key_pattern(schema: &mut schemars::Schema) {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_node_spec.rs</FILE> - <DESC>Canonical graph node contract DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

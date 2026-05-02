@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-contract/tests/test_graph_contract.rs</FILE> - <DESC>Canonical graph source/input validation tests</DESC>
 // <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G4: validate graph value sources and node outputs.</WCTX>
+// <WCTX>Graph contract tests: validate graph value sources, node outputs, and current node DTO defaults.</WCTX>
 // <CLOG>0.2.0: MINOR — add graph value source and node output validation cases.
 // 0.1.0: INIT — lock literal, parameter, signal, effect, input, and source validation.</CLOG>
 
@@ -235,6 +235,7 @@ fn graph_value_source_rejects_kind_mismatch() {
                 outputs: BTreeMap::new(),
                 active_phases: vec![],
                 scope: None,
+                write_channels: vec![],
                 cell_write_policy: None,
                 role_write_policy: None,
             },
@@ -288,6 +289,7 @@ fn graph_rejects_duplicate_graph_value_shape_mismatch() {
                 outputs: BTreeMap::new(),
                 active_phases: vec![],
                 scope: None,
+                write_channels: vec![],
                 cell_write_policy: None,
                 role_write_policy: None,
             },
@@ -305,6 +307,7 @@ fn graph_rejects_duplicate_graph_value_shape_mismatch() {
                 outputs: BTreeMap::new(),
                 active_phases: vec![],
                 scope: None,
+                write_channels: vec![],
                 cell_write_policy: None,
                 role_write_policy: None,
             },
@@ -366,3 +369,6 @@ fn graph_value_source_is_rejected_in_binding_context() {
             if id.as_str() == "dimFactor"
     ));
 }
+
+// <FILE>crates/tui-vfx-contract/tests/test_graph_contract.rs</FILE> - <DESC>Canonical graph source/input validation tests</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

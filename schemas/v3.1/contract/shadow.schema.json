@@ -12,6 +12,17 @@
       "description": "Where the shadow composites relative to the element.",
       "$ref": "#/$defs/ShadowCompositeMode"
     },
+    "edgeCrossingPolicy": {
+      "description": "Optional policy for shadows while the source surface crosses a viewport edge.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ShadowEdgeCrossingPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "edges": {
       "description": "Edges that contribute to the shadow.",
       "type": "array",
@@ -378,7 +389,7 @@
       ]
     },
     "ScopeSpec": {
-      "description": "Minimal Phase A/B scope algebra.",
+      "description": "Minimal scope algebra for active surface coordinate evaluation.",
       "oneOf": [
         {
           "description": "Match every in-bounds cell.",
@@ -513,6 +524,58 @@
           ]
         },
         {
+          "description": "Match specific non-contiguous row indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Row indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "rows"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous column indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Column indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "columns"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
+          ]
+        },
+        {
           "description": "Match rows where `row % modulus == remainder`.",
           "type": "object",
           "properties": {
@@ -636,6 +699,26 @@
         "right",
         "bottom",
         "left"
+      ]
+    },
+    "ShadowEdgeCrossingPolicy": {
+      "description": "Shadow behavior while a moving source surface crosses a viewport edge.",
+      "oneOf": [
+        {
+          "description": "Use the renderer's default edge-crossing behavior.",
+          "type": "string",
+          "const": "default"
+        },
+        {
+          "description": "Fade shadow coverage at the crossed edge.",
+          "type": "string",
+          "const": "fade"
+        },
+        {
+          "description": "Preserve shadow coverage even while the source crosses the edge.",
+          "type": "string",
+          "const": "preserve"
+        }
       ]
     },
     "ShadowFalloff": {

@@ -80,6 +80,13 @@
           "type": "null"
         }
       ]
+    },
+    "writeChannels": {
+      "description": "Optional cell-channel restriction for writes produced by this node.\n\nEmpty means the node does not further restrict the descriptor's declared\nwritable channels. Non-empty lists must be a subset of the descriptor's\n`cellAccess.writes` declaration.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CellChannel"
+      }
     }
   },
   "additionalProperties": false,
@@ -89,6 +96,41 @@
     "inputs"
   ],
   "$defs": {
+    "CellChannel": {
+      "description": "Canonical channels that make up a cell write.",
+      "oneOf": [
+        {
+          "description": "Glyph character channel.",
+          "type": "string",
+          "const": "glyph"
+        },
+        {
+          "description": "Foreground color channel.",
+          "type": "string",
+          "const": "foreground"
+        },
+        {
+          "description": "Background color channel.",
+          "type": "string",
+          "const": "background"
+        },
+        {
+          "description": "Text modifier channel.",
+          "type": "string",
+          "const": "modifiers"
+        },
+        {
+          "description": "Modifier alpha channel.",
+          "type": "string",
+          "const": "modifierAlpha"
+        },
+        {
+          "description": "Semantic role channel. Role writes are governed by role policy.",
+          "type": "string",
+          "const": "role"
+        }
+      ]
+    },
     "CellWritePolicy": {
       "description": "Policy for how a cell write updates cell channels.",
       "oneOf": [
@@ -512,7 +554,7 @@
       ]
     },
     "ScopeSpec": {
-      "description": "Minimal Phase A/B scope algebra.",
+      "description": "Minimal scope algebra for active surface coordinate evaluation.",
       "oneOf": [
         {
           "description": "Match every in-bounds cell.",
@@ -644,6 +686,58 @@
             "kind",
             "start",
             "end"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous row indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Row indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "rows"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous column indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Column indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "columns"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
           ]
         },
         {

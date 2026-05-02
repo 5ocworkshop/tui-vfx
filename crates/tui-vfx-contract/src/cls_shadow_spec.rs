@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_shadow_spec.rs</FILE> - <DESC>Typed scene-element shadow attachment DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>v3.1 recipe-oracle pass: shadows are surface attachments that may expand paint bounds, not transitions.</WCTX>
-// <CLOG>0.1.0: INIT — add typed shadow geometry and compositing vocabulary.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Scene shadow contract: shadows are surface attachments that may expand paint bounds and coordinate with viewport edge crossing.</WCTX>
+// <CLOG>0.2.0: MINOR — add explicit shadow edge-crossing policy for viewport transit.
+// 0.1.0: INIT — add typed shadow geometry and compositing vocabulary.</CLOG>
 
 use tui_vfx_types::Color;
 
@@ -32,6 +33,9 @@ pub struct ShadowSpec {
     pub composite_mode: ShadowCompositeMode,
     /// Blend operation used when compositing the shadow.
     pub blend_mode: ShadowBlendMode,
+    /// Optional policy for shadows while the source surface crosses a viewport edge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_crossing_policy: Option<ShadowEdgeCrossingPolicy>,
     /// Optional glyph material policy.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub glyph_material: Option<ShadowGlyphMaterial>,
@@ -151,6 +155,29 @@ pub enum ShadowBlendMode {
     Multiply,
 }
 
+/// Shadow behavior while a moving source surface crosses a viewport edge.
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
+#[serde(rename_all = "camelCase")]
+pub enum ShadowEdgeCrossingPolicy {
+    /// Use the renderer's default edge-crossing behavior.
+    Default,
+    /// Fade shadow coverage at the crossed edge.
+    Fade,
+    /// Preserve shadow coverage even while the source crosses the edge.
+    Preserve,
+}
+
 /// Glyph material used by shadow support cells.
 #[derive(
     Clone,
@@ -171,4 +198,4 @@ pub enum ShadowGlyphMaterial {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_shadow_spec.rs</FILE> - <DESC>Typed scene-element shadow attachment DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

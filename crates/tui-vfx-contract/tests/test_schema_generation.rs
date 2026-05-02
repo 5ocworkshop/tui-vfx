@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.14.0</VERS>
-// <WCTX>v3.1 pre-release scene vocabulary: include scroll factor schema root.</WCTX>
-// <CLOG>0.14.0: MINOR — guard v3.1 schema and descriptor input names against ambiguous field vocabulary.
+// <VERS>VERSION: 0.16.0</VERS>
+// <WCTX>Stable contract schema generation: keep checked-in v3.1 schema roots aligned with current DTO rustdoc.</WCTX>
+// <CLOG>0.16.0: MINOR — assert index-set scope schema constraints.
+// 0.15.0: MINOR — update schema description assertions for active scope vocabulary.
+// 0.14.0: MINOR — guard v3.1 schema and descriptor input names against ambiguous field vocabulary.
 // 0.13.0: MINOR — add signal expression, shadow, style color, and visibility geometry schema fixtures.
 // 0.12.0: MINOR — add ScrollFactor schema fixture for scene-element scroll metadata.
 // 0.11.0: MINOR — add descriptor pack, pack ref, and catalog schema fixtures.
@@ -490,7 +492,7 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
         .join("\n");
 
     assert!(all_schemas.contains("Dense rectangular semantic render surface"));
-    assert!(all_schemas.contains("Minimal Phase A/B scope algebra"));
+    assert!(all_schemas.contains("Minimal scope algebra for active surface coordinate evaluation"));
     assert!(all_schemas.contains("Policy for how a cell write updates cell channels"));
     assert!(all_schemas.contains("Structured diagnostic emitted by surface contract operations"));
     assert!(all_schemas.contains("Scene composed from one or more placed semantic elements"));
@@ -566,6 +568,25 @@ fn generated_contract_schema_objects_are_strict_and_described() {
 }
 
 #[test]
+fn index_set_scope_schema_requires_non_empty_unique_indices() {
+    let schema: serde_json::Value =
+        serde_json::from_str(&canonical_schema::<ScopeSpec>()).expect("scope schema is JSON");
+    let variants = schema["oneOf"]
+        .as_array()
+        .expect("scope variants are an array");
+
+    for kind in ["rows", "columns"] {
+        let variant = variants
+            .iter()
+            .find(|variant| variant["properties"]["kind"]["const"] == kind)
+            .unwrap_or_else(|| panic!("{kind} scope variant is present"));
+        let indices = &variant["properties"]["indices"];
+        assert_eq!(indices["minItems"], serde_json::json!(1));
+        assert_eq!(indices["uniqueItems"], serde_json::json!(true));
+    }
+}
+
+#[test]
 fn v31_schema_and_descriptor_field_names_are_domain_specific() {
     for (file_name, schema) in schema_roots() {
         let value: serde_json::Value = serde_json::from_str(&schema).expect("schema is JSON");
@@ -607,4 +628,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.14.0</VERS>
+// <VERS>END OF VERSION: 0.16.0</VERS>

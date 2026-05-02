@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_scope_contract.rs</FILE> - <DESC>Scope contract tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: prove accepted built-in scope evaluation.</WCTX>
-// <CLOG>0.1.0: INIT — cover modulo, non-empty, outer-band, and inner scope matching.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Scope contract tests: prove accepted built-in scope evaluation and explicit index-set scopes.</WCTX>
+// <CLOG>0.2.0: MINOR — cover non-contiguous row and column index scopes.
+// 0.1.0: INIT — cover modulo, non-empty, outer-band, and inner scope matching.</CLOG>
 
 use tui_vfx_contract::{
     CoordinateSpace, NumericRange, RoleSpace, ScopeEvalInput, ScopeSpec, Value, ValueSource,
@@ -49,6 +50,47 @@ fn modulo_scopes_match_expected_rows_and_columns() {
             RoleSpace::Destination
         )
     );
+}
+
+#[test]
+fn index_set_scopes_match_non_contiguous_rows_and_columns() {
+    let trim_rows = ScopeSpec::Rows {
+        indices: vec![0, 10],
+    };
+    assert!(trim_rows.matches(
+        &input(2, 0),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+    assert!(trim_rows.matches(
+        &input(2, 10),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+    assert!(!trim_rows.matches(
+        &input(2, 5),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+
+    let trim_columns = ScopeSpec::Columns {
+        indices: vec![1, 4],
+    };
+    assert!(trim_columns.matches(
+        &input(1, 2),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+    assert!(trim_columns.matches(
+        &input(4, 2),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+    assert!(!trim_columns.matches(
+        &input(3, 2),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
 }
 
 #[test]
@@ -130,4 +172,4 @@ fn cell_scope_uses_static_literal_map_and_sampled_fallback_coordinates() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_scope_contract.rs</FILE> - <DESC>Scope contract tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

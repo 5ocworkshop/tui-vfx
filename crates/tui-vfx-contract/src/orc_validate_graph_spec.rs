@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_graph_spec.rs</FILE> - <DESC>Validate canonical graph contracts</DESC>
 // <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: honor optional effect inputs during node validation.</WCTX>
+// <WCTX>Graph contract validation: honor optional effect inputs and node-level write-channel restrictions.</WCTX>
 // <CLOG>0.3.0: MINOR — allow descriptor inputs marked optional to be omitted without defaults.
 // 0.2.0: MINOR — validate graph-local value sources and node output declarations.</CLOG>
 
@@ -175,6 +175,9 @@ fn validate_node(
 
     if let Some(scope) = &node.scope {
         effect.validate_scope(scope)?;
+    }
+    for channel in &node.write_channels {
+        effect.validate_write_channel(*channel)?;
     }
     if let Some(policy) = node.cell_write_policy {
         effect.validate_cell_write_policy(policy)?;

@@ -1,15 +1,16 @@
 // <FILE>crates/tui-vfx-contract/tests/test_graph_policy_contract.rs</FILE> - <DESC>Canonical graph policy, order, and binding validation tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G3: prove topology validation while preserving linear order fallback.</WCTX>
-// <CLOG>0.2.0: MINOR — add unknown, duplicate, and coverage topology tests.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Graph policy contract tests: prove topology and channel write validation while preserving linear order fallback.</WCTX>
+// <CLOG>0.3.0: MINOR — add node-level writeChannels validation.
+// 0.2.0: MINOR — add unknown, duplicate, and coverage topology tests.
 // 0.1.0: INIT — lock policy support, deterministic ordering, and F2 binding reuse.</CLOG>
 
 mod support;
 
 use support::{base_graph, binding_to, literal_source, signal_source};
 use tui_vfx_contract::{
-    CellWritePolicy, DescriptorValidationError, GraphSpec, GraphStep, NodeId, NodeSpec,
-    ParallelMergePolicy, RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec,
+    CellChannel, CellWritePolicy, DescriptorValidationError, GraphSpec, GraphStep, NodeId,
+    NodeSpec, ParallelMergePolicy, RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec,
 };
 use tui_vfx_types::{Rect, RoleTag};
 
@@ -63,6 +64,7 @@ fn node_optional_scope_and_write_policies_accept_null_or_omission() {
     .expect("node with omitted optional policies deserializes");
 
     assert_eq!(omitted.scope, None);
+    assert!(omitted.write_channels.is_empty());
     assert_eq!(omitted.cell_write_policy, None);
     assert_eq!(omitted.role_write_policy, None);
 
@@ -71,6 +73,7 @@ fn node_optional_scope_and_write_policies_accept_null_or_omission() {
         "effect": "terminal.opacity",
         "inputs": {},
         "scope": null,
+        "writeChannels": [],
         "cellWritePolicy": null,
         "roleWritePolicy": null
     }))
@@ -80,6 +83,7 @@ fn node_optional_scope_and_write_policies_accept_null_or_omission() {
 
     let json = serde_json::to_value(&omitted).expect("node serializes");
     assert!(json.get("scope").is_none());
+    assert!(json.get("writeChannels").is_none());
     assert!(json.get("cellWritePolicy").is_none());
     assert!(json.get("roleWritePolicy").is_none());
 }
@@ -112,6 +116,35 @@ fn graph_rejects_unsupported_cell_write_policy_for_effect() {
         graph.validate(),
         Err(DescriptorValidationError::UnsupportedCellWritePolicy {
             requested: CellWritePolicy::SkipTransparentEmpty
+        })
+    ));
+}
+
+#[test]
+fn graph_accepts_declared_node_write_channels() {
+    let mut graph = base_graph(literal_source());
+    graph
+        .nodes
+        .get_mut(&NodeId::new("fadeIn"))
+        .unwrap()
+        .write_channels = vec![CellChannel::Foreground];
+
+    assert!(graph.validate().is_ok());
+}
+
+#[test]
+fn graph_rejects_undeclared_node_write_channels() {
+    let mut graph = base_graph(literal_source());
+    graph
+        .nodes
+        .get_mut(&NodeId::new("fadeIn"))
+        .unwrap()
+        .write_channels = vec![CellChannel::Foreground, CellChannel::Background];
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::UndeclaredWriteChannel {
+            channel: CellChannel::Background
         })
     ));
 }
@@ -275,4 +308,4 @@ fn g1_does_not_add_runtime_or_recipe_execution() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_graph_policy_contract.rs</FILE> - <DESC>Canonical graph policy, order, and binding validation tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

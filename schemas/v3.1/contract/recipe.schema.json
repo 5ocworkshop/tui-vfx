@@ -1685,6 +1685,13 @@
               "type": "null"
             }
           ]
+        },
+        "writeChannels": {
+          "description": "Optional cell-channel restriction for writes produced by this node.\n\nEmpty means the node does not further restrict the descriptor's declared\nwritable channels. Non-empty lists must be a subset of the descriptor's\n`cellAccess.writes` declaration.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
         }
       },
       "additionalProperties": false,
@@ -2892,6 +2899,16 @@
           "const": "columnRange"
         },
         {
+          "description": "Descriptor supports non-contiguous row index-set scopes.",
+          "type": "string",
+          "const": "rows"
+        },
+        {
+          "description": "Descriptor supports non-contiguous column index-set scopes.",
+          "type": "string",
+          "const": "columns"
+        },
+        {
           "description": "Descriptor supports row modulo scopes.",
           "type": "string",
           "const": "moduloRows"
@@ -2919,7 +2936,7 @@
       ]
     },
     "ScopeSpec": {
-      "description": "Minimal Phase A/B scope algebra.",
+      "description": "Minimal scope algebra for active surface coordinate evaluation.",
       "oneOf": [
         {
           "description": "Match every in-bounds cell.",
@@ -3051,6 +3068,58 @@
             "kind",
             "start",
             "end"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous row indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Row indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "rows"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous column indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Column indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "columns"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
           ]
         },
         {
@@ -3233,6 +3302,26 @@
         "left"
       ]
     },
+    "ShadowEdgeCrossingPolicy": {
+      "description": "Shadow behavior while a moving source surface crosses a viewport edge.",
+      "oneOf": [
+        {
+          "description": "Use the renderer's default edge-crossing behavior.",
+          "type": "string",
+          "const": "default"
+        },
+        {
+          "description": "Fade shadow coverage at the crossed edge.",
+          "type": "string",
+          "const": "fade"
+        },
+        {
+          "description": "Preserve shadow coverage even while the source crosses the edge.",
+          "type": "string",
+          "const": "preserve"
+        }
+      ]
+    },
     "ShadowFalloff": {
       "description": "Shadow falloff in cells.",
       "type": "object",
@@ -3368,6 +3457,17 @@
         "compositeMode": {
           "description": "Where the shadow composites relative to the element.",
           "$ref": "#/$defs/ShadowCompositeMode"
+        },
+        "edgeCrossingPolicy": {
+          "description": "Optional policy for shadows while the source surface crosses a viewport edge.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShadowEdgeCrossingPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "edges": {
           "description": "Edges that contribute to the shadow.",

@@ -270,8 +270,8 @@ pub use cls_scope_spec::ScopeSpec;
 pub use cls_scope_support::ScopeSupport;
 pub use cls_scroll_factor::ScrollFactor;
 pub use cls_shadow_spec::{
-    ShadowBlendMode, ShadowCompositeMode, ShadowEdge, ShadowFalloff, ShadowGlyphMaterial,
-    ShadowInset, ShadowOffset, ShadowOutset, ShadowSpec,
+    ShadowBlendMode, ShadowCompositeMode, ShadowEdge, ShadowEdgeCrossingPolicy, ShadowFalloff,
+    ShadowGlyphMaterial, ShadowInset, ShadowOffset, ShadowOutset, ShadowSpec,
 };
 pub use cls_shift_sampler::ShiftSampler;
 pub use cls_signal_expression_spec::SignalExpressionSpec;

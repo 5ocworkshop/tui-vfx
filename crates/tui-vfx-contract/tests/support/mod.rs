@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/support/mod.rs</FILE> - <DESC>Shared graph contract test fixtures</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G4: add graph value validation fixtures.</WCTX>
-// <CLOG>0.2.0: MINOR — add graph value output and source fixture helpers.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Graph contract test fixtures cover graph values and channel-restricted writes.</WCTX>
+// <CLOG>0.3.0: PATCH — initialize node writeChannels fixtures.
+// 0.2.0: MINOR — add graph value output and source fixture helpers.
 // 0.1.0: INIT — shared descriptor, value, parameter, signal, and graph builders.</CLOG>
 
 #![allow(dead_code)]
@@ -120,6 +121,7 @@ pub fn base_node(source: ValueSource) -> NodeSpec {
         outputs: BTreeMap::new(),
         active_phases: vec![],
         scope: Some(ScopeSpec::All),
+        write_channels: vec![],
         cell_write_policy: Some(CellWritePolicy::WriteCell),
         role_write_policy: Some(RoleWritePolicy::PreserveDestination),
     }
@@ -217,4 +219,4 @@ pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/support/mod.rs</FILE> - <DESC>Shared graph contract test fixtures</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

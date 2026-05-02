@@ -381,7 +381,7 @@
       ]
     },
     "ScopeSpec": {
-      "description": "Minimal Phase A/B scope algebra.",
+      "description": "Minimal scope algebra for active surface coordinate evaluation.",
       "oneOf": [
         {
           "description": "Match every in-bounds cell.",
@@ -513,6 +513,58 @@
             "kind",
             "start",
             "end"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous row indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Row indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "rows"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
+          ]
+        },
+        {
+          "description": "Match specific non-contiguous column indices in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "indices": {
+              "description": "Column indices selected in the active coordinate space.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint",
+                "minimum": 0
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "kind": {
+              "type": "string",
+              "const": "columns"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "indices"
           ]
         },
         {

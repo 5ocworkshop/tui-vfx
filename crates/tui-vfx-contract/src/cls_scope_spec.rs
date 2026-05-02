@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>v3.1 scope contract: add accepted built-in style scope vocabulary.</WCTX>
-// <CLOG>0.7.0: MINOR — treat new time/expression value sources as non-static scope coordinates.
+// <VERS>VERSION: 0.8.1</VERS>
+// <WCTX>v3.1 scope contract: add accepted built-in style scope vocabulary and explicit index-set scopes.</WCTX>
+// <CLOG>0.8.1: PATCH — constrain row and column index-set schemas to non-empty unique arrays.
+// 0.8.0: MINOR — add non-contiguous row and column index-set scopes.
+// 0.7.0: MINOR — treat new time/expression value sources as non-static scope coordinates.
 // 0.6.0: MINOR — add value-source-backed single-cell scopes for runtime-selected cells.
 // 0.5.0: MINOR — add modulo, non-empty, outer-band, and inner scopes.
 // 0.4.2: PATCH — add explicit Schemars descriptions for row/column range fields.</CLOG>
@@ -13,7 +15,7 @@ use crate::{
     fnc_scope_coordinate::scope_coordinate,
 };
 
-/// Minimal Phase A/B scope algebra.
+/// Minimal scope algebra for active surface coordinate evaluation.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ScopeSpec {
@@ -56,6 +58,18 @@ pub enum ScopeSpec {
         /// Exclusive end column in the active coordinate space.
         #[schemars(description = "Exclusive end column in the active coordinate space.")]
         end: usize,
+    },
+    /// Match specific non-contiguous row indices in the active coordinate space.
+    Rows {
+        /// Row indices selected in the active coordinate space.
+        #[schemars(length(min = 1), extend("uniqueItems" = true))]
+        indices: Vec<usize>,
+    },
+    /// Match specific non-contiguous column indices in the active coordinate space.
+    Columns {
+        /// Column indices selected in the active coordinate space.
+        #[schemars(length(min = 1), extend("uniqueItems" = true))]
+        indices: Vec<usize>,
     },
     /// Match rows where `row % modulus == remainder`.
     ModuloRows {
@@ -120,6 +134,14 @@ impl ScopeSpec {
             ScopeSpec::ColumnRange { start, end } => {
                 let (x, _) = scope_coordinate(input, coordinate_space);
                 x >= *start && x < *end
+            }
+            ScopeSpec::Rows { indices } => {
+                let (_, y) = scope_coordinate(input, coordinate_space);
+                indices.contains(&y)
+            }
+            ScopeSpec::Columns { indices } => {
+                let (x, _) = scope_coordinate(input, coordinate_space);
+                indices.contains(&x)
             }
             ScopeSpec::ModuloRows { modulus, remainder } => {
                 let (_, y) = scope_coordinate(input, coordinate_space);
@@ -224,4 +246,4 @@ fn scope_dimensions(
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.1</VERS>
