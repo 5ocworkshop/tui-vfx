@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_shader_linear_gradient.rs</FILE> - <DESC>Compost direct linearGradient tests</DESC>
 // <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>First compost vertical slice proves canonical v3.1 load and render without non-canonical DTO construction.</WCTX>
-// <CLOG>0.1.1: PATCH — remove non-canonical migration vocabulary from metadata and test names.
+// <WCTX>Compost linearGradient smoke coverage proves canonical v3.1 load and render directly.</WCTX>
+// <CLOG>0.1.1: PATCH — keep metadata and test names in native compost vocabulary.
 // 0.1.0: INIT — add RED tests for native compost linearGradient slice.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
@@ -27,7 +27,7 @@ fn rejects_unsupported_recipe_version_before_rendering() {
 }
 
 #[test]
-fn rejects_runtime_sourced_linear_gradient_inputs_at_load_time() {
+fn resolves_runtime_sourced_linear_gradient_inputs_at_load_time() {
     let catalog = primitive_catalog();
     let mut recipe = linear_gradient_recipe_value();
     recipe["graph"]["parameters"]["angle"] = serde_json::json!({
@@ -50,22 +50,16 @@ fn rejects_runtime_sourced_linear_gradient_inputs_at_load_time() {
         "fallback": { "kind": "number", "value": 0.0 }
     });
 
-    let err = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("compost rejects unresolved runtime inputs");
+    let loaded = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
+        .expect("compost resolves parameter-backed shader inputs");
+    let frame =
+        render_recipe(&loaded, &SampleContext::default()).expect("render resolved shader input");
 
-    assert!(matches!(
-        err,
-        LoadError::UnsupportedInput {
-            node_id,
-            effect,
-            input,
-            ..
-        } if node_id == "gradient" && effect == "shader.linearGradient" && input == "angleDeg"
-    ));
+    assert_eq!(frame.applied_effect_kinds, vec!["shader.linearGradient"]);
 }
 
 #[test]
-fn load_validated_linear_gradient_renders_without_noncanonical_dto_construction() {
+fn load_validated_linear_gradient_renders_directly() {
     let catalog = primitive_catalog();
     let loaded = LoadedRecipe::load(recipe_from_value(linear_gradient_recipe_value()), &catalog)
         .expect("recipe validates at load time");

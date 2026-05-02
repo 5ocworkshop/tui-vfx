@@ -12,17 +12,19 @@ use tui_vfx_contract::{SourceInputId, ValueSource};
 use tui_vfx_types::{Cell, Grid, Modifiers, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
 use crate::RenderError;
+use crate::runtime::RuntimeContext;
 
 use super::col_literal_source_input::{literal_color, literal_integer, literal_text};
 
 pub(crate) fn source_grid_from_inputs(
     inputs: &BTreeMap<SourceInputId, ValueSource>,
+    context: &RuntimeContext,
 ) -> Result<SemanticScene, RenderError> {
-    let width = literal_integer(inputs, "width")?;
-    let height = literal_integer(inputs, "height")?;
-    let message = literal_text(inputs, "message")?;
-    let foreground = literal_color(inputs, "foreground")?;
-    let background = literal_color(inputs, "background")?;
+    let width = literal_integer(inputs, "width", context)?;
+    let height = literal_integer(inputs, "height", context)?;
+    let message = literal_text(inputs, "message", context)?;
+    let foreground = literal_color(inputs, "foreground", context)?;
+    let background = literal_color(inputs, "background", context)?;
 
     let mut grid = OwnedGrid::new(width, height);
     let mut roles = RoleMap::new_with_default(width as u16, height as u16, RoleTag::Background);

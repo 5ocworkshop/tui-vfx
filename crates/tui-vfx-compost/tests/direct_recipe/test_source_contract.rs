@@ -87,7 +87,7 @@ fn rejects_unsupported_source_descriptor_id_at_load_time() {
 }
 
 #[test]
-fn rejects_runtime_sourced_source_inputs_at_load_time() {
+fn resolves_runtime_sourced_source_inputs_at_load_time() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["graph"]["parameters"]["messageParam"] = serde_json::json!({
         "id": "messageParam",
@@ -109,9 +109,10 @@ fn rejects_runtime_sourced_source_inputs_at_load_time() {
         "fallback": { "kind": "text", "value": "fallback" }
     });
 
-    let error = load_recipe_error(recipe);
+    let frame = render_recipe_value(recipe);
 
-    assert_source_input_error(error, "message");
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'r');
+    assert_eq!(frame.grid.cell((1, 0)).unwrap().ch, 'u');
 }
 
 #[test]

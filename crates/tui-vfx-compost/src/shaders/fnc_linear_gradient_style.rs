@@ -8,6 +8,7 @@ use tui_vfx_style::models::{ColorSpace, Gradient, LinearGradientApplyTo, LinearG
 use tui_vfx_style::traits::{ShaderContext, StyleShader};
 use tui_vfx_types::Style;
 
+use crate::runtime::RuntimeContext;
 use crate::shaders::{enum_input, gradient_input, number_input};
 
 #[allow(clippy::too_many_arguments)]
@@ -21,12 +22,13 @@ pub(crate) fn linear_gradient_style(
     screen_y: u16,
     phase_t: f64,
     base: Style,
+    context: &RuntimeContext,
 ) -> Style {
     let shader = LinearGradientShader {
-        gradient: gradient_from_node(node),
-        angle_deg: number_input(node, "angleDeg") as f32,
-        apply_to: apply_to_from_node(node),
-        intensity: number_input(node, "intensity") as f32,
+        gradient: gradient_from_node(node, context),
+        angle_deg: number_input(node, "angleDeg", context) as f32,
+        apply_to: apply_to_from_node(node, context),
+        intensity: number_input(node, "intensity", context) as f32,
     };
     let context = ShaderContext::new(
         local_x, local_y, width, height, screen_x, screen_y, phase_t, None, None,
@@ -34,8 +36,9 @@ pub(crate) fn linear_gradient_style(
     shader.style_at(&context, base)
 }
 
-fn gradient_from_node(node: &NodeSpec) -> Gradient {
-    gradient_input(node, "gradient")
+fn gradient_from_node(node: &NodeSpec, context: &RuntimeContext) -> Gradient {
+    gradient_input(node, "gradient", context)
+        .as_ref()
         .map(gradient_from_spec)
         .unwrap_or_default()
 }
@@ -54,8 +57,8 @@ fn gradient_from_spec(spec: &GradientSpec) -> Gradient {
     }
 }
 
-fn apply_to_from_node(node: &NodeSpec) -> LinearGradientApplyTo {
-    match enum_input(node, "channelTarget") {
+fn apply_to_from_node(node: &NodeSpec, context: &RuntimeContext) -> LinearGradientApplyTo {
+    match enum_input(node, "channelTarget", context).as_str() {
         "background" => LinearGradientApplyTo::Background,
         "both" => LinearGradientApplyTo::Both,
         _ => LinearGradientApplyTo::Foreground,

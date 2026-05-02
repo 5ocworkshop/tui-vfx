@@ -6,18 +6,20 @@
 use tui_vfx_contract::{EffectInputId, NodeId, NodeSpec, Value};
 
 use crate::LoadError;
+use crate::runtime::RuntimeContext;
 use crate::validation::{
-    require_declared_inputs_literal, require_enum_value, require_literal_input,
-    require_number_input,
+    require_declared_inputs_resolvable, require_enum_value, require_number_input,
+    require_resolved_input,
 };
 
 pub(crate) fn validate_linear_gradient_inputs(
     node_id: &NodeId,
     node: &NodeSpec,
+    context: &RuntimeContext,
 ) -> Result<(), LoadError> {
-    require_declared_inputs_literal(node_id, node)?;
+    require_declared_inputs_resolvable(node_id, node, context)?;
     if node.inputs.contains_key(&EffectInputId::new("gradient")) {
-        match require_literal_input(node_id, node, "gradient")? {
+        match require_resolved_input(node_id, node, "gradient", context)?.value() {
             Value::Gradient(_) => {}
             value => {
                 return Err(LoadError::UnsupportedInput {
@@ -29,17 +31,18 @@ pub(crate) fn validate_linear_gradient_inputs(
             }
         }
     } else {
-        require_literal_input(node_id, node, "startColor")?;
-        require_literal_input(node_id, node, "endColor")?;
-        require_enum_value(node_id, node, "colorSpace", &["rgb", "hct"])?;
+        require_resolved_input(node_id, node, "startColor", context)?;
+        require_resolved_input(node_id, node, "endColor", context)?;
+        require_enum_value(node_id, node, "colorSpace", &["rgb", "hct"], context)?;
     }
-    require_number_input(node_id, node, "angleDeg")?;
-    require_number_input(node_id, node, "intensity")?;
+    require_number_input(node_id, node, "angleDeg", context)?;
+    require_number_input(node_id, node, "intensity", context)?;
     require_enum_value(
         node_id,
         node,
         "channelTarget",
         &["foreground", "background", "both"],
+        context,
     )?;
     Ok(())
 }

@@ -9,6 +9,7 @@ use tui_vfx_contract::RecipeDocument;
 
 use crate::LoadError;
 use crate::render::{EffectFamily, has_parallel_surface_merge};
+use crate::runtime::RuntimeContext;
 use crate::validation::shaders::validate_shader_inputs;
 
 use super::{validate_scene_element_policies, validate_source_inputs};
@@ -21,8 +22,10 @@ const UNSUPPORTED_NODE_WRITE_POLICY_REASON: &str =
     "node-local write policy precedence requires per-stage write policy execution";
 
 pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), LoadError> {
+    let runtime_context = RuntimeContext::load_time().with_graph_defaults(&recipe.graph);
+
     for (source_id, source) in &recipe.sources {
-        validate_source_inputs(source_id, source)?;
+        validate_source_inputs(source_id, source, &runtime_context)?;
     }
 
     for scene in &recipe.scenes {
@@ -82,7 +85,7 @@ pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), Lo
             node.effect.as_str(),
         ) {
             (EffectFamily::Shader, "shader.linearGradient") => {
-                validate_shader_inputs(node_id, node)?;
+                validate_shader_inputs(node_id, node, &runtime_context)?;
             }
             (family, effect) => {
                 return Err(LoadError::UnsupportedEffectFamily {

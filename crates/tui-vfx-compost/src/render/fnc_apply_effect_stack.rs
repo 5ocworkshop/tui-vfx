@@ -13,6 +13,7 @@ use crate::render::{
     EffectStack, EffectStage, ElementClipBounds, RenderError, SampleContext, is_node_active,
     merge_element_surface, resolve_shader_phase_t,
 };
+use crate::runtime::RuntimeContext;
 use crate::shaders::LinearGradientNode;
 
 pub(crate) fn apply_effect_stack(
@@ -21,6 +22,7 @@ pub(crate) fn apply_effect_stack(
     bounds: ElementClipBounds,
     sample: &SampleContext,
     stack: &EffectStack<'_>,
+    runtime_context: &RuntimeContext,
 ) -> Result<(), RenderError> {
     if let Some(stage) = stack
         .content_stages()
@@ -40,6 +42,9 @@ pub(crate) fn apply_effect_stack(
         .collect::<Result<Vec<_>, _>>()?;
 
     let source_grid = source.grid();
+    let base_context = runtime_context
+        .clone()
+        .with_dimensions(source_grid.width() as u16, source_grid.height() as u16);
     for visible_y in 0..bounds.height {
         for visible_x in 0..bounds.width {
             let local_x = bounds.local_x_start + visible_x;
@@ -52,6 +57,9 @@ pub(crate) fn apply_effect_stack(
             let sampled_role = source
                 .role((local_x as u16, local_y as u16))
                 .unwrap_or(RoleTag::Background);
+            let cell_context = base_context
+                .clone()
+                .with_cell(local_x as u16, local_y as u16);
             let mut style = Style::new(source_cell.fg, source_cell.bg, source_cell.mods);
             for shader in &shaders {
                 style = shader.style_at(
@@ -63,6 +71,7 @@ pub(crate) fn apply_effect_stack(
                     dest_y as u16,
                     resolve_shader_phase_t(sample),
                     style,
+                    &cell_context,
                 );
             }
             let final_cell = source_cell

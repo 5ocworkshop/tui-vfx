@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_timing_lifecycle.rs</FILE> - <DESC>Compost timing and lifecycle substrate tests</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Timing substrate tests keep sample clocks explicit and verify lifecycle active-node gating.</WCTX>
-// <CLOG>0.2.1: PATCH — keep external tests focused on sample data and render-observable lifecycle behavior.
+// <CLOG>0.3.0: MINOR — verify elapsed clock fields stay separate from normalized coordinates.
+// 0.2.1: PATCH — keep external tests focused on sample data and render-observable lifecycle behavior.
 // 0.2.0: MINOR — verify activePhases render only during matching lifecycle samples.
 // 0.1.0: INIT — add RED coverage for loop clocks, absolute time, and activePhases rejection.</CLOG>
 
@@ -58,5 +59,20 @@ fn active_phases_apply_node_only_when_sample_phase_matches() {
     );
 }
 
+#[test]
+fn sample_context_keeps_normalized_progress_separate_from_elapsed_clocks() {
+    let sample = SampleContext::new(0.25)
+        .with_loop_t(0.5)
+        .with_absolute_time_ms(2_000)
+        .with_phase_time_ms(750)
+        .with_loop_time_ms(125);
+
+    assert_eq!(sample.phase_t, 0.25);
+    assert_eq!(sample.loop_t, Some(0.5));
+    assert_eq!(sample.absolute_time_ms, Some(2_000));
+    assert_eq!(sample.phase_time_ms, Some(750));
+    assert_eq!(sample.loop_time_ms, Some(125));
+}
+
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_timing_lifecycle.rs</FILE> - <DESC>Compost timing and lifecycle substrate tests</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

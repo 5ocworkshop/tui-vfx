@@ -9,14 +9,18 @@ use tui_vfx_contract::SourceSpec;
 use tui_vfx_types::SemanticScene;
 
 use crate::RenderError;
+use crate::runtime::RuntimeContext;
 
 use super::fnc_source_grid_from_inputs::source_grid_from_inputs;
 
 const SOURCE_CARD_DESCRIPTOR: &str = "source.card";
 
-pub(crate) fn materialize_source(source: &SourceSpec) -> Result<SemanticScene, RenderError> {
+pub(crate) fn materialize_source(
+    source: &SourceSpec,
+    context: &RuntimeContext,
+) -> Result<SemanticScene, RenderError> {
     match source.source_descriptor.as_str() {
-        SOURCE_CARD_DESCRIPTOR => source_grid_from_inputs(&source.inputs),
+        SOURCE_CARD_DESCRIPTOR => source_grid_from_inputs(&source.inputs, context),
         descriptor => Err(RenderError::Unsupported(format!(
             "load-validated source descriptor `{descriptor}` is not materializable"
         ))),

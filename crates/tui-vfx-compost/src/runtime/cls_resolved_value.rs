@@ -1,24 +1,34 @@
 // <FILE>crates/tui-vfx-compost/src/runtime/cls_resolved_value.rs</FILE> - <DESC>Resolved canonical value wrapper</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Resolved values keep ValueSource matching out of primitive validators.</WCTX>
-// <CLOG>0.1.0: INIT — add borrowed resolved value wrapper.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Runtime values may resolve to borrowed literals or context/fallback-owned values.</WCTX>
+// <CLOG>0.2.0: MINOR — store resolved values as borrowed-or-owned data for non-literal sources.</CLOG>
+
+use std::borrow::Cow;
 
 use tui_vfx_contract::Value;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct ResolvedValue<'a> {
-    value: &'a Value,
+    value: Cow<'a, Value>,
 }
 
 impl<'a> ResolvedValue<'a> {
     pub(crate) fn literal(value: &'a Value) -> Self {
-        Self { value }
+        Self {
+            value: Cow::Borrowed(value),
+        }
     }
 
-    pub(crate) fn value(&self) -> &'a Value {
-        self.value
+    pub(crate) fn owned(value: Value) -> Self {
+        Self {
+            value: Cow::Owned(value),
+        }
+    }
+
+    pub(crate) fn value(&self) -> &Value {
+        self.value.as_ref()
     }
 }
 
 // <FILE>crates/tui-vfx-compost/src/runtime/cls_resolved_value.rs</FILE> - <DESC>Resolved canonical value wrapper</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

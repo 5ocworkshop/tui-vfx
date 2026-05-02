@@ -15,6 +15,7 @@ use crate::render::{
     ElementRenderOutcome, RenderError, SampleContext, apply_effect_stack, build_effect_stack,
     clip_element_bounds,
 };
+use crate::runtime::RuntimeContext;
 use crate::source::materialize_source;
 
 pub(crate) fn render_scene_element(
@@ -34,7 +35,8 @@ pub(crate) fn render_scene_element(
                 element.source_instance.as_str()
             ))
         })?;
-    let source_grid = materialize_source(source)?;
+    let runtime_context = RuntimeContext::from_sample(sample).with_graph_defaults(&recipe.graph);
+    let source_grid = materialize_source(source, &runtime_context)?;
     let Some(bounds) = clip_element_bounds(
         element.placement,
         source_grid.grid().width(),
@@ -50,7 +52,14 @@ pub(crate) fn render_scene_element(
     let effect_stack = build_effect_stack(recipe, element)?;
     let applied_effect_kinds = effect_stack.applied_effect_kinds(sample);
 
-    apply_effect_stack(&source_grid, destination, bounds, sample, &effect_stack)?;
+    apply_effect_stack(
+        &source_grid,
+        destination,
+        bounds,
+        sample,
+        &effect_stack,
+        &runtime_context,
+    )?;
 
     Ok(ElementRenderOutcome::applied(applied_effect_kinds))
 }

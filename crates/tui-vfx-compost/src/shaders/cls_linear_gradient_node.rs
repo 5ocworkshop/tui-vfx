@@ -10,6 +10,7 @@ use tui_vfx_contract::NodeSpec;
 use tui_vfx_types::Style;
 
 use crate::RenderError;
+use crate::runtime::RuntimeContext;
 use crate::shaders::linear_gradient_style;
 
 /// Borrowed v3.1 graph node for `shader.linearGradient`.
@@ -39,9 +40,10 @@ impl<'a> LinearGradientNode<'a> {
         screen_y: u16,
         phase_t: f64,
         base: Style,
+        context: &RuntimeContext,
     ) -> Style {
         linear_gradient_style(
-            self.node, local_x, local_y, width, height, screen_x, screen_y, phase_t, base,
+            self.node, local_x, local_y, width, height, screen_x, screen_y, phase_t, base, context,
         )
     }
 }

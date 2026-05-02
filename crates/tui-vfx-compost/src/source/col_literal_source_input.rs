@@ -1,7 +1,7 @@
-// <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read load-validated literal source inputs</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Runtime reads already load-validated canonical source fields directly.</WCTX>
-// <CLOG>0.1.0: INIT — add literal source input accessors.</CLOG>
+// <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read resolved source inputs</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Source materialization uses the same runtime resolver as node validation.</WCTX>
+// <CLOG>0.2.0: MINOR — resolve source.card inputs from RuntimeContext before materialization.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -9,15 +9,19 @@ use tui_vfx_contract::{SourceInputId, Value, ValueSource};
 use tui_vfx_types::Color;
 
 use crate::RenderError;
+use crate::runtime::{RuntimeContext, resolve_value_source};
 
-fn literal_input<'a>(
-    inputs: &'a BTreeMap<SourceInputId, ValueSource>,
+fn resolved_input(
+    inputs: &BTreeMap<SourceInputId, ValueSource>,
     id: &str,
-) -> Result<&'a Value, RenderError> {
+    context: &RuntimeContext,
+) -> Result<Value, RenderError> {
     match inputs.get(&SourceInputId::new(id)) {
-        Some(ValueSource::Literal { value }) => Ok(value),
-        _ => Err(RenderError::Unsupported(format!(
-            "load-validated source is missing literal `{id}`"
+        Some(source) => resolve_value_source(source, context)
+            .map(|value| value.value().clone())
+            .map_err(|error| RenderError::Unsupported(error.reason())),
+        None => Err(RenderError::Unsupported(format!(
+            "load-validated source is missing input `{id}`"
         ))),
     }
 }
@@ -25,9 +29,10 @@ fn literal_input<'a>(
 pub(crate) fn literal_text(
     inputs: &BTreeMap<SourceInputId, ValueSource>,
     id: &str,
+    context: &RuntimeContext,
 ) -> Result<String, RenderError> {
-    match literal_input(inputs, id)? {
-        Value::Text(value) | Value::String(value) => Ok(value.clone()),
+    match resolved_input(inputs, id, context)? {
+        Value::Text(value) | Value::String(value) => Ok(value),
         value => Err(RenderError::Unsupported(format!(
             "source input `{id}` expected text/string, found {:?}",
             value.kind()
@@ -38,9 +43,10 @@ pub(crate) fn literal_text(
 pub(crate) fn literal_integer(
     inputs: &BTreeMap<SourceInputId, ValueSource>,
     id: &str,
+    context: &RuntimeContext,
 ) -> Result<usize, RenderError> {
-    match literal_input(inputs, id)? {
-        Value::Integer(value) if *value >= 0 => Ok(*value as usize),
+    match resolved_input(inputs, id, context)? {
+        Value::Integer(value) if value >= 0 => Ok(value as usize),
         value => Err(RenderError::Unsupported(format!(
             "source input `{id}` expected non-negative integer, found {:?}",
             value.kind()
@@ -51,9 +57,10 @@ pub(crate) fn literal_integer(
 pub(crate) fn literal_color(
     inputs: &BTreeMap<SourceInputId, ValueSource>,
     id: &str,
+    context: &RuntimeContext,
 ) -> Result<Color, RenderError> {
-    match literal_input(inputs, id)? {
-        Value::Color(value) => Ok(*value),
+    match resolved_input(inputs, id, context)? {
+        Value::Color(value) => Ok(value),
         value => Err(RenderError::Unsupported(format!(
             "source input `{id}` expected color, found {:?}",
             value.kind()
@@ -61,5 +68,5 @@ pub(crate) fn literal_color(
     }
 }
 
-// <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read load-validated literal source inputs</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read resolved source inputs</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

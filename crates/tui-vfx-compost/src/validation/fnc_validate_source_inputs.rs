@@ -19,6 +19,7 @@ const SOURCE_CARD_WIDTH_MAX: i64 = 512;
 pub(crate) fn validate_source_inputs(
     source_id: &SourceInstanceId,
     source: &SourceSpec,
+    context: &RuntimeContext,
 ) -> Result<(), LoadError> {
     if source.source_descriptor.as_str() != SOURCE_CARD_DESCRIPTOR {
         return Err(LoadError::UnsupportedSourceDescriptor {
@@ -28,9 +29,8 @@ pub(crate) fn validate_source_inputs(
         });
     }
 
-    let context = RuntimeContext::load_time();
     for (input, value_source) in &source.inputs {
-        let value = resolve_value_source(value_source, &context)
+        let value = resolve_value_source(value_source, context)
             .map_err(|error| source_input_error(source_id, input.as_str(), error.reason()))?;
         validate_source_card_input(source_id, input, value.value())?;
     }
