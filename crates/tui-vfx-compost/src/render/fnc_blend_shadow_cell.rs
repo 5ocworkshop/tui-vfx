@@ -3,23 +3,26 @@
 // <WCTX>Lift the mature glyph-overlay shadow blend from tui-vfx-compositor for native compost surface shadows.</WCTX>
 // <CLOG>0.1.0: INIT — add source-over shadow cell blending.</CLOG>
 
+use tui_vfx_contract::ShadowBlendMode;
 use tui_vfx_types::Cell;
 
-pub(crate) fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
-    let blended_bg = if shadow_cell.bg.a < 255 && shadow_cell.bg.a > 0 {
-        shadow_cell.bg.blend_over(dest_cell.bg)
-    } else if shadow_cell.bg.a == 0 {
-        dest_cell.bg
+use crate::render::blend_shadow_color;
+
+pub(crate) fn blend_shadow_cell(
+    shadow_cell: &Cell,
+    dest_cell: &Cell,
+    blend_mode: ShadowBlendMode,
+) -> Cell {
+    let blended_bg = if shadow_cell.bg.a > 0 {
+        blend_shadow_color(shadow_cell.bg, dest_cell.bg, blend_mode)
     } else {
-        shadow_cell.bg
+        dest_cell.bg
     };
 
-    let blended_fg = if shadow_cell.fg.a < 255 && shadow_cell.fg.a > 0 {
-        shadow_cell.fg.blend_over(dest_cell.bg)
-    } else if shadow_cell.fg.a == 0 {
-        dest_cell.bg
+    let blended_fg = if shadow_cell.fg.a > 0 {
+        blend_shadow_color(shadow_cell.fg, dest_cell.bg, blend_mode)
     } else {
-        shadow_cell.fg
+        dest_cell.bg
     };
 
     Cell::styled(shadow_cell.ch, blended_fg, blended_bg, shadow_cell.mods)

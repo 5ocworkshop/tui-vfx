@@ -35,7 +35,7 @@ pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), Lo
     let runtime_context = RuntimeContext::load_time().with_graph_defaults(&recipe.graph);
 
     for (source_id, source) in &recipe.sources {
-        validate_source_inputs(source_id, source, &runtime_context)?;
+        validate_source_inputs(source_id, source, &recipe.assets, &runtime_context)?;
     }
 
     for scene in &recipe.scenes {

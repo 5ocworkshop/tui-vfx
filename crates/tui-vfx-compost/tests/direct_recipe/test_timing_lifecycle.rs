@@ -60,6 +60,33 @@ fn active_phases_apply_node_only_when_sample_phase_matches() {
 }
 
 #[test]
+fn graph_binding_timing_derives_element_local_signal_progress() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["graphBinding"] = serde_json::json!({
+        "graph": "mainGraph",
+        "timing": { "enterMs": 1000, "enterOffsetMs": 500, "enterEase": "linear" },
+        "topology": { "kind": "node", "node": "gradient" }
+    });
+    recipe["graph"]["nodes"]["gradient"]["inputs"]["intensity"] = serde_json::json!({
+        "kind": "signalExpression",
+        "expression": { "kind": "ramp", "start": 0.0, "end": 1.0 },
+        "fallback": null
+    });
+
+    let frame = render_recipe_value(
+        recipe,
+        SampleContext::new(0.75)
+            .with_phase_time_ms(750)
+            .with_lifecycle_phase(tui_vfx_contract::LifecyclePhase::Enter),
+    );
+
+    assert_eq!(
+        frame.grid.cell((0, 0)).unwrap().fg,
+        Color::rgb(255, 191, 191)
+    );
+}
+
+#[test]
 fn sample_context_keeps_normalized_progress_separate_from_elapsed_clocks() {
     let sample = SampleContext::new(0.25)
         .with_loop_t(0.5)

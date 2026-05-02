@@ -18,7 +18,7 @@ use tui_vfx_types::SemanticScene;
 use crate::render::{
     ElementRenderOutcome, RenderError, RenderSkipReason, SampleContext, build_effect_stack,
     is_scene_element_visible, render_clipped_scene_element, render_hidden_overflow_scene_element,
-    render_wrapped_scene_element, trace_element_skipped,
+    render_wrapped_scene_element, resolve_element_graph_sample, trace_element_skipped,
 };
 use crate::runtime::RuntimeContext;
 use crate::source::materialize_source;
@@ -45,35 +45,38 @@ pub(crate) fn render_scene_element(
         .sources
         .get(&element.source_instance)
         .ok_or_else(|| missing_source_error(element))?;
-    let source_grid = materialize_source(source, &runtime_context)?;
+    let source_grid = materialize_source(source, &recipe.assets, &runtime_context)?;
     let effect_stack = build_effect_stack(recipe, element)?;
+    let graph_sample = resolve_element_graph_sample(element, sample);
+    let graph_runtime_context =
+        RuntimeContext::from_sample(&graph_sample).with_graph_defaults(&recipe.graph);
     match element.overflow.unwrap_or(SceneElementOverflowPolicy::Clip) {
         SceneElementOverflowPolicy::Clip => render_clipped_scene_element(
             scene,
             element,
-            sample,
+            &graph_sample,
             destination,
             &source_grid,
             &effect_stack,
-            &runtime_context,
+            &graph_runtime_context,
         ),
         SceneElementOverflowPolicy::Hide => render_hidden_overflow_scene_element(
             scene,
             element,
-            sample,
+            &graph_sample,
             destination,
             &source_grid,
             &effect_stack,
-            &runtime_context,
+            &graph_runtime_context,
         ),
         SceneElementOverflowPolicy::Wrap => render_wrapped_scene_element(
             scene,
             element,
-            sample,
+            &graph_sample,
             destination,
             &source_grid,
             &effect_stack,
-            &runtime_context,
+            &graph_runtime_context,
         ),
     }
 }

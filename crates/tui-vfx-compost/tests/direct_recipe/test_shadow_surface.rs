@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_shadow_surface.rs</FILE> - <DESC>Compost scene-element surface shadow tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Surface shadow regressions lock mature tui-vfx-shadow geometry and compositor blending adapted to v3.1 scene elements.</WCTX>
-// <CLOG>0.1.0: INIT — cover source-over surface shadows, shadow role tagging, baseStyle rejection, and preserveDestination material.</CLOG>
+// <CLOG>0.2.0: MINOR — accept role-scoped shadow source regions for bordered source surfaces.
+// 0.1.0: INIT — cover source-over surface shadows, shadow role tagging, baseStyle rejection, and preserveDestination material.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{LoadedRecipe, SampleContext, render_recipe};
@@ -194,37 +195,40 @@ IJKL",
 }
 
 #[test]
-fn rejects_shadow_source_region_until_scope_extrusion_is_native() {
+fn role_scoped_shadow_source_region_loads_for_bordered_sources() {
     let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["width"] = serde_json::json!(6);
+    recipe["scenes"][0]["height"] = serde_json::json!(5);
+    recipe["sources"]["mainCard"] = source_with_message("AB", 4, 3);
+    recipe["sources"]["mainCard"]["inputs"]["borderStyle"]["value"]["value"] =
+        serde_json::json!("rounded");
     recipe["scenes"][0]["elements"][0]["surface"] = surface_shadow();
     recipe["scenes"][0]["elements"][0]["surface"]["shadow"]["sourceRegion"] =
         serde_json::json!({ "kind": "role", "role": "Border" });
 
-    let catalog = primitive_catalog();
-    let error = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("sourceRegion requires scope-aware shadow extrusion")
-        .to_string();
+    let frame = render_shadow_recipe(recipe);
 
-    assert!(error.contains("mainElement.surface.shadow.sourceRegion"));
+    assert_eq!(frame.grid.role((4, 1)), Some(RoleTag::Shadow));
 }
 
 #[test]
-fn rejects_multiply_shadow_blend_until_color_multiplication_is_native() {
+fn multiply_shadow_blend_loads_and_tags_cells() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["scenes"][0]["elements"][0]["surface"] = surface_shadow();
     recipe["scenes"][0]["elements"][0]["surface"]["shadow"]["blendMode"] =
         serde_json::json!("multiply");
 
-    let catalog = primitive_catalog();
-    let error = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("multiply requires native color multiplication")
-        .to_string();
+    recipe["scenes"][0]["width"] = serde_json::json!(6);
+    recipe["scenes"][0]["height"] = serde_json::json!(5);
+    recipe["sources"]["mainCard"] = source_with_message("ABCD\nEFGH\nIJKL", 4, 3);
 
-    assert!(error.contains("mainElement.surface.shadow.blendMode"));
+    let frame = render_shadow_recipe(recipe);
+
+    assert_eq!(frame.grid.role((4, 1)), Some(RoleTag::Shadow));
 }
 
 #[test]
-fn rejects_paint_outset_until_scene_expansion_is_native() {
+fn paint_outset_expands_shadow_casting_bounds() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["scenes"][0]["elements"][0]["surface"] = surface_shadow();
     recipe["scenes"][0]["elements"][0]["surface"]["shadow"]["paintOutset"] = serde_json::json!({
@@ -234,26 +238,33 @@ fn rejects_paint_outset_until_scene_expansion_is_native() {
         "bottom": 1
     });
 
-    let catalog = primitive_catalog();
-    let error = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("paintOutset requires native scene paint expansion")
-        .to_string();
+    recipe["scenes"][0]["width"] = serde_json::json!(6);
+    recipe["scenes"][0]["height"] = serde_json::json!(5);
+    recipe["sources"]["mainCard"] = source_with_message("ABCD\nEFGH\nIJKL", 4, 3);
 
-    assert!(error.contains("mainElement.surface.shadow.paintOutset"));
+    let frame = render_shadow_recipe(recipe);
+
+    assert_eq!(frame.grid.role((5, 1)), Some(RoleTag::Shadow));
 }
 
 #[test]
-fn rejects_wrapped_shadow_elements_until_shadow_wrap_semantics_are_native() {
+fn wrapped_shadow_elements_cast_wrapped_cell_shadows() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["scenes"][0]["elements"][0]["overflow"] = serde_json::json!("wrap");
     recipe["scenes"][0]["elements"][0]["surface"] = surface_shadow();
 
-    let catalog = primitive_catalog();
-    let error = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("wrapped shadows require explicit wrap-aware shadow semantics")
-        .to_string();
+    recipe["scenes"][0]["width"] = serde_json::json!(4);
+    recipe["scenes"][0]["height"] = serde_json::json!(3);
+    recipe["sources"]["mainCard"] = source_with_message("AB", 2, 1);
 
-    assert!(error.contains("mainElement.surface.shadow"));
+    let frame = render_shadow_recipe(recipe);
+
+    assert!(
+        frame
+            .trace_events
+            .iter()
+            .any(|event| event.stage_kind == "shadow")
+    );
 }
 
 #[test]
@@ -302,4 +313,4 @@ IJKL",
     assert_eq!(frame.grid.role((4, 1)), Some(RoleTag::Shadow));
 }
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_shadow_surface.rs</FILE> - <DESC>Compost scene-element surface shadow tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

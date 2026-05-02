@@ -8,7 +8,7 @@
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{LoadError, LoadedRecipe, SampleContext, render_recipe};
-use tui_vfx_types::Color;
+use tui_vfx_types::{Color, Modifiers};
 
 fn load_recipe_error(recipe: serde_json::Value) -> LoadError {
     let catalog = primitive_catalog();
@@ -61,6 +61,22 @@ fn assert_contract_error_contains(error: LoadError, expected: &str) {
     );
 }
 
+fn assert_source_descriptor_error(error: LoadError, expected_descriptor: &str) {
+    let is_expected_descriptor = matches!(
+        &error,
+        LoadError::UnsupportedSourceDescriptor {
+            source_id,
+            descriptor,
+            ..
+        } if source_id == "mainCard" && descriptor == expected_descriptor
+    );
+
+    assert!(
+        is_expected_descriptor,
+        "expected source descriptor `{expected_descriptor}` rejection for `mainCard`, got: {error}"
+    );
+}
+
 #[test]
 fn literal_source_card_remains_supported() {
     let frame = render_recipe_value(linear_gradient_recipe_value());
@@ -73,26 +89,177 @@ fn literal_source_card_remains_supported() {
 }
 
 #[test]
-fn rejects_unsupported_source_descriptor_id_at_load_time() {
+fn source_text_materializes_text_bounds_and_style() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["sources"]["mainCard"]["sourceDescriptor"] =
         serde_json::Value::String("source.text".to_string());
     recipe["sources"]["mainCard"]["inputs"] = serde_json::json!({
-        "text": { "kind": "literal", "value": { "kind": "text", "value": "text source" } },
-        "width": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
-        "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "Hi\nZ" } },
+        "foreground": { "kind": "literal", "value": { "kind": "color", "value": { "r": 10, "g": 20, "b": 30, "a": 255 } } },
+        "background": { "kind": "literal", "value": { "kind": "color", "value": { "r": 1, "g": 2, "b": 3, "a": 255 } } },
+        "bold": { "kind": "literal", "value": { "kind": "boolean", "value": true } }
+    });
+    recipe["graph"]["nodes"] = serde_json::json!({});
+    recipe["graph"]["order"] = serde_json::json!([]);
+    recipe["scenes"][0]["height"] = serde_json::Value::Number(2.into());
+
+    let frame = render_recipe_value(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'H');
+    assert_eq!(frame.grid.cell((1, 0)).unwrap().ch, 'i');
+    assert_eq!(frame.grid.cell((0, 1)).unwrap().ch, 'Z');
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().fg, Color::rgb(10, 20, 30));
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().bg, Color::rgb(1, 2, 3));
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().mods, Modifiers::bold());
+}
+
+#[test]
+fn source_procedural_materializes_braille_flag_asset_cells() {
+    let mut recipe = linear_gradient_recipe_value();
+    let asset_path = crate::support::repo_root()
+        .join("crates/tui-vfx-compost/tests/fixtures/braille_flag_asset_minimal.json");
+    recipe["assets"] = serde_json::json!({
+        "flagDots": {
+            "id": "flagDots",
+            "kind": { "kind": "brailleDotfield" },
+            "format": "tui-vfx.braille_flag_asset.v1",
+            "locator": { "kind": "path", "path": asset_path.to_string_lossy() },
+            "description": null
+        }
+    });
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "params": {
+                "kind": "literal",
+                "value": { "kind": "structured", "value": { "asset": "$asset:flagDots" } }
+            }
+        },
+        "assets": {}
+    });
+    recipe["graph"]["nodes"] = serde_json::json!({});
+    recipe["graph"]["order"] = serde_json::json!([]);
+    recipe["scenes"][0]["elements"][0]["roleWritePolicy"] =
+        serde_json::json!({ "kind": "copySampledSource" });
+
+    let frame = render_recipe_value(recipe);
+
+    let cell = frame.grid.cell((0, 0)).unwrap();
+    assert_eq!(cell.ch, '⠁');
+    assert_eq!(cell.fg, Color::RED);
+    assert_eq!(
+        frame.grid.role((0, 0)),
+        Some(tui_vfx_types::RoleTag::Procedural)
+    );
+}
+
+#[test]
+fn source_procedural_requires_braille_asset_params_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+        },
+        "assets": {}
     });
 
     let error = load_recipe_error(recipe);
 
-    assert!(matches!(
-        error,
-        LoadError::UnsupportedSourceDescriptor {
-            source_id,
-            descriptor,
-            ..
-        } if source_id == "mainCard" && descriptor == "source.text"
-    ));
+    assert_source_input_error(error, "params");
+}
+
+#[test]
+fn source_procedural_rejects_unknown_generator_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "particle_fountain" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "params": { "kind": "literal", "value": { "kind": "structured", "value": {} } }
+        },
+        "assets": {}
+    });
+
+    let error = load_recipe_error(recipe);
+
+    assert_source_input_error(error, "generator");
+}
+
+#[test]
+fn source_procedural_rejects_unknown_braille_asset_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "params": {
+                "kind": "literal",
+                "value": { "kind": "structured", "value": { "asset": "$asset:missingDots" } }
+            }
+        },
+        "assets": {}
+    });
+
+    let error = load_recipe_error(recipe);
+
+    assert_source_input_error(error, "params");
+}
+
+#[test]
+fn source_procedural_rejects_logical_braille_asset_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["assets"] = serde_json::json!({
+        "flagDots": {
+            "id": "flagDots",
+            "kind": { "kind": "brailleDotfield" },
+            "format": "tui-vfx.braille_flag_asset.v1",
+            "locator": { "kind": "logical", "locator": "flags.canada" },
+            "description": null
+        }
+    });
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } },
+            "params": {
+                "kind": "literal",
+                "value": { "kind": "structured", "value": { "asset": "$asset:flagDots" } }
+            }
+        },
+        "assets": {}
+    });
+
+    let error = load_recipe_error(recipe);
+
+    assert_source_input_error(error, "params");
+}
+
+#[test]
+fn unsupported_existing_source_descriptor_rejects_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"] = serde_json::json!({
+        "sourceDescriptor": "source.ansi",
+        "inputs": {
+            "ansiText": { "kind": "literal", "value": { "kind": "text", "value": "\\u001b[31mred" } }
+        },
+        "assets": {}
+    });
+
+    let error = load_recipe_error(recipe);
+
+    assert_source_descriptor_error(error, "source.ansi");
 }
 
 #[test]
@@ -149,14 +316,70 @@ fn rejects_missing_required_source_card_input_at_load_time() {
 }
 
 #[test]
-fn source_card_accepts_descriptor_border_style_values_at_load_time() {
+fn source_card_renders_rounded_border_cells_with_border_roles() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["sources"]["mainCard"]["inputs"]["borderStyle"]["value"]["value"] =
         serde_json::Value::String("rounded".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["width"]["value"]["value"] =
+        serde_json::Value::Number(5.into());
+    recipe["sources"]["mainCard"]["inputs"]["height"]["value"]["value"] =
+        serde_json::Value::Number(3.into());
+    recipe["graph"]["nodes"] = serde_json::json!({});
+    recipe["graph"]["order"] = serde_json::json!([]);
+    recipe["scenes"][0]["width"] = serde_json::Value::Number(5.into());
+    recipe["scenes"][0]["height"] = serde_json::Value::Number(3.into());
+    recipe["scenes"][0]["elements"][0]["roleWritePolicy"] =
+        serde_json::json!({ "kind": "copySampledSource" });
 
     let frame = render_recipe_value(recipe);
 
-    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, '╭');
+    assert_eq!(frame.grid.cell((4, 0)).unwrap().ch, '╮');
+    assert_eq!(frame.grid.cell((1, 1)).unwrap().ch, 'A');
+    assert_eq!(
+        frame.grid.role((0, 0)),
+        Some(tui_vfx_types::RoleTag::Border)
+    );
+}
+
+#[test]
+fn source_card_renders_custom_border_frame() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"]["inputs"]["borderStyle"]["value"]["value"] =
+        serde_json::Value::String("custom".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["borderConfig"] = serde_json::json!({
+        "kind": "literal",
+        "value": {
+            "kind": "structured",
+            "value": {
+                "frame": {
+                    "corners": ["◢", "◣", "◥", "◤"],
+                    "edges": ["▀", "█", "▄", "▌"]
+                }
+            }
+        }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"]["value"]["value"] =
+        serde_json::Value::Number(5.into());
+    recipe["sources"]["mainCard"]["inputs"]["height"]["value"]["value"] =
+        serde_json::Value::Number(3.into());
+    recipe["graph"]["nodes"] = serde_json::json!({});
+    recipe["graph"]["order"] = serde_json::json!([]);
+    recipe["scenes"][0]["width"] = serde_json::Value::Number(5.into());
+    recipe["scenes"][0]["height"] = serde_json::Value::Number(3.into());
+    recipe["scenes"][0]["elements"][0]["roleWritePolicy"] =
+        serde_json::json!({ "kind": "copySampledSource" });
+
+    let frame = render_recipe_value(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, '◢');
+    assert_eq!(frame.grid.cell((4, 0)).unwrap().ch, '◣');
+    assert_eq!(frame.grid.cell((0, 2)).unwrap().ch, '◥');
+    assert_eq!(frame.grid.cell((4, 2)).unwrap().ch, '◤');
+    assert_eq!(frame.grid.cell((2, 0)).unwrap().ch, '▀');
+    assert_eq!(frame.grid.cell((4, 1)).unwrap().ch, '█');
+    assert_eq!(frame.grid.cell((2, 2)).unwrap().ch, '▄');
+    assert_eq!(frame.grid.cell((0, 1)).unwrap().ch, '▌');
 }
 
 #[test]

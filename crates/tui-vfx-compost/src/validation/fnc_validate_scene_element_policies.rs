@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
 // <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Accept simple scene-relative anchor placementRules whose resolved placement is the canonical render position; reject only sibling-relative anchors, absolute-rect rules, and motion-bearing rules that require native resolution.</WCTX>
-// <CLOG>0.7.0: MINOR — accept anchor-kind placementRule when sibling_layer and placement_motion are absent (resolved placement is authoritative).
+// <CLOG>0.9.0: MINOR — accept shadow sourceRegion now that shadow geometry evaluates source scopes.
+// 0.8.0: MINOR — accept graphBinding.timing now that render orchestration derives element-local graph samples.
+// 0.7.0: MINOR — accept anchor-kind placementRule when sibling_layer and placement_motion are absent (resolved placement is authoritative).
 // 0.6.0: MINOR — accept native visibility, warn clipping, overflow, and no-op scroll factor substrate.
 // 0.5.1: PATCH — use capability-based unsupported-policy reasons instead of schedule language.
 // 0.5.0: MINOR — accept copied and explicit role writes after role policy execution lands.
@@ -12,7 +14,7 @@
 
 use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, RecipeSceneElement, RoleWritePolicy, SceneElementOverflowPolicy,
-    SceneElementPlacementRule, ShadowBlendMode,
+    SceneElementPlacementRule,
 };
 
 use crate::LoadError;
@@ -20,19 +22,6 @@ use crate::LoadError;
 pub(crate) fn validate_scene_element_policies(
     element: &RecipeSceneElement,
 ) -> Result<(), LoadError> {
-    if element
-        .graph_binding
-        .as_ref()
-        .and_then(|binding| binding.timing.as_ref())
-        .is_some()
-    {
-        return unsupported_policy(
-            element,
-            "graphBinding.timing",
-            "element-local graph timing requires native timing resolution",
-        );
-    }
-
     if let Some(rule) = &element.placement_rule {
         match rule {
             SceneElementPlacementRule::Anchor {
@@ -65,44 +54,22 @@ pub(crate) fn validate_scene_element_policies(
         }
     }
 
-    if let Some(surface) = &element.surface {
-        if surface.base_style.is_some() {
-            return unsupported_policy(
-                element,
-                "surface.baseStyle",
-                "base style requires typed native surface style rendering",
-            );
-        }
-        if let Some(shadow) = &surface.shadow {
-            if shadow.source_region.is_some() {
-                return unsupported_policy(
-                    element,
-                    "surface.shadow.sourceRegion",
-                    "shadow source regions require native scope-to-shadow extrusion",
-                );
-            }
-            if shadow.paint_outset.is_some() {
-                return unsupported_policy(
-                    element,
-                    "surface.shadow.paintOutset",
-                    "shadow paint outsets require native scene paint expansion",
-                );
-            }
-            if element.overflow == Some(SceneElementOverflowPolicy::Wrap) {
-                return unsupported_policy(
-                    element,
-                    "surface.shadow",
-                    "wrapped shadow elements require native wrap-aware shadow semantics",
-                );
-            }
-            if shadow.blend_mode == ShadowBlendMode::Multiply {
-                return unsupported_policy(
-                    element,
-                    "surface.shadow.blendMode",
-                    "multiply shadow blending requires destination color multiplication",
-                );
-            }
-        }
+    if element.placement_motion.is_some() {
+        return unsupported_policy(
+            element,
+            "placementMotion",
+            "placement motion requires motion-aware scene rendering",
+        );
+    }
+
+    if let Some(surface) = &element.surface
+        && surface.base_style.is_some()
+    {
+        return unsupported_policy(
+            element,
+            "surface.baseStyle",
+            "base style requires typed native surface style rendering",
+        );
     }
 
     match element.overflow {
@@ -110,14 +77,6 @@ pub(crate) fn validate_scene_element_policies(
         | Some(SceneElementOverflowPolicy::Clip)
         | Some(SceneElementOverflowPolicy::Hide)
         | Some(SceneElementOverflowPolicy::Wrap) => {}
-    }
-
-    if element.placement_motion.is_some() {
-        return unsupported_policy(
-            element,
-            "placementMotion",
-            "placement motion requires motion-aware scene rendering",
-        );
     }
 
     match element.clip_policy {

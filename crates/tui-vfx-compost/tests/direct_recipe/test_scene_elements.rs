@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Scene substrate tests prove multi-element composition, z ordering, signed placement clipping, and strict unsupported-policy rejection.</WCTX>
-// <CLOG>0.5.0: MINOR — prove native visibility, warn clipping, hide overflow, and wrap overflow execution.
+// <CLOG>0.6.0: MINOR — accept graphBinding.timing at load time now that element-local graph timing executes.
+// 0.5.0: MINOR — prove native visibility, warn clipping, hide overflow, and wrap overflow execution.
 // 0.4.2: PATCH — assert stable one-scene unsupported diagnostic wording.
 // 0.4.1: PATCH — use unsupported-policy language instead of schedule language in test names.
 // 0.4.0: MINOR — drop stale role-policy rejection now that role writes execute natively.
@@ -14,7 +15,7 @@
 // 0.1.0: INIT — add RED tests for canonical v3.1 scene element rendering.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
-use tui_vfx_compost::{Frame, LoadedRecipe, SampleContext, render_recipe};
+use tui_vfx_compost::{Frame, LoadedRecipe, SampleContext, render_recipe, render_recipe_scene};
 use tui_vfx_contract::LifecyclePhase;
 use tui_vfx_types::RoleTag;
 
@@ -46,16 +47,6 @@ fn element_with_source(
     })
 }
 
-fn load_error_for_element_policy(policy: &str, value: serde_json::Value) -> String {
-    let catalog = primitive_catalog();
-    let mut recipe = linear_gradient_recipe_value();
-    recipe["scenes"][0]["elements"][0][policy] = value;
-
-    LoadedRecipe::load(recipe_from_value(recipe), &catalog)
-        .expect_err("policy should be rejected before render")
-        .to_string()
-}
-
 fn set_scene_size(recipe: &mut serde_json::Value, width: i64, height: i64) {
     recipe["scenes"][0]["width"] = serde_json::Value::Number(width.into());
     recipe["scenes"][0]["height"] = serde_json::Value::Number(height.into());
@@ -70,21 +61,6 @@ fn render_test_recipe_at(recipe: serde_json::Value, sample: SampleContext) -> Fr
     let loaded = LoadedRecipe::load(recipe_from_value(recipe), &catalog).expect("load recipe");
 
     render_recipe(&loaded, &sample).expect("render scene")
-}
-
-fn assert_rejects_element_policy_path(
-    policy: &str,
-    expected_policy_path: &str,
-    value: serde_json::Value,
-) {
-    let error = load_error_for_element_policy(policy, value);
-
-    assert!(
-        error.contains(&format!(
-            "unsupported scene element policy mainElement.{expected_policy_path}"
-        )),
-        "expected {expected_policy_path} rejection after setting {policy}, got: {error}"
-    );
 }
 
 #[test]
@@ -249,6 +225,23 @@ fn rejects_empty_scene_elements_with_existing_diagnostic() {
 }
 
 #[test]
+fn renders_explicit_scene_from_multi_scene_recipe() {
+    let mut recipe = linear_gradient_recipe_value();
+    let mut second_scene = recipe["scenes"][0].clone();
+    second_scene["id"] = serde_json::json!("detailScene");
+    second_scene["elements"][0]["sourceInstance"] = serde_json::json!("detailCard");
+    recipe["sources"]["detailCard"] = source_with_message("Z", 1, 1);
+    recipe["scenes"] = serde_json::json!([recipe["scenes"][0].clone(), second_scene]);
+
+    let catalog = primitive_catalog();
+    let loaded = LoadedRecipe::load(recipe_from_value(recipe), &catalog).expect("load recipe");
+    let frame = render_recipe_scene(&loaded, "detailScene", &SampleContext::default())
+        .expect("render selected scene");
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'Z');
+}
+
+#[test]
 fn rejects_multiple_scenes_instead_of_silently_dropping_later_scenes() {
     let catalog = primitive_catalog();
     let mut recipe = linear_gradient_recipe_value();
@@ -379,6 +372,24 @@ fn empty_surface_is_preserved_as_noop() {
 }
 
 #[test]
+fn rejects_placement_motion_until_motion_runtime_executes_it() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["placementMotion"] = serde_json::json!({
+        "enter": { "duration": "120ms", "easing": "quadOut" }
+    });
+
+    let catalog = primitive_catalog();
+    let error = LoadedRecipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("placementMotion must not silently render as a no-op")
+        .to_string();
+
+    assert!(
+        error.contains("mainElement.placementMotion"),
+        "expected placementMotion rejection, got: {error}"
+    );
+}
+
+#[test]
 fn scroll_factor_is_preserved_as_noop_without_scroll_runtime_input() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["scenes"][0]["elements"][0]["scrollFactor"] = serde_json::json!({ "x": 0.5, "y": 1.25 });
@@ -390,17 +401,18 @@ fn scroll_factor_is_preserved_as_noop_without_scroll_runtime_input() {
 }
 
 #[test]
-fn rejects_unsupported_graph_binding_timing_at_load_time() {
-    assert_rejects_element_policy_path(
-        "graphBinding",
-        "graphBinding.timing",
-        serde_json::json!({
-            "graph": "mainGraph",
-            "timing": { "enterMs": 120 },
-            "topology": { "kind": "node", "node": "gradient" }
-        }),
-    );
+fn accepts_graph_binding_timing_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["graphBinding"] = serde_json::json!({
+        "graph": "mainGraph",
+        "timing": { "enterMs": 120 },
+        "topology": { "kind": "node", "node": "gradient" }
+    });
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.applied_effect_kinds, vec!["shader.linearGradient"]);
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

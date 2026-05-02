@@ -213,8 +213,8 @@
         "kind": "text"
       },
       "inputs": {
-        "text": {
-          "displayName": "Text",
+        "message": {
+          "displayName": "Message",
           "description": "Plain text rendered into the source grid.",
           "value": {
             "kind": "text",
@@ -241,6 +241,7 @@
             "unit": null,
             "semantic": null
           },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "compileTime"
         },
@@ -258,6 +259,7 @@
             "unit": null,
             "semantic": null
           },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "compileTime"
         },

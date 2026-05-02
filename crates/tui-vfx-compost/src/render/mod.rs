@@ -46,6 +46,7 @@ mod fnc_render_recipe;
 mod fnc_render_scene;
 mod fnc_render_scene_element;
 mod fnc_render_wrapped_scene_element;
+mod fnc_resolve_element_graph_sample;
 mod fnc_resolve_shader_phase_t;
 mod fnc_shadow_cast_rect;
 mod fnc_wrap_element_cell_bounds;
@@ -56,7 +57,7 @@ pub use cls_render_diagnostic::RenderDiagnostic;
 pub use cls_render_error::RenderError;
 pub use cls_render_trace_event::{RenderSkipReason, RenderStageKind, RenderTraceEvent};
 pub use cls_sample_context::SampleContext;
-pub use fnc_render_recipe::render_recipe;
+pub use fnc_render_recipe::{render_recipe, render_recipe_scene};
 
 pub(crate) use cls_cell_write_decision::CellWriteDecision;
 pub(crate) use cls_effect_stack::EffectStack;
@@ -69,7 +70,9 @@ pub(crate) use fnc_apply_cell_write_policy::apply_cell_write_policy;
 pub(crate) use fnc_apply_effect_stack::{ScopeCoordinateMode, apply_effect_stack};
 pub(crate) use fnc_apply_role_write_policy::apply_role_write_policy;
 pub(crate) use fnc_blend_shadow_cell::blend_shadow_cell;
-pub(crate) use fnc_blend_underlying_shadow_cell::blend_underlying_shadow_cell;
+pub(crate) use fnc_blend_underlying_shadow_cell::{
+    blend_shadow_color, blend_underlying_shadow_cell,
+};
 pub(crate) use fnc_build_effect_stack::build_effect_stack;
 pub(crate) use fnc_build_shadow_config::build_shadow_config;
 pub(crate) use fnc_clip_element_bounds::{ElementClipBounds, clip_element_bounds};
@@ -91,6 +94,7 @@ pub(crate) use fnc_render_hidden_overflow_scene_element::render_hidden_overflow_
 pub(crate) use fnc_render_scene::render_scene;
 pub(crate) use fnc_render_scene_element::render_scene_element;
 pub(crate) use fnc_render_wrapped_scene_element::render_wrapped_scene_element;
+pub(crate) use fnc_resolve_element_graph_sample::resolve_element_graph_sample;
 pub(crate) use fnc_resolve_shader_phase_t::resolve_shader_phase_t;
 pub(crate) use fnc_shadow_cast_rect::{shadow_cast_rect, shadow_edge_progress};
 pub(crate) use fnc_wrap_element_cell_bounds::wrap_element_cell_bounds;

@@ -18,7 +18,7 @@ mod source;
 mod validation;
 
 pub use loader::{LoadError, LoadedRecipe};
-pub use render::{Frame, RenderError, SampleContext, render_recipe};
+pub use render::{Frame, RenderError, SampleContext, render_recipe, render_recipe_scene};
 
 // <FILE>crates/tui-vfx-compost/src/lib.rs</FILE> - <DESC>v3.1-native compositor skeleton crate entry point</DESC>
 // <VERS>END OF VERSION: 0.2.0</VERS>
