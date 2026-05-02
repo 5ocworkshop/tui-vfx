@@ -32,6 +32,7 @@ pub mod fnc_lift_bindings_to_signals;
 pub mod fnc_lift_card_to_source;
 pub mod fnc_lift_effects_to_nodes;
 pub mod fnc_lift_lifecycle;
+pub mod fnc_lift_scene_array;
 pub mod fnc_lift_top_level_extras;
 pub mod fnc_lift_transitions;
 pub mod fnc_lift_value_envelope;

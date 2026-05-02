@@ -17,6 +17,7 @@ use super::fnc_lift_bindings_to_signals::lift_bindings_to_signals;
 use super::fnc_lift_card_to_source::lift_card_to_source;
 use super::fnc_lift_effects_to_nodes::lift_effects_to_nodes;
 use super::fnc_lift_lifecycle::lift_lifecycle;
+use super::fnc_lift_scene_array::lift_scene_array;
 use super::fnc_lift_top_level_extras::{apply_anchor_to_default_element, lift_top_level_extras};
 use super::fnc_lift_transitions::lift_transitions;
 
@@ -36,6 +37,7 @@ pub fn canonicalize_recipe(input: Value) -> Result<RecipeDocument, Canonicalizat
 
     let extras = lift_top_level_extras(&mut tree)?;
     lift_lifecycle(&mut tree)?;
+    lift_scene_array(&mut tree)?;
     lift_card_to_source(&mut tree)?;
     lift_bindings_to_signals(&mut tree)?;
     let alias_usages = lift_effects_to_nodes(&mut tree)?;

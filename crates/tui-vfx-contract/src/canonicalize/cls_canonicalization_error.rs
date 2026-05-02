@@ -106,6 +106,15 @@ pub enum CanonicalizationErrorKind {
     UnexpectedJsonShape { expected: String },
     /// Internal table data is malformed; indicates a bug or table corruption.
     MalformedTable { table: String, detail: String },
+    /// Author-side authoring shape is real but the canonical V3.1 contract
+    /// has no path to represent it yet. Blocks the recipe with a clear
+    /// reason rather than silently discarding the author's intent.
+    UnsupportedShorthand { detail: String },
+    /// An author-side input value cannot be carried by the canonical
+    /// `NodeSpec.inputs` slot (which is `BTreeMap<EffectInputId, ValueSource>`).
+    /// Structural inputs like `paths`, `stops`, `nodes`, `pattern`, and
+    /// `signal` need a contract-level mechanism that does not yet exist.
+    UnrepresentableInput { effect: String, param: String },
 }
 
 // <FILE>crates/tui-vfx-contract/src/canonicalize/cls_canonicalization_error.rs</FILE> - <DESC>Canonicalize error type with JSON-path context</DESC>

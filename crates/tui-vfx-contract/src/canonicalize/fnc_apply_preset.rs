@@ -109,13 +109,19 @@ fn build_iris_track(
     consumed: &mut Vec<String>,
 ) -> Result<Value, CanonicalizationError> {
     let shape = match consume_string(author, "shape", consumed).as_deref() {
-        Some("diamond") => "diamond",
-        // VisibilityIrisShape only supports `circle` and `diamond`. Other
-        // author-side shapes (`box`, `square`) fall back to circle; the
-        // original is recorded in PresetUsage.consumed_params.
-        _ => "circle",
-    }
-    .to_string();
+        Some("diamond") => "diamond".to_string(),
+        Some("circle") | None => "circle".to_string(),
+        Some(other) => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::UnsupportedShorthand {
+                    detail: format!("iris shape `{other}`"),
+                },
+                format!(
+                    "VisibilityIrisShape only accepts `circle` and `diamond`. Author wrote `{other}`. Either map this to one of the canonical shapes in the recipe, or extend VisibilityIrisShape in the contract."
+                ),
+            ));
+        }
+    };
     let mut track = json!({
         "kind": "visibility.iris",
         "subject": "to",
@@ -151,9 +157,9 @@ fn build_wipe_track(
         "kind": "visibility.wipe",
         "subject": "to",
     });
-    if let Some(direction) = consume_string(author, "direction", consumed)
-        && let Some(canonical) = canonical_reveal_direction(&direction)
-    {
+    if let Some(direction) = consume_string(author, "direction", consumed) {
+        let canonical = canonical_reveal_direction(&direction)
+            .map_err(|e| e.at(JsonPathSegment::field("direction")))?;
         track["revealDirection"] = Value::String(canonical.into());
     }
     if let Some(soft) = author.get("softEdge").and_then(Value::as_bool) {
@@ -165,19 +171,23 @@ fn build_wipe_track(
     Ok(track)
 }
 
-fn canonical_reveal_direction(author: &str) -> Option<&'static str> {
-    Some(match author {
+fn canonical_reveal_direction(author: &str) -> Result<&'static str, CanonicalizationError> {
+    Ok(match author {
         "leftToRight" => "leftToRight",
         "rightToLeft" => "rightToLeft",
         "topToBottom" => "topToBottom",
         "bottomToTop" => "bottomToTop",
-        // Author-side composite spellings the canonical enum doesn't have.
-        // Map them to the closest cardinal direction; the original is recorded
-        // in PresetUsage.consumed_params for diagnostics.
-        "horizontalCenterOut" | "horizontalEdgesIn" => "leftToRight",
-        "verticalCenterOut" | "verticalEdgesIn" => "topToBottom",
         "angle" => "angle",
-        _ => return None,
+        other => {
+            return Err(CanonicalizationError::new(
+                CanonicalizationErrorKind::UnsupportedShorthand {
+                    detail: format!("wipe direction `{other}`"),
+                },
+                format!(
+                    "TransitionRevealDirection only accepts leftToRight / rightToLeft / topToBottom / bottomToTop / angle. Author wrote `{other}`. Use the canonical name, or extend TransitionRevealDirection / TransitionVisibilityGeometry in the contract."
+                ),
+            ));
+        }
     })
 }
 

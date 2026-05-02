@@ -79,25 +79,24 @@ fn build_phase(name: &str, value: &Value) -> Result<Value, CanonicalizationError
         Value::String(_) => resolve_duration(value)?,
         Value::Object(obj) => match obj.get("duration") {
             Some(d) => resolve_duration(d)?,
-            None => match obj.get("fallback") {
-                // `dwell: { until: <trigger>, fallback: "<duration>" }` shorthand:
-                // the canonical TriggerSpec dwell-until policy needs full
-                // condition/latch/reset/action wiring that descriptor catalogs
-                // own. As a near-term canonicalization, emit fixed dwell with
-                // the fallback duration so the recipe is canonicalize-clean;
-                // runtime tooling that knows the binding can promote it later.
-                Some(fb) => resolve_duration(fb)?,
-                None => {
-                    return Err(CanonicalizationError::new(
-                        CanonicalizationErrorKind::MissingRequired {
-                            field: "duration".into(),
-                        },
-                        format!(
-                            "lifecycle.{name} object must declare `duration` (or `fallback` for trigger-based dwell)"
-                        ),
-                    ));
-                }
-            },
+            None if obj.contains_key("until") => {
+                return Err(CanonicalizationError::new(
+                    CanonicalizationErrorKind::UnsupportedShorthand {
+                        detail: "trigger-based dwell".into(),
+                    },
+                    format!(
+                        "lifecycle.{name} declares `until: <trigger>` shorthand. The canonical DwellPolicy::Until needs a TriggerSpec with explicit condition/latch/reset/action wiring; this canonicalize pass cannot synthesize that without the descriptor catalog. Provide a canonical `policy: {{ kind: \"until\", trigger: ..., maxDuration: ... }}` directly, or extend canonicalize with a TriggerSpec lift in coordination with the contract owners."
+                    ),
+                ));
+            }
+            None => {
+                return Err(CanonicalizationError::new(
+                    CanonicalizationErrorKind::MissingRequired {
+                        field: "duration".into(),
+                    },
+                    format!("lifecycle.{name} object must declare `duration`"),
+                ));
+            }
         },
         _ => {
             return Err(CanonicalizationError::new(

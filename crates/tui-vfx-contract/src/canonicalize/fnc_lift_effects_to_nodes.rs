@@ -85,19 +85,10 @@ pub fn lift_effects_to_nodes(
             .at(JsonPathSegment::field("effects"))
         })?;
 
-        let (axis, axis_key, from) = match detect_axis(entry_obj) {
-            Ok(detected) => detected,
-            Err(_) => {
-                // No recognized effect axis (filter/shader/sampler/style/mask).
-                // The corpus has authoring shapes the canonical V3.1 contract
-                // does not yet model directly (e.g., `content: "scramble"`,
-                // descriptor-defined custom axes). Skip so the rest of the
-                // recipe canonicalizes; runtime tooling that knows the
-                // descriptor can promote the entry once a contract path
-                // exists.
-                continue;
-            }
-        };
+        let (axis, axis_key, from) = detect_axis(entry_obj).map_err(|e| {
+            e.at(JsonPathSegment::Index(index))
+                .at(JsonPathSegment::field("effects"))
+        })?;
 
         let table = alias_table(axis)?;
         let alias_entry = table.find(&from).ok_or_else(|| {

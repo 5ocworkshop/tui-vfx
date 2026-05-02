@@ -123,14 +123,18 @@ pub fn apply_alias(
                     .unwrap_or(EnvelopeHint::None);
                 let lifted = lift_value_envelope(value, envelope_hint)
                     .map_err(|e| e.at(JsonPathSegment::field(key.clone())))?;
-                // NodeSpec.inputs is BTreeMap<EffectInputId, ValueSource>. The
-                // canonical schema rejects entries whose lifted shape isn't a
-                // tagged ValueSource variant (paths/stops/nodes/pattern/signal
-                // structural inputs that pass through unwrapped). Skip those —
-                // descriptor-defined structural inputs need a contract-level
-                // mechanism that does not yet exist.
                 if !is_canonical_value_source(&lifted) {
-                    continue;
+                    return Err(CanonicalizationError::new(
+                        CanonicalizationErrorKind::UnrepresentableInput {
+                            effect: entry.canonical_effect.clone(),
+                            param: key.clone(),
+                        },
+                        format!(
+                            "input `{key}` on `{}` carries a structural value the canonical NodeSpec.inputs slot cannot represent. NodeSpec.inputs is BTreeMap<EffectInputId, ValueSource>; the canonical ValueSource enum has no variant for arbitrary structured author shapes (paths/stops/nodes/pattern/signal). Adding a ValueSource::Structured(StructuredValue) variant to the contract is the open path forward.",
+                            entry.canonical_effect
+                        ),
+                    )
+                    .at(JsonPathSegment::field(key.clone())));
                 }
                 inputs.insert(target_key, lifted);
             }

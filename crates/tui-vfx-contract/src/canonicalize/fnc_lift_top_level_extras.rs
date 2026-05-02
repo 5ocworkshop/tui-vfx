@@ -37,16 +37,6 @@ pub fn lift_top_level_extras(recipe: &mut Value) -> Result<TopLevelExtras, Canon
         )
     })?;
 
-    if recipe_obj.contains_key("scene") {
-        return Err(CanonicalizationError::new(
-            CanonicalizationErrorKind::UnexpectedJsonShape {
-                expected: "(unsupported)".into(),
-            },
-            "top-level `scene: [...]` shorthand is pending — use canonical `scenes: [...]` for now",
-        )
-        .at(JsonPathSegment::field("scene")));
-    }
-
     if recipe_obj.contains_key("extends") {
         return Err(CanonicalizationError::new(
             CanonicalizationErrorKind::UnexpectedJsonShape {
@@ -155,15 +145,12 @@ mod tests {
         lift_top_level_extras(&mut recipe).unwrap();
         let clock = &recipe["lifecycle"]["clock"];
         assert_eq!(clock["clockMode"], "looping");
-        assert_eq!(
-            clock["period"],
-            json!({ "kind": "seconds", "value": 2.2 })
-        );
+        assert_eq!(clock["period"], json!({ "kind": "seconds", "value": 2.2 }));
     }
 
     #[test]
-    fn scene_array_rejects_with_pending_message() {
-        let mut recipe = json!({ "id": "x", "scene": [] });
+    fn extends_rejects_with_pending_message() {
+        let mut recipe = json!({ "id": "x", "extends": "themes/foo.json" });
         let err = lift_top_level_extras(&mut recipe).unwrap_err();
         assert!(err.message.contains("pending"));
     }
