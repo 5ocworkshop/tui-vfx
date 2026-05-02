@@ -72,10 +72,6 @@ fn render_test_recipe_at(recipe: serde_json::Value, sample: SampleContext) -> Fr
     render_recipe(&loaded, &sample).expect("render scene")
 }
 
-fn assert_rejects_element_policy(policy: &str, value: serde_json::Value) {
-    assert_rejects_element_policy_path(policy, policy, value);
-}
-
 fn assert_rejects_element_policy_path(
     policy: &str,
     expected_policy_path: &str,
@@ -372,11 +368,14 @@ fn predicate_visibility_uses_runtime_resolver_value() {
 }
 
 #[test]
-fn rejects_unsupported_surface_policy_at_load_time() {
-    assert_rejects_element_policy(
-        "surface",
-        serde_json::json!({ "baseStyle": null, "shadow": null }),
-    );
+fn empty_surface_is_preserved_as_noop() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["surface"] =
+        serde_json::json!({ "baseStyle": null, "shadow": null });
+
+    let frame = render_test_recipe(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
 }
 
 #[test]

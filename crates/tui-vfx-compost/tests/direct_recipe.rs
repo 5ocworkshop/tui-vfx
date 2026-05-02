@@ -30,5 +30,8 @@ mod test_runtime_values;
 #[path = "direct_recipe/test_render_observability.rs"]
 mod test_render_observability;
 
+#[path = "direct_recipe/test_shadow_surface.rs"]
+mod test_shadow_surface;
+
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe.rs</FILE> - <DESC>Integration test harness for compost direct recipe tests</DESC>
 // <VERS>END OF VERSION: 0.8.1</VERS>

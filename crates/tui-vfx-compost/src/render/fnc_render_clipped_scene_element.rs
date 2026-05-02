@@ -3,12 +3,13 @@
 // <WCTX>Clip and warn clipping share mature render-area style bounds with element diagnostics.</WCTX>
 // <CLOG>0.1.0: INIT — split clipped scene element rendering from element orchestration.</CLOG>
 
-use tui_vfx_contract::{ClipPolicy, RecipeScene, RecipeSceneElement};
+use tui_vfx_contract::{ClipPolicy, RecipeScene, RecipeSceneElement, ShadowCompositeMode};
 use tui_vfx_types::{Grid, SemanticScene};
 
 use crate::render::{
-    EffectStack, ElementRenderOutcome, RenderDiagnostic, RenderError, SampleContext,
-    apply_effect_stack, clip_element_bounds, element_bounds_fully_visible,
+    EffectStack, ElementClipBounds, ElementRenderOutcome, RenderDiagnostic, RenderError,
+    SampleContext, apply_effect_stack, clip_element_bounds, element_bounds_fully_visible,
+    render_element_shadow, shadow_cast_rect, shadow_edge_progress,
 };
 use crate::runtime::RuntimeContext;
 
@@ -37,6 +38,13 @@ pub(crate) fn render_clipped_scene_element(
     };
 
     let diagnostics = clip_warning(scene, element, source_grid);
+    render_shadow_for_mode(
+        element,
+        source_grid,
+        destination,
+        ShadowCompositeMode::Under,
+        bounds,
+    );
     apply_effect_stack(
         source_grid,
         destination,
@@ -45,6 +53,13 @@ pub(crate) fn render_clipped_scene_element(
         effect_stack,
         runtime_context,
     )?;
+    render_shadow_for_mode(
+        element,
+        source_grid,
+        destination,
+        ShadowCompositeMode::Over,
+        bounds,
+    );
     Ok(ElementRenderOutcome::applied_with_diagnostics(
         applied_effect_kinds,
         diagnostics,
@@ -63,6 +78,30 @@ pub(crate) fn source_fits_scene(
         scene.width,
         scene.height,
     )
+}
+
+fn render_shadow_for_mode(
+    element: &RecipeSceneElement,
+    source_grid: &SemanticScene,
+    destination: &mut SemanticScene,
+    mode: ShadowCompositeMode,
+    bounds: ElementClipBounds,
+) {
+    let Some(shadow) = element
+        .surface
+        .as_ref()
+        .and_then(|surface| surface.shadow.as_ref())
+    else {
+        return;
+    };
+    if shadow.composite_mode == mode {
+        render_element_shadow(
+            destination,
+            shadow,
+            shadow_cast_rect(element, source_grid, bounds, shadow),
+            shadow_edge_progress(source_grid, bounds, shadow),
+        );
+    }
 }
 
 fn clip_warning(

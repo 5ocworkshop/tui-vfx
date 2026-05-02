@@ -11,6 +11,7 @@
 
 use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, RecipeSceneElement, RoleWritePolicy, SceneElementOverflowPolicy,
+    ShadowBlendMode,
 };
 
 use crate::LoadError;
@@ -39,12 +40,44 @@ pub(crate) fn validate_scene_element_policies(
         );
     }
 
-    if element.surface.is_some() {
-        return unsupported_policy(
-            element,
-            "surface",
-            "element surface styling and shadow semantics require native surface rendering",
-        );
+    if let Some(surface) = &element.surface {
+        if surface.base_style.is_some() {
+            return unsupported_policy(
+                element,
+                "surface.baseStyle",
+                "base style requires typed native surface style rendering",
+            );
+        }
+        if let Some(shadow) = &surface.shadow {
+            if shadow.source_region.is_some() {
+                return unsupported_policy(
+                    element,
+                    "surface.shadow.sourceRegion",
+                    "shadow source regions require native scope-to-shadow extrusion",
+                );
+            }
+            if shadow.paint_outset.is_some() {
+                return unsupported_policy(
+                    element,
+                    "surface.shadow.paintOutset",
+                    "shadow paint outsets require native scene paint expansion",
+                );
+            }
+            if element.overflow == Some(SceneElementOverflowPolicy::Wrap) {
+                return unsupported_policy(
+                    element,
+                    "surface.shadow",
+                    "wrapped shadow elements require native wrap-aware shadow semantics",
+                );
+            }
+            if shadow.blend_mode == ShadowBlendMode::Multiply {
+                return unsupported_policy(
+                    element,
+                    "surface.shadow.blendMode",
+                    "multiply shadow blending requires destination color multiplication",
+                );
+            }
+        }
     }
 
     match element.overflow {

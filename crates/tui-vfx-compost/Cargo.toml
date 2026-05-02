@@ -17,6 +17,7 @@ readme = "README.md"
 
 [dependencies]
 tui-vfx-contract.workspace = true
+tui-vfx-shadow.workspace = true
 tui-vfx-style.workspace = true
 tui-vfx-types.workspace = true
 serde.workspace = true
