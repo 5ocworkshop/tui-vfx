@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/source/fnc_source_grid_from_inputs.rs</FILE> - <DESC>Create source grid from canonical v3.1 source inputs</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Materialize load-validated source.card text into a bounded grid while preserving line boundaries.</WCTX>
-// <CLOG>0.3.0: MINOR — return a semantic source surface with text roles for materialized message cells.
+// <CLOG>0.4.0: MINOR — apply source.card descriptor color defaults when optional inputs are omitted.
+// 0.3.0: MINOR — return a semantic source surface with text roles for materialized message cells.
 // 0.2.1: PATCH — read literal source helpers from their owning module.
 // 0.2.0: PATCH — preserve source.card message line boundaries.
 // 0.1.0: INIT — add source text grid builder.</CLOG>
@@ -9,12 +10,12 @@
 use std::collections::BTreeMap;
 
 use tui_vfx_contract::{SourceInputId, ValueSource};
-use tui_vfx_types::{Cell, Grid, Modifiers, OwnedGrid, RoleMap, RoleTag, SemanticScene};
+use tui_vfx_types::{Cell, Color, Grid, Modifiers, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
 use crate::RenderError;
 use crate::runtime::RuntimeContext;
 
-use super::col_literal_source_input::{literal_color, literal_integer, literal_text};
+use super::col_literal_source_input::{literal_integer, literal_text, optional_color};
 
 pub(crate) fn source_grid_from_inputs(
     inputs: &BTreeMap<SourceInputId, ValueSource>,
@@ -23,8 +24,8 @@ pub(crate) fn source_grid_from_inputs(
     let width = literal_integer(inputs, "width", context)?;
     let height = literal_integer(inputs, "height", context)?;
     let message = literal_text(inputs, "message", context)?;
-    let foreground = literal_color(inputs, "foreground", context)?;
-    let background = literal_color(inputs, "background", context)?;
+    let foreground = optional_color(inputs, "foreground", Color::WHITE, context)?;
+    let background = optional_color(inputs, "background", Color::TRANSPARENT, context)?;
 
     let mut grid = OwnedGrid::new(width, height);
     let mut roles = RoleMap::new_with_default(width as u16, height as u16, RoleTag::Background);
@@ -42,4 +43,4 @@ pub(crate) fn source_grid_from_inputs(
 }
 
 // <FILE>crates/tui-vfx-compost/src/source/fnc_source_grid_from_inputs.rs</FILE> - <DESC>Create source grid from canonical v3.1 source inputs</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

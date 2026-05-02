@@ -1,12 +1,14 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_source_contract.rs</FILE> - <DESC>Compost source substrate tests</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Source substrate tests ensure source descriptors validate at load and materialization stays separate from scene dimensions.</WCTX>
-// <CLOG>0.2.1: PATCH — tighten source-input diagnostic assertions.
+// <CLOG>0.3.0: MINOR — align source.card tests with descriptor optional color defaults and border style vocabulary.
+// 0.2.1: PATCH — tighten source-input diagnostic assertions.
 // 0.2.0: PATCH — add source.card dimension bounds, literal shape, and multiline regressions.
 // 0.1.1: PATCH — name repeated source message fixture mutation.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{LoadError, LoadedRecipe, SampleContext, render_recipe};
+use tui_vfx_types::Color;
 
 fn load_recipe_error(recipe: serde_json::Value) -> LoadError {
     let catalog = primitive_catalog();
@@ -49,6 +51,13 @@ fn assert_source_input_error(error: LoadError, expected_input: &str) {
     assert!(
         is_expected_source_input,
         "expected source input `{expected_input}` rejection for `mainCard`, got: {error}"
+    );
+}
+
+fn assert_contract_error_contains(error: LoadError, expected: &str) {
+    assert!(
+        matches!(&error, LoadError::Contract { message } if message.contains(expected)),
+        "expected descriptor contract error containing `{expected}`, got: {error}"
     );
 }
 
@@ -116,14 +125,14 @@ fn resolves_runtime_sourced_source_inputs_at_load_time() {
 }
 
 #[test]
-fn rejects_unsupported_source_card_inputs_at_load_time() {
+fn rejects_unknown_source_card_inputs_at_load_time() {
     let mut recipe = linear_gradient_recipe_value();
-    recipe["sources"]["mainCard"]["inputs"]["borderStyle"]["value"]["value"] =
-        serde_json::Value::String("rounded".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["padding"] =
+        serde_json::json!({ "kind": "literal", "value": { "kind": "integer", "value": 1 } });
 
     let error = load_recipe_error(recipe);
 
-    assert_source_input_error(error, "borderStyle");
+    assert_contract_error_contains(error, "UnknownSourceInput");
 }
 
 #[test]
@@ -132,11 +141,40 @@ fn rejects_missing_required_source_card_input_at_load_time() {
     recipe["sources"]["mainCard"]["inputs"]
         .as_object_mut()
         .expect("source inputs object")
-        .remove("foreground");
+        .remove("message");
 
     let error = load_recipe_error(recipe);
 
-    assert_source_input_error(error, "foreground");
+    assert_contract_error_contains(error, "MissingRequiredSourceInput");
+}
+
+#[test]
+fn source_card_accepts_descriptor_border_style_values_at_load_time() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["sources"]["mainCard"]["inputs"]["borderStyle"]["value"]["value"] =
+        serde_json::Value::String("rounded".to_string());
+
+    let frame = render_recipe_value(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
+}
+
+#[test]
+fn source_card_uses_descriptor_color_defaults_when_optional_inputs_are_absent() {
+    let mut recipe = linear_gradient_recipe_value();
+    let inputs = recipe["sources"]["mainCard"]["inputs"]
+        .as_object_mut()
+        .expect("source inputs object");
+    inputs.remove("foreground");
+    inputs.remove("background");
+    recipe["graph"]["nodes"] = serde_json::json!({});
+    recipe["graph"]["order"] = serde_json::json!([]);
+
+    let frame = render_recipe_value(recipe);
+
+    let cell = frame.grid.cell((0, 0)).unwrap();
+    assert_eq!(cell.fg, Color::WHITE);
+    assert_eq!(cell.bg, Color::TRANSPARENT);
 }
 
 #[test]
@@ -233,4 +271,4 @@ fn source_card_message_preserves_line_boundaries() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_source_contract.rs</FILE> - <DESC>Compost source substrate tests</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

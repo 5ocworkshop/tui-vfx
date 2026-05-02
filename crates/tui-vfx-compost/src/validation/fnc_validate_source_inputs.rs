@@ -58,8 +58,12 @@ fn validate_source_card_input(
         "width" => source_dimension_in_range(value, SOURCE_CARD_WIDTH_MAX),
         "height" => source_dimension_in_range(value, SOURCE_CARD_HEIGHT_MAX),
         "foreground" | "background" => matches!(value, Value::Color(_)),
-        "borderStyle" => matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_STYLES.contains(&name.as_str())),
-        "borderTrim" => matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_TRIMS.contains(&name.as_str())),
+        "borderStyle" => {
+            matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_STYLES.contains(&name.as_str()))
+        }
+        "borderTrim" => {
+            matches!(value, Value::Enum(name) if SOURCE_CARD_BORDER_TRIMS.contains(&name.as_str()))
+        }
         "borderConfig" => matches!(value, Value::Structured(_)),
         "bold" => matches!(value, Value::Boolean(_)),
         _ => {

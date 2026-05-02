@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read resolved source inputs</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Source materialization uses the same runtime resolver as node validation.</WCTX>
-// <CLOG>0.2.0: MINOR — resolve source.card inputs from RuntimeContext before materialization.</CLOG>
+// <CLOG>0.3.0: MINOR — allow source.card materialization to apply descriptor-equivalent color defaults.</CLOG>
+// 0.2.0: MINOR — resolve source.card inputs from RuntimeContext before materialization.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -68,5 +69,17 @@ pub(crate) fn literal_color(
     }
 }
 
+pub(crate) fn optional_color(
+    inputs: &BTreeMap<SourceInputId, ValueSource>,
+    id: &str,
+    default: Color,
+    context: &RuntimeContext,
+) -> Result<Color, RenderError> {
+    if !inputs.contains_key(&SourceInputId::new(id)) {
+        return Ok(default);
+    }
+    literal_color(inputs, id, context)
+}
+
 // <FILE>crates/tui-vfx-compost/src/source/col_literal_source_input.rs</FILE> - <DESC>Read resolved source inputs</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
