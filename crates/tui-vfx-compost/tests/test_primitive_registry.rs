@@ -1,8 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Phase 0.5/1 of Rust-SSOT primitive migration grows the v3.1 primitive pack through domain-directory ports.</WCTX>
 // <CLOG>0.1.0: INIT — prove descriptor/runtime registration, domain mismatch rejection, source runtime registration, and CellView debug assertions.</CLOG>
-// <CLOG>0.3.0: ADD — prove mask.dissolve installs through the primitive pack.
+// <CLOG>0.4.0: ADD — prove sampler.gravity installs through the primitive pack.
+// 0.3.0: ADD — prove mask.dissolve installs through the primitive pack.
 // 0.2.0: ADD — prove filter.dim v3.1 descriptor shape, pack installation, and runtime color semantics without reading generated artifacts.</CLOG>
 
 use std::collections::BTreeMap;
@@ -14,6 +15,7 @@ use tui_vfx_compost::primitive::{
     PrimitiveRegistryError, SourcePrimitive, SourceRuntime, SourceSurface,
     install_v31_primitive_pack,
 };
+use tui_vfx_compost::samplers::{SamplerAxis, SamplerGravityInputs};
 use tui_vfx_contract::{
     CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorPackId, EffectCompletion,
     EffectDescriptor, EffectDomain, EffectId, EffectInputId, EffectLifecycle, RoleSpace,
@@ -273,6 +275,35 @@ fn filter_dim_descriptor_is_v31_native_without_reading_generated_artifacts() {
     );
     assert!(registry.has_runtime(&mask_id, EffectRuntimeKind::Mask));
     assert_eq!(MaskDissolveInputs::new(7, 0).chunk_size, 1);
+
+    let sampler_id = EffectId::new("sampler.gravity");
+    let sampler_descriptor = registry
+        .effect(&sampler_id)
+        .expect("sampler.gravity descriptor is registered");
+    assert_eq!(sampler_descriptor.domain, EffectDomain::CoordinateSampler);
+    assert_eq!(
+        sampler_descriptor.inputs[&EffectInputId::new("acceleration")]
+            .value
+            .default,
+        Some(Value::Number(4.0))
+    );
+    assert_eq!(
+        sampler_descriptor.inputs[&EffectInputId::new("terminalVelocity")]
+            .value
+            .default,
+        Some(Value::Number(10.0))
+    );
+    assert_eq!(
+        sampler_descriptor.inputs[&EffectInputId::new("axis")]
+            .value
+            .default,
+        Some(Value::Enum("y".to_string()))
+    );
+    assert!(registry.has_runtime(&sampler_id, EffectRuntimeKind::CoordinateSampler));
+    assert_eq!(
+        SamplerGravityInputs::new(1.0, -3.0, SamplerAxis::X).terminal_velocity,
+        3.0
+    );
 }
 
 #[test]
@@ -314,4 +345,4 @@ fn filter_dim_runtime_matches_legacy_channel_target_semantics() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/test_primitive_registry.rs</FILE> - <DESC>Primitive registry substrate tests</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
