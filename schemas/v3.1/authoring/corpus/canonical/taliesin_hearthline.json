@@ -20,18 +20,6 @@
               "value": 11
             }
           },
-          "color": {
-            "kind": "literal",
-            "value": {
-              "kind": "color",
-              "value": {
-                "a": 255,
-                "b": 92,
-                "g": 133,
-                "r": 209
-              }
-            }
-          },
           "cornerBoost": {
             "kind": "literal",
             "value": {
@@ -46,7 +34,19 @@
               "value": 0.4
             }
           },
-          "speed": {
+          "sheenColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 92,
+                "g": 133,
+                "r": 209
+              }
+            }
+          },
+          "sheenRate": {
             "kind": "literal",
             "value": {
               "kind": "number",

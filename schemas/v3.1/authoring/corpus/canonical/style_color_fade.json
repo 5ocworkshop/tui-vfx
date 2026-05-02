@@ -22,7 +22,7 @@
               "value": "rgb"
             }
           },
-          "target": {
+          "targetColor": {
             "kind": "literal",
             "value": {
               "kind": "color",
@@ -51,7 +51,7 @@
               "value": "hsl"
             }
           },
-          "target": {
+          "targetColor": {
             "kind": "literal",
             "value": {
               "kind": "color",

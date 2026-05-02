@@ -1,15 +1,14 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_source_inputs.rs</FILE> - <DESC>Validate native v3.1 source inputs for direct rendering</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Accept the full set of borderStyle values declared by the source.card descriptor and the borderConfig structured payload that preserves title/titleAlign/frame extras through canonicalize.</WCTX>
-// <CLOG>0.5.0: MINOR — accept all source.card descriptor borderStyle values plus the borderConfig structured input emitted for object-form borders.</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Drop foreground/background from the hardcoded required list now that the source.card descriptor marks them optional with safe defaults; bare-card author shorthand without explicit colors must load.</WCTX>
+// <CLOG>0.6.0: MINOR — only message/width/height are mandatory inputs at validation time; foreground and background fall back to descriptor defaults.</CLOG>
 
 use tui_vfx_contract::{SourceInputId, SourceInstanceId, SourceSpec, Value};
 
 use crate::LoadError;
 use crate::runtime::{RuntimeContext, resolve_value_source};
 
-const REQUIRED_SOURCE_CARD_INPUTS: [&str; 5] =
-    ["message", "width", "height", "foreground", "background"];
+const REQUIRED_SOURCE_CARD_INPUTS: [&str; 3] = ["message", "width", "height"];
 const SOURCE_CARD_HEIGHT_MAX: i64 = 256;
 const SOURCE_CARD_DESCRIPTOR: &str = "source.card";
 const SOURCE_CARD_WIDTH_MAX: i64 = 512;
@@ -103,4 +102,4 @@ fn source_input_error(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_source_inputs.rs</FILE> - <DESC>Validate native v3.1 source inputs for direct rendering</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

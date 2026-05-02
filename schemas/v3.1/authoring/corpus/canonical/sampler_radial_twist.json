@@ -27,7 +27,7 @@
               "value": 0.08
             }
           },
-          "twist": {
+          "strength": {
             "kind": "literal",
             "value": {
               "kind": "number",

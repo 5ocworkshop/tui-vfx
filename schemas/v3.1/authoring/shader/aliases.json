@@ -52,15 +52,16 @@
       "from": "border_sweep",
       "canonicalEffect": "shader.borderSweep",
       "paramMapping": {
-        "speed":  { "to": "speed",  "envelope": "literal-number", "default": 0.5 },
-        "length": { "to": "length", "envelope": "literal-integer" },
-        "color":  { "to": "color",  "envelope": "literal-color" },
-        "phase":  { "to": "activePhases", "envelope": "phases-list" },
-        "scope":  { "to": "scope",        "envelope": "scope-spec" }
+        "speed":  { "to": "loopsPerSecond", "envelope": "literal-number", "default": 0.5 },
+        "length": { "to": "length",         "envelope": "literal-integer" },
+        "color":  { "to": "sweepColor",     "envelope": "literal-color" },
+        "phase":  { "to": "activePhases",   "envelope": "phases-list" },
+        "scope":  { "to": "scope",          "envelope": "scope-spec" }
       },
       "scopeRules": {
         "default": { "kind": "role", "value": "border" }
-      }
+      },
+      "notes": "Author-friendly `speed`/`color` map to descriptor inputs `loopsPerSecond`/`sweepColor`."
     },
     {
       "from": "radar",
@@ -91,10 +92,11 @@
       "paramMapping": {
         "color": { "to": "reflectionColor", "envelope": "literal-color" },
         "rate":  { "to": "reflectionRate",  "envelope": "literal-number" },
+        "speed": { "to": "reflectionRate",  "envelope": "literal-number" },
         "phase": { "to": "activePhases",    "envelope": "phases-list" },
         "scope": { "to": "scope",           "envelope": "scope-spec" }
       },
-      "notes": "Author-friendly `color` and `rate` map to descriptor inputs `reflectionColor` and `reflectionRate`."
+      "notes": "Author-friendly `color` maps to `reflectionColor`. Both `rate` and `speed` map to `reflectionRate` (synonyms)."
     },
     {
       "from": "highlighter",
@@ -116,15 +118,47 @@
     },
     {
       "from": "edge_sheen",
-      "canonicalEffect": "shader.edgeSheen"
+      "canonicalEffect": "shader.edgeSheen",
+      "paramMapping": {
+        "color":       { "to": "sheenColor", "envelope": "literal-color" },
+        "speed":       { "to": "sheenRate",  "envelope": "literal-number" },
+        "bandWidth":   { "to": "bandWidth",  "envelope": "literal-integer" },
+        "edgeWidth":   { "to": "edgeWidth",  "envelope": "literal-integer" },
+        "intensity":   { "to": "intensity",  "envelope": "literal-number" },
+        "cornerBoost": { "to": "cornerBoost", "envelope": "literal-number" },
+        "phase":       { "to": "activePhases", "envelope": "phases-list" },
+        "scope":       { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `color`/`speed` map to descriptor inputs `sheenColor`/`sheenRate`."
     },
     {
       "from": "concealed_light",
-      "canonicalEffect": "shader.concealedLight"
+      "canonicalEffect": "shader.concealedLight",
+      "paramMapping": {
+        "color":        { "to": "lightColor",   "envelope": "literal-color" },
+        "source":       { "to": "lightSource",  "envelope": "passthrough" },
+        "edgeWidth":    { "to": "edgeWidth",    "envelope": "literal-integer" },
+        "intensity":    { "to": "intensity",    "envelope": "literal-number" },
+        "sourceCutoff": { "to": "sourceCutoff", "envelope": "literal-number" },
+        "spread":       { "to": "spread",       "envelope": "literal-number" },
+        "phase":        { "to": "activePhases", "envelope": "phases-list" },
+        "scope":        { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `color`/`source` map to descriptor inputs `lightColor`/`lightSource`."
     },
     {
       "from": "affordance_wake",
-      "canonicalEffect": "shader.affordanceWake"
+      "canonicalEffect": "shader.affordanceWake",
+      "paramMapping": {
+        "color":         { "to": "wakeColor",    "envelope": "literal-color" },
+        "progress":      { "to": "wakeProgress", "envelope": "value-source" },
+        "peakIntensity": { "to": "peakIntensity", "envelope": "literal-number" },
+        "radius":        { "to": "radius",        "envelope": "literal-integer" },
+        "zone":          { "to": "zone",          "envelope": "passthrough" },
+        "phase":         { "to": "activePhases",  "envelope": "phases-list" },
+        "scope":         { "to": "scope",         "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `color`/`progress` map to descriptor inputs `wakeColor`/`wakeProgress`."
     },
     {
       "from": "glisten_band",

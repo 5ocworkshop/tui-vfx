@@ -86,6 +86,7 @@
             "unit": null,
             "semantic": "foreground-color"
           },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
@@ -108,6 +109,7 @@
             "unit": null,
             "semantic": "background-color"
           },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
@@ -8785,7 +8787,7 @@
       "inputs": {
         "strength": {
           "displayName": "Strength",
-          "description": null,
+          "description": "Twist magnitude. Higher values rotate sampled coordinates further per unit radius.",
           "value": {
             "kind": "number",
             "default": {
@@ -8800,6 +8802,45 @@
             "unit": null,
             "semantic": null
           },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "center": {
+          "displayName": "Center",
+          "description": "Twist origin in destination-local coordinates. Accepts named anchors (\"center\", \"topLeft\", ...) or a structured payload preserved verbatim from authoring shorthand.",
+          "value": {
+            "kind": "text",
+            "default": {
+              "kind": "text",
+              "value": "center"
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
+          "bindable": false,
+          "runtimeMutability": "compileTime"
+        },
+        "radiusFloor": {
+          "displayName": "Radius Floor",
+          "description": "Minimum radius (as fraction of half-extent) below which the twist effect is suppressed; prevents singular behavior at the center.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.0
+            },
+            "range": {
+              "min": 0,
+              "max": 1
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
           "bindable": true,
           "runtimeMutability": "phaseStart"
         }
@@ -16368,6 +16409,28 @@
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Selects which channel the computed gradient color targets: \"foreground\", \"background\", or \"both\".",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "foreground",
+              "background",
+              "both"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "optional": true,
+          "bindable": false,
+          "runtimeMutability": "phaseStart"
         }
       },
       "outputs": {},

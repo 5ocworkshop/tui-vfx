@@ -89,7 +89,14 @@
         "effect": "shader.concealedLight",
         "id": "concealed_light0",
         "inputs": {
-          "color": {
+          "intensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.3
+            }
+          },
+          "lightColor": {
             "kind": "literal",
             "value": {
               "kind": "color",
@@ -101,14 +108,7 @@
               }
             }
           },
-          "intensity": {
-            "kind": "literal",
-            "value": {
-              "kind": "number",
-              "value": 0.3
-            }
-          },
-          "source": {
+          "lightSource": {
             "kind": "literal",
             "value": {
               "kind": "text",
@@ -118,8 +118,8 @@
           "spread": {
             "kind": "literal",
             "value": {
-              "kind": "integer",
-              "value": 6
+              "kind": "number",
+              "value": 6.0
             }
           }
         },

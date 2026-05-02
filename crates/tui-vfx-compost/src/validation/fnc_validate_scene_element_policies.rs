@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Element policy validation supports writeCell/skipTransparentEmpty cell writes and native role writes.</WCTX>
-// <CLOG>0.6.0: MINOR — accept native visibility, warn clipping, overflow, and no-op scroll factor substrate.
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Accept simple scene-relative anchor placementRules whose resolved placement is the canonical render position; reject only sibling-relative anchors, absolute-rect rules, and motion-bearing rules that require native resolution.</WCTX>
+// <CLOG>0.7.0: MINOR — accept anchor-kind placementRule when sibling_layer and placement_motion are absent (resolved placement is authoritative).
+// 0.6.0: MINOR — accept native visibility, warn clipping, overflow, and no-op scroll factor substrate.
 // 0.5.1: PATCH — use capability-based unsupported-policy reasons instead of schedule language.
 // 0.5.0: MINOR — accept copied and explicit role writes after role policy execution lands.
 // 0.4.0: MINOR — accept skipTransparentEmpty after cell write policy substrate lands.
@@ -11,7 +12,7 @@
 
 use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, RecipeSceneElement, RoleWritePolicy, SceneElementOverflowPolicy,
-    ShadowBlendMode,
+    SceneElementPlacementRule, ShadowBlendMode,
 };
 
 use crate::LoadError;
@@ -32,12 +33,36 @@ pub(crate) fn validate_scene_element_policies(
         );
     }
 
-    if element.placement_rule.is_some() {
-        return unsupported_policy(
-            element,
-            "placementRule",
-            "declarative placement rules require native placement resolution",
-        );
+    if let Some(rule) = &element.placement_rule {
+        match rule {
+            SceneElementPlacementRule::Anchor {
+                sibling_layer,
+                placement_motion,
+                ..
+            } => {
+                if sibling_layer.is_some() {
+                    return unsupported_policy(
+                        element,
+                        "placementRule.siblingLayer",
+                        "sibling-relative anchors require native placement resolution",
+                    );
+                }
+                if placement_motion.is_some() {
+                    return unsupported_policy(
+                        element,
+                        "placementRule.placementMotion",
+                        "placement motion requires motion-aware scene rendering",
+                    );
+                }
+            }
+            SceneElementPlacementRule::Absolute { .. } => {
+                return unsupported_policy(
+                    element,
+                    "placementRule",
+                    "absolute placement rectangles require native placement resolution",
+                );
+            }
+        }
     }
 
     if let Some(surface) = &element.surface {
@@ -123,4 +148,4 @@ fn unsupported_policy(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

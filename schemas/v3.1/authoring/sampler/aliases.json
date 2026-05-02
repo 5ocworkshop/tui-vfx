@@ -42,12 +42,15 @@
       "from": "radial_twist",
       "canonicalEffect": "sampler.radialTwist",
       "paramMapping": {
-        "center":   { "to": "center",   "envelope": "passthrough" },
-        "strength": { "to": "strength", "envelope": "literal-number" },
-        "falloff":  { "to": "falloff",  "envelope": "literal-number" },
-        "phase":    { "to": "activePhases", "envelope": "phases-list" },
-        "scope":    { "to": "scope",        "envelope": "scope-spec" }
-      }
+        "center":      { "to": "center",      "envelope": "passthrough" },
+        "strength":    { "to": "strength",    "envelope": "literal-number" },
+        "twist":       { "to": "strength",    "envelope": "literal-number" },
+        "radiusFloor": { "to": "radiusFloor", "envelope": "literal-number" },
+        "falloff":     { "to": "falloff",     "envelope": "literal-number" },
+        "phase":       { "to": "activePhases", "envelope": "phases-list" },
+        "scope":       { "to": "scope",        "envelope": "scope-spec" }
+      },
+      "notes": "Author-friendly `twist` is a synonym for `strength` (descriptor input)."
     },
     {
       "from": "spatial_signal",

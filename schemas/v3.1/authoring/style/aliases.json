@@ -9,11 +9,12 @@
       "from": "color_fade",
       "canonicalEffect": "style.colorFade",
       "paramMapping": {
-        "colorSpace": { "to": "colorSpace", "envelope": "literal-enum", "default": "rgb" },
-        "target":     { "to": "target",     "envelope": "literal-color" },
+        "colorSpace": { "to": "colorSpace",  "envelope": "literal-enum", "default": "rgb" },
+        "target":     { "to": "targetColor", "envelope": "literal-color" },
         "phase":      { "to": "activePhases", "envelope": "phases-list" },
         "scope":      { "to": "scope",        "envelope": "scope-spec" }
-      }
+      },
+      "notes": "Author-friendly `target` maps to the descriptor input `targetColor`."
     },
     {
       "from": "glitch",

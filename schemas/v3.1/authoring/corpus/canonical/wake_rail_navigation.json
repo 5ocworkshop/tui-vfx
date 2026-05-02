@@ -13,7 +13,21 @@
         "effect": "shader.affordanceWake",
         "id": "affordance_wake0",
         "inputs": {
-          "color": {
+          "peakIntensity": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.22
+            }
+          },
+          "radius": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 2
+            }
+          },
+          "wakeColor": {
             "kind": "literal",
             "value": {
               "kind": "color",
@@ -25,24 +39,10 @@
               }
             }
           },
-          "peakIntensity": {
-            "kind": "literal",
-            "value": {
-              "kind": "number",
-              "value": 0.22
-            }
-          },
-          "progress": {
+          "wakeProgress": {
             "fallback": null,
             "id": "hoverProgress",
             "kind": "signal"
-          },
-          "radius": {
-            "kind": "literal",
-            "value": {
-              "kind": "integer",
-              "value": 2
-            }
           },
           "zone": {
             "kind": "literal",

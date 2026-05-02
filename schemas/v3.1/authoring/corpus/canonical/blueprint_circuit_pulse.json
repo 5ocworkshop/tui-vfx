@@ -13,7 +13,21 @@
         "effect": "shader.borderSweep",
         "id": "border_sweep0",
         "inputs": {
-          "color": {
+          "length": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": 8
+            }
+          },
+          "loopsPerSecond": {
+            "kind": "literal",
+            "value": {
+              "kind": "number",
+              "value": 0.4
+            }
+          },
+          "sweepColor": {
             "kind": "literal",
             "value": {
               "kind": "color",
@@ -23,20 +37,6 @@
                 "g": 245,
                 "r": 190
               }
-            }
-          },
-          "length": {
-            "kind": "literal",
-            "value": {
-              "kind": "integer",
-              "value": 8
-            }
-          },
-          "speed": {
-            "kind": "literal",
-            "value": {
-              "kind": "number",
-              "value": 0.4
             }
           }
         },

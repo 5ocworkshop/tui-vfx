@@ -13,18 +13,6 @@
         "effect": "shader.concealedLight",
         "id": "concealed_light0",
         "inputs": {
-          "color": {
-            "kind": "literal",
-            "value": {
-              "kind": "color",
-              "value": {
-                "a": 255,
-                "b": 176,
-                "g": 210,
-                "r": 236
-              }
-            }
-          },
           "edgeWidth": {
             "kind": "literal",
             "value": {
@@ -39,7 +27,19 @@
               "value": 0.12
             }
           },
-          "source": {
+          "lightColor": {
+            "kind": "literal",
+            "value": {
+              "kind": "color",
+              "value": {
+                "a": 255,
+                "b": 176,
+                "g": 210,
+                "r": 236
+              }
+            }
+          },
+          "lightSource": {
             "kind": "literal",
             "value": {
               "kind": "text",
